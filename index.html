@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>三支一扶专属答题系统 (正式版)</title>
+    <title>三支一扶专属答题系统 (稳定版)</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #f4f6f9; color: #333; padding: 15px; }
@@ -99,16 +99,22 @@
     let bookmarkedIds = new Set(), wrongRecords = [], isAnswered = false;
 
     window.onload = function() {
-        if (localStorage.getItem('quiz_saved_state')) {
-            document.getElementById('resume-btn').classList.remove('hidden');
-            document.getElementById('divider').classList.remove('hidden');
-        }
+        try {
+            if (localStorage.getItem('quiz_saved_state')) {
+                document.getElementById('resume-btn').classList.remove('hidden');
+                document.getElementById('divider').classList.remove('hidden');
+            }
+        } catch(e) { console.warn("读取存档状态失败", e); }
     };
 
     function saveProgress() {
-        const state = { currentIdx, score, mode, wrongRecords, bookmarkedIds: Array.from(bookmarkedIds), isAnswered };
-        localStorage.setItem('quiz_saved_data', JSON.stringify(rawQuestions));
-        localStorage.setItem('quiz_saved_state', JSON.stringify(state));
+        try {
+            const state = { currentIdx, score, mode, wrongRecords, bookmarkedIds: Array.from(bookmarkedIds), isAnswered };
+            localStorage.setItem('quiz_saved_data', JSON.stringify(rawQuestions));
+            localStorage.setItem('quiz_saved_state', JSON.stringify(state));
+        } catch(e) {
+            console.warn("浏览器阻止了本地存储", e);
+        }
     }
 
     function resumeQuiz() {
@@ -122,8 +128,8 @@
             renderQuestion();
             if (mode === 'instant' && isAnswered) restoreInstantFeedback();
         } catch (e) {
-            alert("存档损坏，请重新开始。");
-            localStorage.removeItem('quiz_saved_state');
+            alert("存档读取失败或已损坏，请开始新练习。");
+            try { localStorage.removeItem('quiz_saved_state'); } catch(err){}
         }
     }
 
@@ -135,15 +141,37 @@
     }
 
     function startNewQuiz() {
-        try { rawQuestions = JSON.parse(document.getElementById('data-input').value); if(!rawQuestions.length) throw new Error(); } 
-        catch (e) { alert("题库解析失败！请检查JSON格式。"); return; }
-        mode = document.querySelector('input[name="mode"]:checked').value;
-        if (document.getElementById('shuffle-cb').checked) shuffleArray(rawQuestions);
-        currentIdx = 0; score = 0; wrongRecords = []; bookmarkedIds.clear(); isAnswered = false;
-        saveProgress();
-        document.getElementById('setup-page').classList.add('hidden');
-        document.getElementById('quiz-page').classList.remove('hidden');
-        renderQuestion();
+        try {
+            let rawData = document.getElementById('data-input').value;
+            // 尝试去除可能导致报错的不可见字符
+            rawData = rawData.replace(/[\u200B-\u200D\uFEFF]/g, '');
+            
+            try {
+                rawQuestions = JSON.parse(rawData);
+            } catch (jsonErr) {
+                alert("❌ 题库解析失败！请检查JSON格式（逗号、括号是否配对）。\n系统报错信息：" + jsonErr.message);
+                return;
+            }
+            
+            if (!rawQuestions || rawQuestions.length === 0) {
+                alert("❌ 题库为空！");
+                return;
+            }
+
+            mode = document.querySelector('input[name="mode"]:checked').value;
+            if (document.getElementById('shuffle-cb').checked) shuffleArray(rawQuestions);
+            
+            currentIdx = 0; score = 0; wrongRecords = []; bookmarkedIds.clear(); isAnswered = false;
+            
+            saveProgress();
+            
+            document.getElementById('setup-page').classList.add('hidden');
+            document.getElementById('quiz-page').classList.remove('hidden');
+            renderQuestion();
+            
+        } catch (globalErr) {
+            alert("❌ 发生未知错误，请截图发给AI：\n" + globalErr.message);
+        }
     }
 
     function renderQuestion() {
@@ -223,7 +251,7 @@
     }
 
     function showResult() {
-        localStorage.removeItem('quiz_saved_state');
+        try { localStorage.removeItem('quiz_saved_state'); } catch(e){}
         document.getElementById('quiz-page').classList.add('hidden');
         document.getElementById('result-page').classList.remove('hidden');
         document.getElementById('score-text').innerText = `得分：${Math.round((score / rawQuestions.length) * 100)} 分`;
@@ -243,7 +271,7 @@
 
     function copyChunk(idx) {
         navigator.clipboard.writeText(document.getElementById(`chunk-text-${idx}`).value)
-        。then(() => alert(`第 ${idx} 段报告已复制！`)).catch(() => alert('复制失败，请手动全选。'));
+        .then(() => alert(`第 ${idx} 段报告已复制！`)).catch(() => alert('复制失败，请手动全选。'));
     }
     function backToHome() { location.reload(); }
 </script>
