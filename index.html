@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>三支一扶题库系统 V6.3 (出处追踪版)</title>
+    <title>三支一扶题库系统 V6.4 (自动容错版)</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #f4f6f9; color: #333; padding: 15px; }
@@ -118,11 +118,26 @@
     function saveBanks() { localStorage.setItem('szys_banks', JSON.stringify(banks)); }
     function getFingerprint(str) { return str.replace(/[^\u4e00-\u9fa5a-zA-Z0-9]/g, ''); }
     
+    // ✨ 核心升级：强大的智能数据清洗器
     function parseInput() {
-        let raw = document.getElementById('data-input').value.replace(/[\u200B-\u200D\uFEFF]/g, '');
-        if (!raw) { alert("⚠️ 请先粘贴题目数据！"); return null; }
-        try { let data = JSON.parse(raw); if(data.length) return data; throw new Error(); } 
-        catch(e) { alert("❌ JSON格式错误，请检查！"); return null; }
+        let raw = document.getElementById('data-input').value;
+        if (!raw.trim()) { alert("⚠️ 请先粘贴题目数据！"); return null; }
+        
+        // 自动清理 AI 输出的 Markdown 代码块标识 (```json 和 ```)
+        raw = raw.replace(/```json/gi, '').replace(/```/g, '').trim();
+        // 清理不可见零宽字符
+        raw = raw.replace(/[\u200B-\u200D\uFEFF]/g, '');
+        
+        try { 
+            let data = JSON.parse(raw); 
+            if(Array.isArray(data) && data.length > 0) return data; 
+            alert("❌ 数据结构不对！必须是包含题目的数组 [ ] 格式。");
+            return null;
+        } 
+        catch(e) { 
+            alert("❌ 解析失败，JSON 格式有误！\n\n常见原因：\n1. 漏复制了最开头的 [ 符号\n2. 漏复制了最末尾的 ] 符号\n3. 选项中包含未转义的特殊引号\n\n系统报错信息：" + e.message); 
+            return null; 
+        }
     }
 
     function saveNewBank() {
@@ -206,7 +221,6 @@
         const q = App.data[App.current];
         DOM.progress.innerText = `${App.current + 1} / ${App.data.length}`;
         
-        // 显示题目和出处
         let sourceHtml = q.source ? `<span class="source-text">📄 出处文件: ${q.source}</span>` : '';
         DOM.title.innerHTML = `<span class="badge">${q.type === 'multiple' ? '多选' : '单选'}</span> ${q.question} ${sourceHtml}`;
         
@@ -243,7 +257,6 @@
     function processAnswer(q) {
         let myAns = App.selected.sort().join(''); let rightAns = q.answer.split('').sort().join(''); let isRight = (myAns === rightAns);
         if (isRight) App.score++;
-        // 在错题集里存入 source 字段
         if (!isRight || App.stars.has(q.id)) App.wrongList.push({ id: q.id, q: q.question, source: q.source || "未知", my: myAns || "未答", right: q.answer, reason: !isRight ? "答错" : "收藏" });
     }
 
@@ -252,7 +265,7 @@
         document.querySelectorAll('.opt-btn').forEach(btn => { let k = btn.id.replace('opt-', ''); if (q.answer.includes(k)) btn.classList.add('correct'); else if (myAns.includes(k) && !q.answer.includes(k)) btn.classList.add('wrong'); });
         DOM.feedback.classList.remove('hidden');
         if (myAns === q.answer.split('').sort().join('')) { DOM.feedback.style.background = '#d4edda'; DOM.feedback.style.color = '#155724'; DOM.feedback.innerText = "🎉 回答正确！"; } 
-        else { DOM.feedback.style。background = '#f8d7da'; DOM.feedback.style.color = '#721c24'; DOM.feedback.innerText = `❌ 错误！答案: ${q.answer}`; }
+        else { DOM.feedback.style.background = '#f8d7da'; DOM.feedback.style.color = '#721c24'; DOM.feedback.innerText = `❌ 错误！答案: ${q.answer}`; }
     }
 
     function restoreFeedback() {
@@ -280,7 +293,6 @@
         for (let i = 0, batch = 1; i < App.wrongList.length; i += chunkSize, batch++) {
             let chunk = App.wrongList.slice(i, i + chunkSize); 
             
-            // 明确唤醒指令，强调谷歌云盘和出处
             let text = `【三支一扶错题解析申请 - 第 ${batch} 批】\n请务必使用工具检索我的“谷歌云盘”。针对每道题提供的【出处文件】，请优先检索该文件或相似答案文件来获取官方解析。严格按4个模块为我逐一解析：\n\n`;
             
             chunk.forEach((item, index) => { 
