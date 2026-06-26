@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>三支一扶专属答题系统 (正式版)</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #f4f6f9; color: #333; padding: 15px; }
+        .container { width: 100%; max-width: 600px; margin: 0 auto; background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        h2 { font-size: 18px; color: #1a73e8; margin-bottom: 15px; border-bottom: 2px solid #e8f0fe; padding-bottom: 10px; }
+        .form-group { margin-bottom: 15px; }
+        label { font-size: 14px; font-weight: bold; display: block; margin-bottom: 5px; }
+        textarea { width: 100%; height: 120px; padding: 10px; border: 1px solid #ccd0d5; border-radius: 8px; font-family: monospace; font-size: 13px; resize: none; background: #fafafa; }
+        .controls { display: flex; justify-content: space-between; margin-bottom: 20px; font-size: 14px; }
+        .controls label { font-weight: normal; display: flex; align-items: center; }
+        .controls input { margin-right: 5px; }
+        .btn { width: 100%; padding: 14px; background-color: #1a73e8; color: #fff; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; text-align: center; margin-bottom: 12px; -webkit-tap-highlight-color: transparent; }
+        .btn:active { background-color: #1557b0; }
+        .btn-secondary { background-color: #6c757d; }
+        .btn-resume { background-color: #ff9800; animation: pulse 2s infinite; }
+        .hidden { display: none !important; }
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(255, 152, 0, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(255, 152, 0, 0); } 100% { box-shadow: 0 0 0 0 rgba(255, 152, 0, 0); } }
+        .header-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .progress { font-size: 14px; color: #666; font-weight: bold; }
+        .bookmark-btn { font-size: 22px; color: #ccc; background: none; border: none; cursor: pointer; padding: 5px; }
+        .bookmark-btn.active { color: #f1c40f; }
+        .question-title { font-size: 16px; font-weight: bold; line-height: 1.5; margin-bottom: 10px; }
+        .question-type { font-size: 12px; background: #e8f0fe; color: #1a73e8; padding: 3px 8px; border-radius: 4px; margin-right: 5px; vertical-align: middle; }
+        .option-label { display: block; padding: 12px; background: #f8fafd; border: 1px solid #dce4ec; border-radius: 8px; margin-bottom: 10px; font-size: 15px; cursor: pointer; line-height: 1.4; transition: all 0.2s; }
+        .option-label input { margin-right: 10px; transform: scale(1.2); }
+        .option-label.correct { background: #d4edda; border-color: #c3e6cb; color: #155724; }
+        .option-label.wrong { background: #f8d7da; border-color: #f5c6cb; color: #721c24; }
+        .feedback-box { margin-top: 15px; padding: 12px; background: #fff3cd; border-left: 4px solid #ffeeba; border-radius: 4px; font-size: 14px; display: none; }
+        .result-score { font-size: 28px; color: #e67e22; text-align: center; margin: 20px 0; font-weight: bold; }
+        .chunk-box { background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 8px; padding: 15px; margin-bottom: 15px; }
+        .chunk-title { font-size: 14px; font-weight: bold; color: #495057; margin-bottom: 10px; }
+        .chunk-textarea { height: 100px; margin-bottom: 10px; }
+        .copy-btn { background-color: #28a745; margin-bottom: 0; padding: 10px; font-size: 14px; }
+    </style>
+</head>
+<body>
+
+<div class="container" id="setup-page">
+    <h2>设置与导入题库</h2>
+    <button class="btn btn-resume hidden" id="resume-btn" onclick="resumeQuiz()">🌟 检测到未完成的练习，点击继续答题</button>
+    <div id="divider" class="hidden" style="text-align:center; color:#999; font-size:12px; margin-bottom:12px;">— 或开始新练习 —</div>
+
+    <div class="form-group">
+        <label>粘贴JSON题库数据：</label>
+        <textarea id="data-input">[
+  {
+    "id": "Q_001",
+    "type": "single",
+    "question": "我国“三支一扶”计划中的“三支”具体是指以下哪项？",
+    "options": {"A": "支教、支农、支医", "B": "支教、支工、支医", "C": "支商、支农、支医", "D": "支教、支农、支兵"},
+    "answer": "A"
+  },
+  {
+    "id": "Q_002",
+    "type": "multiple",
+    "question": "以下属于“三支一扶”人员享受的政策待遇有？（多选）",
+    "options": {"A": "生活补贴", "B": "社会保险", "C": "直接提拔为乡长", "D": "期满后考研加分"},
+    "answer": "ABD"
+  }
+]</textarea>
+    </div>
+    
+    <div class="controls">
+        <div><label><input type="checkbox" id="shuffle-cb" checked> 题目乱序</label></div>
+        <div>
+            <label><input type="radio" name="mode" value="exam" checked> 考试模式</label>
+            <label style="margin-top:8px;"><input type="radio" name="mode" value="instant"> 即时反馈</label>
+        </div>
+    </div>
+    <button class="btn" onclick="startNewQuiz()">开始新刷题 (将清空旧存档)</button>
+</div>
+
+<div class="container hidden" id="quiz-page">
+    <div class="header-bar">
+        <div class="progress" id="progress-text">1 / 10</div>
+        <button class="bookmark-btn" id="bookmark-btn" onclick="toggleBookmark()">☆</button>
+    </div>
+    <div class="question-title" id="question-text"><span class="question-type" id="q-type-badge">单选</span> ...</div>
+    <div id="options-container"></div>
+    <div class="feedback-box" id="feedback-box"></div>
+    <button class="btn" id="action-btn" onclick="handleAction()">确认 / 下一题</button>
+</div>
+
+<div class="container hidden" id="result-page">
+    <h2>练习结算报告</h2>
+    <div class="result-score" id="score-text">100 分</div>
+    <div id="chunks-container"></div>
+    <button class="btn btn-secondary" style="margin-top: 20px;" onclick="backToHome()">返回首页</button>
+</div>
+
+<script>
+    let rawQuestions = [], currentIdx = 0, score = 0, mode = 'exam';
+    let bookmarkedIds = new Set(), wrongRecords = [], isAnswered = false;
+
+    window.onload = function() {
+        if (localStorage.getItem('quiz_saved_state')) {
+            document.getElementById('resume-btn').classList.remove('hidden');
+            document.getElementById('divider').classList.remove('hidden');
+        }
+    };
+
+    function saveProgress() {
+        const state = { currentIdx, score, mode, wrongRecords, bookmarkedIds: Array.from(bookmarkedIds), isAnswered };
+        localStorage.setItem('quiz_saved_data', JSON.stringify(rawQuestions));
+        localStorage.setItem('quiz_saved_state', JSON.stringify(state));
+    }
+
+    function resumeQuiz() {
+        try {
+            rawQuestions = JSON.parse(localStorage.getItem('quiz_saved_data'));
+            const state = JSON.parse(localStorage.getItem('quiz_saved_state'));
+            currentIdx = state.currentIdx; score = state.score; mode = state.mode;
+            wrongRecords = state.wrongRecords; bookmarkedIds = new Set(state.bookmarkedIds); isAnswered = state.isAnswered;
+            document.getElementById('setup-page').classList.add('hidden');
+            document.getElementById('quiz-page').classList.remove('hidden');
+            renderQuestion();
+            if (mode === 'instant' && isAnswered) restoreInstantFeedback();
+        } catch (e) {
+            alert("存档损坏，请重新开始。");
+            localStorage.removeItem('quiz_saved_state');
+        }
+    }
+
+    function shuffleArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+    }
+
+    function startNewQuiz() {
+        try { rawQuestions = JSON.parse(document.getElementById('data-input').value); if(!rawQuestions.length) throw new Error(); } 
+        catch (e) { alert("题库解析失败！请检查JSON格式。"); return; }
+        mode = document.querySelector('input[name="mode"]:checked').value;
+        if (document.getElementById('shuffle-cb').checked) shuffleArray(rawQuestions);
+        currentIdx = 0; score = 0; wrongRecords = []; bookmarkedIds.clear(); isAnswered = false;
+        saveProgress();
+        document.getElementById('setup-page').classList.add('hidden');
+        document.getElementById('quiz-page').classList.remove('hidden');
+        renderQuestion();
+    }
+
+    function renderQuestion() {
+        isAnswered = false; const q = rawQuestions[currentIdx];
+        document.getElementById('progress-text').innerText = `${currentIdx + 1} / ${rawQuestions.length}`;
+        const starBtn = document.getElementById('bookmark-btn');
+        starBtn.innerHTML = bookmarkedIds.has(q.id) ? '★' : '☆';
+        starBtn.classList.toggle('active', bookmarkedIds.has(q.id));
+        const badge = document.getElementById('q-type-badge');
+        badge.innerText = q.type === 'multiple' ? '多选' : '单选/判断';
+        document.getElementById('question-text').innerHTML = `<span class="question-type">${badge.innerText}</span> ${q.question}`;
+        const container = document.getElementById('options-container'); container.innerHTML = '';
+        const inputType = q.type === 'multiple' ? 'checkbox' : 'radio';
+        for (let key in q.options) {
+            const label = document.createElement('label'); label.className = 'option-label';
+            label.innerHTML = `<input type="${inputType}" name="opt" value="${key}"> ${key}. ${q.options[key]}`;
+            container.appendChild(label);
+        }
+        document.getElementById('feedback-box').style.display = 'none';
+        const btn = document.getElementById('action-btn');
+        btn.innerText = mode === 'instant' ? '确认答案' : (currentIdx === rawQuestions.length - 1 ? '交卷' : '下一题');
+        btn.onclick = mode === 'instant' ? checkAnswerInstant : handleNext;
+        saveProgress();
+    }
+
+    function toggleBookmark() {
+        const q = rawQuestions[currentIdx]; const starBtn = document.getElementById('bookmark-btn');
+        if (bookmarkedIds.has(q.id)) { bookmarkedIds.delete(q.id); starBtn.innerHTML = '☆'; starBtn.classList.remove('active'); } 
+        else { bookmarkedIds.add(q.id); starBtn.innerHTML = '★'; starBtn.classList.add('active'); }
+        saveProgress();
+    }
+
+    function getUserSelection() { return Array.from(document.querySelectorAll('input[name="opt"]:checked')).map(el => el.value).sort().join(''); }
+
+    function handleNext() {
+        const q = rawQuestions[currentIdx]; const sel = getUserSelection();
+        if (!sel && !confirm("未选择答案，确定跳过？")) return;
+        let isCorrect = (sel === q.answer.split('').sort().join(''));
+        if (isCorrect) score += 1;
+        if (!isCorrect || bookmarkedIds.has(q.id)) wrongRecords.push({ id: q.id, q: q.question, myAns: sel || "未作答", rightAns: q.answer, reason: !isCorrect ? "答错" : "猜对但收藏" });
+        currentIdx++;
+        currentIdx >= rawQuestions.length ? showResult() : renderQuestion();
+    }
+
+    function checkAnswerInstant() {
+        const q = rawQuestions[currentIdx]; const sel = getUserSelection();
+        if (!sel) return alert("请先选择选项！");
+        isAnswered = true; let isCorrect = (sel === q.answer.split('').sort().join(''));
+        document.querySelectorAll('.option-label').forEach(label => {
+            const val = label.querySelector('input').value;
+            if (q.answer.includes(val)) label.classList.add('correct');
+            else if (sel.includes(val) && !q.answer.includes(val)) label.classList.add('wrong');
+            label.style.pointerEvents = 'none'; 
+        });
+        const fb = document.getElementById('feedback-box'); fb.style.display = 'block';
+        if (isCorrect) { fb.innerHTML = `<span style="color:#155724;font-weight:bold;">回答正确！</span>`; score += 1; } 
+        else { fb.innerHTML = `<span style="color:#721c24;font-weight:bold;">回答错误。</span> 正确答案是: <b>${q.answer}</b>`; }
+        if (!isCorrect || bookmarkedIds.has(q.id)) wrongRecords.push({ id: q.id, q: q.question, myAns: sel, rightAns: q.answer, reason: !isCorrect ? "答错" : "猜对但收藏" });
+        saveProgress();
+        const btn = document.getElementById('action-btn');
+        btn.innerText = currentIdx === rawQuestions.length - 1 ? "结束练习" : "继续下一题";
+        btn.onclick = () => { currentIdx++; currentIdx >= rawQuestions.length ? showResult() : renderQuestion(); };
+    }
+    
+    function restoreInstantFeedback() {
+        const q = rawQuestions[currentIdx];
+        document.querySelectorAll('.option-label').forEach(label => {
+            const val = label.querySelector('input').value;
+            if (q.answer.includes(val)) label.classList.add('correct');
+            label.style.pointerEvents = 'none'; 
+        });
+        const fb = document.getElementById('feedback-box'); fb.style.display = 'block';
+        fb.innerHTML = `(恢复进度) 正确答案是: <b>${q.answer}</b>`;
+        const btn = document.getElementById('action-btn');
+        btn.innerText = currentIdx === rawQuestions.length - 1 ? "结束练习" : "继续下一题";
+        btn.onclick = () => { currentIdx++; currentIdx >= rawQuestions.length ? showResult() : renderQuestion(); };
+    }
+
+    function showResult() {
+        localStorage.removeItem('quiz_saved_state');
+        document.getElementById('quiz-page').classList.add('hidden');
+        document.getElementById('result-page').classList.remove('hidden');
+        document.getElementById('score-text').innerText = `得分：${Math.round((score / rawQuestions.length) * 100)} 分`;
+        const container = document.getElementById('chunks-container'); container.innerHTML = '';
+        if (wrongRecords.length === 0) { container.innerHTML = '<div class="chunk-box"><p>全对且无收藏题！</p></div>'; return; }
+        for (let i = 0, idx = 1; i < wrongRecords.length; i += 5, idx++) {
+            let chunk = wrongRecords.slice(i, i + 5);
+            let text = `【错题与收藏解析申请 - 第 ${idx} 批】\n请调取原版解析并通俗讲解：\n\n`;
+            chunk.forEach(item => text += `题目: [${item.id}] ${item.q}\n状态: ${item.reason} (我的选择: ${item.myAns} | 正确: ${item.rightAns})\n---\n`);
+            const box = document.createElement('div'); box.className = 'chunk-box';
+            box.innerHTML = `<div class="chunk-title">分段报告 ${idx} (${chunk.length} 道题)</div>
+                <textarea class="chunk-textarea" id="chunk-text-${idx}" readonly>${text}</textarea>
+                <button class="btn copy-btn" onclick="copyChunk(${idx})">一键复制第 ${idx} 段报告</button>`;
+            container.appendChild(box);
+        }
+    }
+
+    function copyChunk(idx) {
+        navigator.clipboard.writeText(document.getElementById(`chunk-text-${idx}`).value)
+        。then(() => alert(`第 ${idx} 段报告已复制！`)).catch(() => alert('复制失败，请手动全选。'));
+    }
+    function backToHome() { location.reload(); }
+</script>
+</body>
+</html>
