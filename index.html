@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>三支一扶题库系统 V6 (去重管理版)</title>
+    <title>三支一扶题库系统 V6.1 (防重与存档修复版)</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #f4f6f9; color: #333; padding: 15px; }
@@ -29,7 +29,6 @@
         .bank-actions { display: flex; gap: 8px; }
         .bank-actions .btn { padding: 8px 12px; font-size: 13px; margin: 0; width: auto; }
 
-        /* 答题区样式保留 */
         .controls { background: #f8f9fa; padding: 10px; border-radius: 8px; margin-bottom: 15px; font-size: 14px; display: flex; justify-content: space-between;}
         .controls label { display: flex; align-items: center; margin-bottom: 5px; }
         .controls input { margin-right: 6px; transform: scale(1.1); }
@@ -46,6 +45,7 @@
         .opt-btn.wrong { background: #f8d7da; border-color: #f5c6cb; color: #721c24; text-decoration: line-through; }
         .feedback-box { margin-bottom: 15px; padding: 12px; border-radius: 8px; font-size: 15px; text-align: center; font-weight: bold; }
         .chunk-box { background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 8px; padding: 15px; margin-bottom: 15px; }
+        .chunk-title { font-size: 14px; font-weight: bold; color: #495057; margin-bottom: 10px; }
         .chunk-textarea { height: 100px; margin-bottom: 10px; width: 100%; font-family: monospace; font-size: 13px; padding: 8px; border: 1px solid #ccc; border-radius: 4px; }
     </style>
 </head>
@@ -108,7 +108,6 @@
 
     function saveBanks() { localStorage.setItem('szys_banks', JSON.stringify(banks)); }
     
-    // 核心去重算法：提取纯汉字和字母数字进行比对
     function getFingerprint(str) { return str.replace(/[^\u4e00-\u9fa5a-zA-Z0-9]/g, ''); }
     
     function parseInput() {
@@ -166,8 +165,7 @@
         
         let hasBanks = false;
         for (let id in banks) {
-            hasBanks = true;
-            let b = banks[id];
+            hasBanks = true; let b = banks[id];
             
             let opt = document.createElement('option');
             opt.value = id; opt.innerText = b.name;
@@ -176,7 +174,6 @@
             let div = document.createElement('div');
             div.className = 'bank-item';
             
-            // 检查是否有未完成的进度
             let savedState = JSON.parse(localStorage.getItem('szys_state') || 'null');
             let hasResume = (savedState && savedState.bankId === id);
             let playBtnTxt = hasResume ? '🌟 继续答题' : '开始答题';
@@ -197,38 +194,56 @@
         if(!hasBanks) list.innerHTML = '<div style="text-align:center; color:#999; padding:20px;">暂无题库，请在上方导入。</div>';
     }
 
-    // --- 答题逻辑 (兼容多题库存档) ---
+    // --- 答题逻辑 (修复存档与打乱状态同步) ---
     const App = { bankId: null, data: [], current: 0, score: 0, mode: 'instant', wrongList: [], stars: new Set(), selected: [], isAnswered: false };
     const DOM = { setup: document.getElementById('page-home'), quiz: document.getElementById('page-quiz'), result: document.getElementById('page-result'), title: document.getElementById('question-text'), opts: document.getElementById('options-container'), progress: document.getElementById('progress-text'), feedback: document.getElementById('feedback-box'), btnAction: document.getElementById('btn-action'), btnStar: document.getElementById('btn-star') };
 
     function saveState() {
-        const state = { bankId: App.bankId, current: App.current, score: App.score, mode: App.mode, wrongList: App.wrongList, stars: Array.from(App.stars), isAnswered: App.isAnswered, selected: App.selected };
+        const state = { 
+            bankId: App.bankId, current: App.current, score: App.score, mode: App.mode, 
+            wrongList: App.wrongList, stars: Array.from(App.stars), 
+            isAnswered: App.isAnswered, selected: App.selected,
+            activeData: App.data // ✨ 核心修复：保存打乱后的整套题目状态
+        };
         localStorage.setItem('szys_state', JSON.stringify(state));
     }
 
     function startQuiz(bankId, isResume) {
-        App.bankId = bankId;
-        App.data = JSON.parse(JSON.stringify(banks[bankId].data)); // 深拷贝
-        
         if (isResume) {
             let s = JSON.parse(localStorage.getItem('szys_state'));
-            App.current = s.current; App.score = s.score; App.mode = s.mode; App.wrongList = s.wrongList; App.stars = new Set(s.stars); App.isAnswered = s.isAnswered; App.selected = s.selected;
+            App.bankId = s.bankId; 
+            App.data = s.activeData; // ✨ 核心修复：读取之前保存的打乱版本
+            App.current = s.current; App.score = s.score; App.mode = s.mode; 
+            App.wrongList = s.wrongList; App.stars = new Set(s.stars); 
+            App.isAnswered = s.isAnswered; App.selected = s.selected;
+            
+            DOM.setup.classList.add('hidden'); DOM.quiz.classList.remove('hidden');
+            renderQuestion(true); // 传入 true 代表这是在恢复数据
         } else {
+            App.bankId = bankId;
+            App.data = JSON.parse(JSON.stringify(banks[bankId].data));
             App.mode = document.querySelector('input[name="mode"]:checked').value;
             if (document.getElementById('shuffle-cb').checked) {
-                for (let i = App.data.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [App.data[i], App.data[j]] = [App.data[j], App.data[i]]; }
+                for (let i = App.data.length - 1; i > 0; i--) { 
+                    const j = Math.floor(Math.random() * (i + 1)); 
+                    [App.data[i], App.data[j]] = [App.data[j], App.data[i]]; 
+                }
             }
-            App.current = 0; App.score = 0; App.wrongList = []; App.stars.clear(); App.selected = []; App.isAnswered = false;
+            App.current = 0; App.score = 0; App.wrongList = []; App.stars.clear(); 
+            App.selected = []; App.isAnswered = false;
+            
+            DOM.setup.classList.add('hidden'); DOM.quiz.classList.remove('hidden');
+            renderQuestion(false);
         }
-        
-        saveState();
-        DOM.setup.classList.add('hidden'); DOM.quiz.classList.remove('hidden');
-        renderQuestion();
-        if (isResume && App.mode === 'instant' && App.isAnswered) restoreFeedback();
     }
 
-    function renderQuestion() {
-        if(!App.isAnswered) App.selected = [];
+    function renderQuestion(isRestore = false) {
+        // ✨ 核心修复：如果是新题，强制清空上锁状态和选择内容
+        if (!isRestore) {
+            App.selected = [];
+            App.isAnswered = false;
+        }
+
         const q = App.data[App.current];
         DOM.progress.innerText = `${App.current + 1} / ${App.data.length}`;
         DOM.title.innerHTML = `<span class="badge">${q.type === 'multiple' ? '多选' : '单选'}</span> ${q.question}`;
@@ -247,11 +262,20 @@
         
         DOM.feedback.classList.add('hidden');
         DOM.btnAction.innerText = App.mode === 'instant' ? '确认答案' : (App.current === App.data.length - 1 ? '交卷出分' : '下一题');
+        
+        // 如果是中途退出后恢复回来的，且题目已经回答，则恢复显示解析
+        if (isRestore && App.isAnswered) {
+            restoreFeedback();
+        } else if (isRestore && App.selected.length > 0) {
+            // 如果恢复回来只选了一半还没确认，重新选中
+            App.selected.forEach(k => { let b = document.getElementById(`opt-${k}`); if(b) b.classList.add('selected'); });
+        }
+
         saveState();
     }
 
     function selectOpt(key, type) {
-        if (App.isAnswered) return;
+        if (App.isAnswered) return; // 如果题目已提交，锁死不可再选
         if (type === 'single') {
             App.selected = [key]; document.querySelectorAll('.opt-btn').forEach(b => b.classList.remove('selected')); document.getElementById(`opt-${key}`).classList.add('selected');
         } else {
@@ -282,8 +306,10 @@
             if (!App.selected.length && !confirm("未选择答案，确定跳过吗？")) return;
             processAnswer(q);
         }
+        
+        // 进入下一题
         App.current++;
-        App.current >= App.data.length ? showResult() : renderQuestion();
+        App.current >= App.data.length ? showResult() : renderQuestion(false); // 传入 false，代表渲染全新题目
     }
 
     function processAnswer(q) {
