@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>三支一扶题库系统 V8.4 (红点防丢版)</title>
+    <title>三支一扶题库系统 V8.5 (完全体版)</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { background-color: #f0f2f5; color: #2c2c2c; font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; padding: 12px; line-height: 1.6; overflow-x: hidden; }
@@ -57,7 +57,6 @@
         .honor-num { font-size: 18px; font-weight: 800; font-family: monospace; }
         .honor-label { font-size: 11px; font-weight: 700; margin-top: 2px; }
 
-        /* ✨ 开发者测试舱增强 UI */
         .test-console { background: #fffbeb; border: 2px dashed #f59e0b; padding: 16px; border-radius: 12px; margin-bottom: 16px; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.15); animation: pulse-border 2s infinite;}
         @keyframes pulse-border { 0% {border-color: #f59e0b;} 50% {border-color: #fbbf24;} 100% {border-color: #f59e0b;} }
         .tc-title { font-weight: 800; color: #b45309; margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
@@ -146,7 +145,6 @@
         .chunk-title { font-size: 14px; font-weight: 600; color: #64748b; margin-bottom: 10px; }
         .chunk-textarea { height: 120px; margin-bottom: 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-family: monospace;}
 
-        /* 系统模态框 */
         .sys-modal-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(4px); z-index: 9999; display: flex; justify-content: center; align-items: center; transition: opacity 0.3s; }
         .sys-modal-box { background: #ffffff; width: 88%; max-width: 380px; border-radius: 20px; padding: 24px; box-shadow: 0 20px 40px rgba(0,0,0,0.2); text-align: center; transform: scale(1); transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1); }
         .sys-modal-title { font-size: 18px; font-weight: 800; color: #1e293b; margin-bottom: 12px; }
@@ -154,9 +152,14 @@
         .sys-modal-overlay.hidden { opacity: 0; pointer-events: none; }
         .sys-modal-overlay.hidden .sys-modal-box { transform: scale(0.9); }
 
-        /* ✨ V8.4 防遗忘红点与史诗级弹窗专属样式 */
-        .red-dot { display: inline-block; width: 8px; height: 8px; background: #ef4444; border-radius: 50%; margin-left: 6px; box-shadow: 0 0 6px rgba(239,68,68,0.6); animation: pulse-red 2s infinite; vertical-align: middle;}
-        @keyframes pulse-red { 0% {transform: scale(0.95); opacity: 0.8;} 50% {transform: scale(1.1); opacity: 1;} 100% {transform: scale(0.95); opacity: 0.8;} }
+        /* ✨ V8.5 彻底重构防遗忘红点为刺眼警示牌 */
+        .sync-alert-badge { display: inline-flex; align-items: center; background: #fee2e2; color: #ef4444; font-size: 11px; font-weight: 800; padding: 2px 8px; border-radius: 12px; margin-left: 8px; vertical-align: middle; border: 1px solid #fca5a5; box-shadow: 0 0 8px rgba(239, 68, 68, 0.4); animation: pulse-alert 1.5s infinite; letter-spacing: 1px;}
+        .sync-alert-btn { position: absolute; top: -8px; right: -8px; background: #ef4444; color: white; font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: 10px; border: 2px solid #fff; box-shadow: 0 0 8px rgba(239, 68, 68, 0.6); animation: pulse-alert 1.5s infinite; letter-spacing: 0px;}
+        @keyframes pulse-alert {
+            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); transform: scale(0.95); }
+            70% { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); transform: scale(1); }
+            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); transform: scale(0.95); }
+        }
         
         .epic-modal-box { background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%) !important; border: 2px solid #fde68a; }
         .epic-modal-title { color: #b45309 !important; font-size: 22px !important; margin-top: 10px; }
@@ -169,6 +172,7 @@
 
 <div id="page-home">
 
+    <!-- 开发者沙盒测试面板 -->
     <div class="test-console hidden" id="test-console">
         <div class="tc-title">🚧 沙盒测试终端 <span>(云端接口已物理熔断)</span></div>
         <p style="font-size:12px; color:#b45309; margin-bottom:12px; font-weight:600;">注入假数据验证解锁逻辑，退出时将自动核爆清空所有痕迹。</p>
@@ -177,14 +181,15 @@
             <button class="tc-btn" onclick="testInjectStats()">+ 增加 50 答对数</button>
             <button class="tc-btn" onclick="testInjectHonor()">+ 随机通关荣誉</button>
             <button class="tc-btn" onclick="testForceComplete()">盖 100% 毕业章</button>
-            <button class="tc-btn" onclick="testTriggerRedDot()">🔴 触发未同步红点</button>
+            <button class="tc-btn" onclick="testTriggerRedDot()">🔴 触发未同步警示</button>
             <button class="tc-btn" onclick="testTriggerEpicModal()">🏆 触发史诗封存弹窗</button>
         </div>
     </div>
     
+    <!-- ⚙️ 战备中心 -->
     <div class="fold-wrapper" id="fold-tools">
         <div class="fold-header" onclick="toggleFold('fold-tools')">
-            <div class="fold-title">⚙️ 战备中心 <span class="fold-meta" id="mini-stats-1">正在加载...</span><span id="sync-dot-header" class="red-dot hidden"></span></div>
+            <div class="fold-title">⚙️ 战备中心 <span class="fold-meta" id="mini-stats-1">正在加载...</span><span id="sync-dot-header" class="sync-alert-badge hidden">需同步!</span></div>
             <div class="fold-icon">▼</div>
         </div>
         <div class="fold-content"><div class="fold-inner"><div class="fold-inner-padding">
@@ -220,7 +225,7 @@
             <h2 style="margin-top: 24px;">云端漫游存档</h2>
             <input type="password" id="github-token-input" placeholder="输入 GitHub 密钥 (ghp_ 开头)">
             <div class="flex-row">
-                <button class="btn btn-primary" id="btn-cloud-backup" onclick="cloudBackupFlow()">⬆️ 备份全状态 <span id="sync-dot-btn" class="red-dot hidden"></span></button>
+                <button class="btn btn-primary" id="btn-cloud-backup" onclick="cloudBackupFlow()" style="position:relative;">⬆️ 备份全状态 <span id="sync-dot-btn" class="sync-alert-btn hidden">待备份</span></button>
                 <button class="btn btn-warning" id="btn-cloud-restore" onclick="cloudRestoreFlow()">⬇️ 强制云覆盖</button>
             </div>
             <div style="font-size: 12px; color: #94a3b8; text-align:center;">
@@ -231,6 +236,7 @@
         </div></div></div>
     </div>
 
+    <!-- 📚 常驻面板：常规练习库 -->
     <div class="main-panel">
         <h2 style="font-size: 18px;">📚 常规练习库</h2>
         <div class="controls">
@@ -256,6 +262,7 @@
         <div id="bank-list"></div>
     </div>
 
+    <!-- ⚔️ 折叠舱 2：终极竞技场 -->
     <div class="fold-wrapper" id="fold-arena" style="border-color: #fde68a; box-shadow: 0 4px 20px rgba(245, 158, 11, 0.08);">
         <div class="fold-header" onclick="toggleFold('fold-arena')" style="background: #fffbeb;">
             <div class="fold-title" style="color: #d97706;">⚔️ 终极竞技场 <span class="fold-meta" id="mini-stats-2" style="background: #fef3c7; color: #b45309;">荣誉加载中...</span></div>
@@ -263,6 +270,10 @@
         </div>
         <div class="fold-content"><div class="fold-inner"><div class="fold-inner-padding">
             
+            <p style="font-size:12px; color:#d97706; margin-bottom:12px; font-weight:600; text-align:center; background:#fef3c7; padding:8px; border-radius:8px;">
+                💡 智能引擎提示：竞技场抽题将【优先抓取】错题本与收藏夹内容进行弱点强化。
+            </p>
+
             <div class="honor-board">
                 <div class="honor-item" style="color:#059669;"><div class="honor-num" id="honor-easy">0</div><div class="honor-label">简单过关</div></div>
                 <div class="honor-item" style="color:#2563eb;"><div class="honor-num" id="honor-normal">0</div><div class="honor-label">普通过关</div></div>
@@ -292,6 +303,7 @@
         </div></div></div>
     </div>
 
+    <!-- 🛠️ 折叠舱 3：开发者与危险选项 -->
     <div class="fold-wrapper" id="fold-dev" style="border-color: #fecaca; margin-top: 40px;">
         <div class="fold-header" onclick="toggleFold('fold-dev')" style="background: #fef2f2;">
             <div class="fold-title" style="color: #dc2626;">🛠️ 开发者选项 <span class="fold-meta" style="background: #fee2e2; color: #b91c1c;">实验室 & 危险区</span></div>
@@ -315,6 +327,7 @@
 
 </div>
 
+<!-- ================= 答题区 ================= -->
 <div class="container hidden" id="page-quiz">
     <div class="nav-header">
         <div class="nav-btn" id="nav-btn-back" onclick="location.reload()">〈 保存并退出</div>
@@ -336,6 +349,7 @@
     <button class="btn btn-danger" id="btn-quit" onclick="giveUpQuiz()">放弃进度，清空重卷</button>
 </div>
 
+<!-- ================= 战报区 ================= -->
 <div class="container hidden" id="page-result">
     <div id="challenge-feedback" class="hidden">
         <div class="cf-title" id="cf-title"></div>
@@ -357,6 +371,7 @@
     <button class="btn btn-primary" style="margin-top: 24px; padding: 14px; font-size: 16px;" onclick="location.reload()">完成，返回主页</button>
 </div>
 
+<!-- 基础系统模态框 -->
 <div class="sys-modal-overlay hidden" id="sys-modal">
     <div class="sys-modal-box">
         <div class="sys-modal-title" id="modal-title">提示</div>
@@ -366,6 +381,7 @@
     </div>
 </div>
 
+<!-- 史诗级成就弹窗 -->
 <div class="sys-modal-overlay hidden" id="epic-modal">
     <div class="sys-modal-box epic-modal-box">
         <div style="font-size: 48px; margin-bottom: 10px; line-height: 1;">🏆</div>
@@ -415,7 +431,6 @@
     
     let isTestMode = localStorage.getItem('szys_test_mode') === 'true';
     
-    // ✨ V8.4 全局未同步状态与折叠状态记忆
     let needSync = localStorage.getItem('szys_need_sync') === 'true';
     let foldState = JSON.parse(localStorage.getItem('szys_fold_state') || '{"fold-tools":false, "fold-arena":false, "fold-dev":false}');
 
@@ -429,7 +444,7 @@
         updateDashboard();
         initUIState();
         applyFoldState();
-        setNeedSync(needSync); // 初始化红点
+        setNeedSync(needSync); 
 
         let savedToken = localStorage.getItem('szys_github_token'); 
         if(savedToken) document.getElementById('github-token-input').value = savedToken; 
@@ -448,9 +463,8 @@
     function saveGlobalStats() { localStorage.setItem('szys_global_stats', JSON.stringify(globalStats)); updateDashboard(); setNeedSync(true); }
     function getFingerprint(str) { return str.replace(/[^\u4e00-\u9fa5a-zA-Z0-9]/g, ''); }
 
-    // ✨ 设置未同步红点
     function setNeedSync(state) {
-        if(isTestMode && state) return; // 沙盒模式不触发真实红点
+        if(isTestMode && state) return; 
         needSync = state;
         localStorage.setItem('szys_need_sync', state);
         if(state) {
@@ -462,19 +476,14 @@
         }
     }
 
-    // ✨ 智能折叠状态记忆
     function applyFoldState() {
         for(let id in foldState) {
-            if(foldState[id] && document.getElementById(id)) {
-                document.getElementById(id).classList.add('open');
-            }
+            if(foldState[id] && document.getElementById(id)) { document.getElementById(id).classList.add('open'); }
         }
     }
     function toggleFold(id) { 
-        let el = document.getElementById(id);
-        el.classList.toggle('open'); 
-        foldState[id] = el.classList.contains('open');
-        localStorage.setItem('szys_fold_state', JSON.stringify(foldState));
+        let el = document.getElementById(id); el.classList.toggle('open'); 
+        foldState[id] = el.classList.contains('open'); localStorage.setItem('szys_fold_state', JSON.stringify(foldState));
     }
     
     function initUIState() {
@@ -545,22 +554,10 @@
         let keys = Object.keys(banks).filter(k => !banks[k].isSystem); if(keys.length === 0) return alert("请先注入假题库");
         banks[keys[0]].completed = true; banks[keys[0]].maxRate = 100; saveBanks(); renderBankList(); alert("✅ 已强制给第一个题库盖上 100% 毕业印章");
     }
-    // ✨ 新增的沙盒测试按钮逻辑
-    function testTriggerRedDot() {
-        document.getElementById('sync-dot-header').classList.remove('hidden');
-        document.getElementById('sync-dot-btn').classList.remove('hidden');
-        alert("🔴 红点已强制点亮，请查看战备中心！");
-    }
-    function testTriggerEpicModal() {
-        showEpicModal("史诗成就达成 (沙盒测试)", "这只是一个测试弹窗，用于验证您的史诗级荣誉是否能正常唤起云端封存。在真实环境下，达成 100% 毕业或极限通关会自动触发。");
-    }
+    function testTriggerRedDot() { document.getElementById('sync-dot-header').classList.remove('hidden'); document.getElementById('sync-dot-btn').classList.remove('hidden'); alert("🔴 警示红点已强制点亮，请查看战备中心！"); }
+    function testTriggerEpicModal() { showEpicModal("史诗成就达成 (沙盒测试)", "这只是一个测试弹窗，用于验证您的史诗级荣誉是否能正常唤起云端封存。在真实环境下，达成 100% 毕业或极限通关会自动触发。"); }
 
-    // --- 史诗级云端唤起 ---
-    function showEpicModal(title, desc) {
-        document.getElementById('epic-modal').classList.remove('hidden');
-        document.getElementById('epic-title').innerText = title;
-        document.getElementById('epic-desc').innerText = desc;
-    }
+    function showEpicModal(title, desc) { document.getElementById('epic-modal').classList.remove('hidden'); document.getElementById('epic-title').innerText = title; document.getElementById('epic-desc').innerText = desc; }
     function epicCloudBackupFlow() {
         document.getElementById('epic-modal').classList.add('hidden');
         if(isTestMode) return alert("⛔ 物理熔断：沙盒测试模式下严禁上传假数据至云端！");
@@ -594,18 +591,18 @@
 
     async function executeCloudBackup(token) {
         localStorage.setItem('szys_github_token', token);
-        let backupPayload = { version: "8.4", banks: banks, state: JSON.parse(localStorage.getItem('szys_state') || 'null'), stats: globalStats };
+        let backupPayload = { version: "8.5", banks: banks, state: JSON.parse(localStorage.getItem('szys_state') || 'null'), stats: globalStats };
         let payloadStr = JSON.stringify(backupPayload);
-        const btn = document.getElementById('btn-cloud-backup'); let oriTxt = btn.innerText; btn.innerText = "⏳ 加密上传中..."; btn.disabled = true;
+        const btn = document.getElementById('btn-cloud-backup'); let oriTxt = "⬆️ 备份全状态"; btn.innerText = "⏳ 加密上传中..."; btn.disabled = true;
         try {
             let res = await fetch('https://api.github.com/gists', { headers: { 'Authorization': 'token ' + token }});
             if(!res.ok) throw new Error("密钥验证失败");
             let gists = await res.json(); let targetGist = gists.find(g => g.files['szys_backup.json']);
             if(targetGist) { await fetch('https://api.github.com/gists/' + targetGist.id, { method: 'PATCH', headers: { 'Authorization': 'token ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ files: { 'szys_backup.json': { content: payloadStr } } }) }); } 
-            else { await fetch('https://api.github.com/gists', { method: 'POST', headers: { 'Authorization': 'token ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ description: "三支一扶 V8.4 题库备份", public: false, files: { 'szys_backup.json': { content: payloadStr } } }) }); }
-            setNeedSync(false); // 备份成功，清除红点
+            else { await fetch('https://api.github.com/gists', { method: 'POST', headers: { 'Authorization': 'token ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ description: "三支一扶 V8.5 题库备份", public: false, files: { 'szys_backup.json': { content: payloadStr } } }) }); }
+            setNeedSync(false); 
             alert("✅ 漫游数据备份成功！");
-        } catch(e) { alert("❌ 备份出错：" + e.message); } finally { btn.innerText = oriTxt; btn.disabled = false; }
+        } catch(e) { alert("❌ 备份出错：" + e.message); } finally { btn.innerHTML = oriTxt + ' <span id="sync-dot-btn" class="sync-alert-btn hidden">待备份</span>'; btn.disabled = false; if(needSync) document.getElementById('sync-dot-btn').classList.remove('hidden');}
     }
 
     async function executeCloudRestore(token) {
@@ -630,14 +627,14 @@
                 if (!banks['sys_wrong']) banks['sys_wrong'] = { name: "💔 我的错题本", data: [], isSystem: true, sysType: 'wrong' };
                 if (!banks['sys_star']) banks['sys_star'] = { name: "⭐ 专属收藏夹", data: [], isSystem: true, sysType: 'star' };
             }
-            saveBanks(); saveGlobalStats(); setNeedSync(false); // 恢复后进度是最新的，清除红点
+            saveBanks(); saveGlobalStats(); setNeedSync(false); 
             alert(`✅ 云端覆盖成功！已全量恢复您的专属状态。`); location.reload();
         } catch(e) { alert("❌ 恢复出错：" + e.message); } finally { btn.innerText = oriTxt; btn.disabled = false; }
     }
 
     function exportLocalData() {
         if (Object.keys(banks).length <= 2 && banks['sys_wrong'].data.length===0) return alert("暂无数据可导出");
-        let backupPayload = { version: "8.4", banks: banks, state: JSON.parse(localStorage.getItem('szys_state') || 'null'), stats: globalStats };
+        let backupPayload = { version: "8.5", banks: banks, state: JSON.parse(localStorage.getItem('szys_state') || 'null'), stats: globalStats };
         let blob = new Blob([JSON.stringify(backupPayload)], { type: "application/json" }); let url = URL.createObjectURL(blob); let a = document.createElement('a'); a.href = url;
         a.download = `题库全量备份_${new Date().toISOString().slice(0,10).replace(/-/g,"")}.json`; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
     }
@@ -645,7 +642,7 @@
         let file = event.target.files[0]; if (!file) return; let reader = new FileReader();
         reader.onload = function(e) {
             try {
-                let importedData = JSON.parse(e.target.result); let count = 0;
+                let importedData = JSON.parse(e.target.result);
                 if (importedData.version && importedData.version >= "7.3") {
                     banks = importedData.banks;
                     if (!banks['sys_wrong']) banks['sys_wrong'] = { name: "💔 我的错题本", data: [], isSystem: true, sysType: 'wrong' };
@@ -739,21 +736,52 @@
         });
     }
 
+    // ✨ V8.5 最终阶：AI 智能弱点打击抽取引擎
     function startChallenge(difficulty) {
         let totalQ = parseInt(document.getElementById('global-total-q').innerText);
         let totalC = globalStats.totalCorrect;
         let reqQ = UNLOCK_REQS_Q[difficulty]; let reqC = UNLOCK_REQS_C[difficulty]; let preReqMode = UNLOCK_PRE[difficulty];
-        let diffName = PRE_NAMES[difficulty];
 
         let isQLocked = totalQ < reqQ; let isCLocked = totalC < reqC; let isPreLocked = preReqMode ? (globalStats.challenge[preReqMode] || 0) < 1 : false;
         if(isQLocked || isCLocked || isPreLocked) return alert(`🔒 挑战受限！请先满足解锁条件。`);
         
-        let allQs = []; 
-        for(let id in banks) { if(!banks[id].isSystem) allQs = allQs.concat(banks[id].data); }
-        let reqMap = { 'easy': 10, 'normal': 30, 'hard': 60, 'extreme': 90 }; let req = reqMap[difficulty];
-        for (let i = allQs.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [allQs[i], allQs[j]] = [allQs[j], allQs[i]]; }
+        let reqMap = { 'easy': 10, 'normal': 30, 'hard': 60, 'extreme': 90 }; 
+        let req = reqMap[difficulty];
+
+        // 1. 优先从错题本和收藏夹构建【优先池】
+        let priorityQs = []; let priorityFps = new Set();
+        if (banks['sys_wrong']) {
+            banks['sys_wrong'].data.forEach(q => { let fp = getFingerprint(q.question); if(!priorityFps.has(fp)) { priorityQs.push(q); priorityFps.add(fp); } });
+        }
+        if (banks['sys_star']) {
+            banks['sys_star'].data.forEach(q => { let fp = getFingerprint(q.question); if(!priorityFps.has(fp)) { priorityQs.push(q); priorityFps.add(fp); } });
+        }
+        for (let i = priorityQs.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [priorityQs[i], priorityQs[j]] = [priorityQs[j], priorityQs[i]]; }
+
+        // 2. 从常规题库构建【普通池】（排除已经在优先池里的题）
+        let regularQs = []; 
+        for(let id in banks) { 
+            if(!banks[id].isSystem) {
+                banks[id].data.forEach(q => {
+                    let fp = getFingerprint(q.question);
+                    if(!priorityFps.has(fp)) { regularQs.push(q); }
+                });
+            } 
+        }
+        for (let i = regularQs.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [regularQs[i], regularQs[j]] = [regularQs[j], regularQs[i]]; }
+
+        // 3. 智能拼接：优先用错题塞满，不够的用常规题补齐
+        let finalQs = [];
+        let pCount = Math.min(priorityQs.length, req);
+        finalQs = finalQs.concat(priorityQs.slice(0, pCount));
         
-        App.data = allQs.slice(0, req); App.isChallenge = true; App.challengeDiff = difficulty; App.mode = 'exam';
+        let rCount = req - finalQs.length;
+        if (rCount > 0) { finalQs = finalQs.concat(regularQs.slice(0, rCount)); }
+
+        // 4. 再次全局打乱，不让用户发现哪些是错题
+        for (let i = finalQs.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [finalQs[i], finalQs[j]] = [finalQs[j], finalQs[i]]; }
+
+        App.data = finalQs; App.isChallenge = true; App.challengeDiff = difficulty; App.mode = 'exam';
         App.optShuffle = document.getElementById('opt-shuffle-cb') ? document.getElementById('opt-shuffle-cb').checked : false;
         preprocessOptions(App.data, App.optShuffle);
         App.current = 0; App.score = 0; App.wrongList = []; App.stars.clear(); App.selected = []; App.isAnswered = false; App.isCompletedBank = false; App.isSystemBank = false;
@@ -909,7 +937,6 @@
         }
     }
 
-    // ✨ 返回时携带 epic 成就参数
     function triggerChallengeFeedback(diff, pct) {
         let box = document.getElementById('challenge-feedback'); let title = document.getElementById('cf-title'); let desc = document.getElementById('cf-desc'); box.className = "";
         let diffName = PRE_NAMES[diff];
@@ -921,15 +948,12 @@
             if(!isTestMode) { globalStats.challenge[diff]++; saveGlobalStats(); }
             if(pct === 1) {
                 box.classList.add('cf-gold'); title.innerText = "🏆 完美通关！神级操作！"; desc.innerText = `你在【${diffName}】模式下一题未错，绝对的碾压局！荣誉神殿已为你刻上勋章！`;
-                if(diff === 'extreme') { 
-                    document.body.classList.add('anim-shake'); setTimeout(()=>document.body.classList.remove('anim-shake'), 500); title.classList.add('text-rainbow'); box.classList.add('anim-glow'); createParticles(); 
-                    isEpic = true; // 极限满分属于史诗
-                } 
-                else if(diff === 'hard') { box.classList.add('anim-glow'); isEpic = true; /* 困难满分也算史诗 */ }
-                else { isEpic = true; /* 任意难度满分都弹窗庆祝一下 */ }
+                if(diff === 'extreme') { document.body.classList.add('anim-shake'); setTimeout(()=>document.body.classList.remove('anim-shake'), 500); title.classList.add('text-rainbow'); box.classList.add('anim-glow'); createParticles(); isEpic = true; } 
+                else if(diff === 'hard') { box.classList.add('anim-glow'); isEpic = true; }
+                else { isEpic = true; }
             } else if (pct >= 0.8) {
                 box.classList.add('cf-silver'); title.innerText = "✨ 卓越表现！成功斩杀！"; desc.innerText = `你在【${diffName}】模式下发挥出色，荣誉神殿已为你刻上勋章！`;
-                if(diff === 'extreme') isEpic = true; // 极限通关就算史诗
+                if(diff === 'extreme') isEpic = true;
             } else {
                 box.classList.add('cf-bronze'); title.innerText = "🎉 挑战成功！惊险过关！"; title.style.color = "#059669"; desc.innerText = `你在【${diffName}】模式下达到了及格线，荣誉神殿已为你刻上勋章！`;
             }
@@ -944,8 +968,7 @@
         let pct = App.score / App.data.length; let pctStr = Math.round(pct * 100);
         document.getElementById('score-text').innerText = `${App.score} / ${App.data.length} (${pctStr}%)`;
         
-        let epicTriggered = false;
-        let epicTitle = ""; let epicDesc = "";
+        let epicTriggered = false; let epicTitle = ""; let epicDesc = "";
 
         if (!App.isChallenge) {
             let completeMsg = "";
@@ -953,31 +976,22 @@
                 let b = banks[App.bankId];
                 if (!b.maxRate || pctStr > b.maxRate) b.maxRate = pctStr;
                 if (pctStr === 100 && !b.completed) {
-                    b.completed = true;
-                    completeMsg = "<br><span style='color:#ef4444; font-weight:800; font-size:16px;'>🎉 恭喜！您已100%拿下此题库，获得毕业印章！</span>";
+                    b.completed = true; completeMsg = "<br><span style='color:#ef4444; font-weight:800; font-size:16px;'>🎉 恭喜！您已100%拿下此题库，获得毕业印章！</span>";
                     epicTriggered = true; epicTitle = `🏆 题库 ${b.name} 满分毕业`; epicDesc = "您已 100% 攻克此题库并获得红章。这项伟大的心血进度，是否立即为您安全封存至 GitHub 云端？";
-                } else if (b.completed) {
-                    completeMsg = "<br><span style='color:#64748b;'>（此题库已毕业，本次不增加大盘数值）</span>";
-                }
+                } else if (b.completed) { completeMsg = "<br><span style='color:#64748b;'>（此题库已毕业，本次不增加大盘数值）</span>"; }
                 saveBanks();
-            } else if (App.isSystemBank) {
-                completeMsg = "<br><span style='color:#f59e0b;'>（系统题库不计入大盘数据，错题答对已自动销毁）</span>";
-            }
+            } else if (App.isSystemBank) { completeMsg = "<br><span style='color:#f59e0b;'>（系统题库不计入大盘数据，错题答对已自动销毁）</span>"; }
+            
             document.getElementById('result-page-title').innerText = "练习战报"; document.getElementById('challenge-feedback').classList.add('hidden'); 
             document.getElementById('stat-text').innerHTML = `本次作答 ${App.data.length} 题 | 收录错题 ${App.wrongList.length} 题${completeMsg}`;
         } else {
             document.getElementById('result-page-title').innerText = "⚔️ 竞技场战报"; document.getElementById('stat-text').innerText = `本次极限操作：${App.data.length} 题 | 期间所有错题已全自动收录至错题本`;
             let isEpic = triggerChallengeFeedback(App.challengeDiff, pct);
-            if(isEpic) {
-                epicTriggered = true; epicTitle = `🔥 竞技场无上荣耀`; epicDesc = "您刚刚在竞技场中斩获了惊人的战绩，荣誉神殿已更新。强烈建议您立即将这份荣耀永远封存于云端！";
-            }
+            if(isEpic) { epicTriggered = true; epicTitle = `🔥 竞技场无上荣耀`; epicDesc = "您刚刚在竞技场中斩获了惊人的战绩，荣誉神殿已更新。强烈建议您立即将这份荣耀永远封存于云端！"; }
         }
         renderChunks();
         
-        // ✨ 延迟 1 秒弹出史诗封存，给予视觉缓冲
-        if(epicTriggered && !isTestMode) {
-            setTimeout(() => { showEpicModal(epicTitle, epicDesc); }, 1200);
-        }
+        if(epicTriggered && !isTestMode) { setTimeout(() => { showEpicModal(epicTitle, epicDesc); }, 1200); }
     }
 
     function renderChunks() {
