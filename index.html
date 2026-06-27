@@ -2,306 +2,269 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>三支一扶题库系统 V6.7 (云端同步版)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>三支一扶题库系统 V7.0 (电竞解压版)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #f4f6f9; color: #333; padding: 15px; }
-        .container { width: 100%; max-width: 600px; margin: 0 auto; background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-        h2 { font-size: 18px; color: #1a73e8; margin-bottom: 15px; font-weight: bold; border-bottom: 2px solid #e8f0fe; padding-bottom: 8px;}
-        textarea, input[type="text"], input[type="password"], input[type="number"], select { width: 100%; padding: 12px; border: 1px solid #ccd0d5; border-radius: 8px; font-size: 14px; margin-bottom: 10px; background: #fafafa; }
-        textarea { height: 100px; font-family: monospace; resize: none; }
-        .btn { display: block; width: 100%; padding: 14px; background-color: #1a73e8; color: #fff; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; text-align: center; margin-bottom: 12px; -webkit-tap-highlight-color: transparent; }
-        .btn:active { opacity: 0.8; }
-        .btn-green { background-color: #28a745; }
-        .btn-red { background-color: #dc3545; }
-        .btn-orange { background-color: #ff9800; }
-        .hidden { display: none !important; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Nunito', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        body { background-color: #ffffff; color: #4b4b4b; padding: 15px; overflow-x: hidden; }
+        .container { width: 100%; max-width: 600px; margin: 0 auto; }
         
+        /* 游戏风全局大卡片 */
+        .duo-card { border: 2px solid #e5e5e5; border-radius: 20px; padding: 20px; margin-bottom: 20px; background: #fff; }
+        
+        h2 { font-size: 18px; color: #afafaf; margin-bottom: 15px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; }
+        textarea, input[type="text"], input[type="password"], input[type="number"], select { width: 100%; padding: 14px; border: 2px solid #e5e5e5; border-radius: 16px; font-size: 15px; margin-bottom: 12px; background: #f7f9fa; font-weight: 700; color: #4b4b4b; outline: none; transition: 0.2s; }
+        textarea:focus, input:focus, select:focus { border-color: #1cb0f6; background: #fff; }
+        textarea { height: 100px; resize: none; font-family: monospace; font-weight: normal; }
+        
+        /* 核心：3D 物理按压按钮 */
+        .btn-duo { display: block; width: 100%; padding: 14px; border: 2px solid transparent; border-bottom-width: 6px; border-radius: 16px; font-size: 16px; font-weight: 800; cursor: pointer; text-align: center; margin-bottom: 15px; transition: all 0.1s; user-select: none; -webkit-tap-highlight-color: transparent; }
+        .btn-duo:active:not(:disabled) { transform: translateY(4px); border-bottom-width: 2px; margin-bottom: 19px; }
+        
+        /* 按钮色彩体系 */
+        .btn-blue { background: #1cb0f6; border-color: #1899d6; color: #fff; }
+        .btn-green { background: #58cc02; border-color: #58a700; color: #fff; }
+        .btn-red { background: #ff4b4b; border-color: #ea2b2b; color: #fff; }
+        .btn-orange { background: #ff9600; border-color: #cc7800; color: #fff; }
+        .btn-gray { background: #e5e5e5; border-color: #cecece; color: #afafaf; }
+        .btn-ghost { background: transparent; border: 2px solid #e5e5e5; border-bottom-width: 4px; color: #afafaf; }
+        
+        .hidden { display: none !important; }
         .flex-row { display: flex; gap: 10px; margin-bottom: 15px; align-items: center; }
         .flex-row > * { margin-bottom: 0; }
         .flex-row input, .flex-row select { flex: 1; }
-        .flex-row .btn { width: auto; padding: 0 15px; line-height: 42px; white-space: nowrap; }
+        .flex-row .btn-duo { width: auto; padding: 0 20px; line-height: 46px; padding-top: 0; padding-bottom: 0; }
 
-        .bank-item { background: #fff; border: 1px solid #dce4ec; padding: 15px; border-radius: 8px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
+        .bank-item { background: #fff; border: 2px solid #e5e5e5; padding: 15px; border-radius: 16px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
         .bank-info { flex: 1; }
-        .bank-title { font-size: 16px; font-weight: bold; color: #333; margin-bottom: 4px; }
-        .bank-meta { font-size: 12px; color: #666; }
+        .bank-title { font-size: 16px; font-weight: 800; color: #4b4b4b; margin-bottom: 4px; }
+        .bank-meta { font-size: 13px; color: #afafaf; font-weight: 700; }
         .bank-actions { display: flex; gap: 8px; }
-        .bank-actions .btn { padding: 8px 12px; font-size: 13px; margin: 0; width: auto; }
+        .bank-actions .btn-duo { padding: 8px 15px; font-size: 14px; margin: 0; border-bottom-width: 4px; }
+        .bank-actions .btn-duo:active:not(:disabled) { transform: translateY(2px); border-bottom-width: 2px; margin-bottom: 2px; }
 
-        .controls { background: #f8f9fa; padding: 12px; border-radius: 8px; margin-bottom: 15px; font-size: 14px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
-        .controls label { display: flex; align-items: center; margin-bottom: 5px; cursor: pointer; }
-        .controls input[type="radio"], .controls input[type="checkbox"] { margin-right: 6px; transform: scale(1.1); }
+        .controls { background: #f7f9fa; border: 2px solid #e5e5e5; padding: 15px; border-radius: 16px; margin-bottom: 15px; font-size: 15px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px; font-weight: 700; }
+        .controls label { display: flex; align-items: center; margin-bottom: 5px; cursor: pointer; color: #4b4b4b; }
+        .controls input[type="radio"], .controls input[type="checkbox"] { margin-right: 8px; transform: scale(1.2); accent-color: #1cb0f6; }
         
-        .header-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
-        .progress { font-size: 15px; color: #666; font-weight: bold; }
-        .timer-badge { font-size: 14px; color: #d35400; background: #fdebd0; padding: 3px 10px; border-radius: 12px; font-weight: bold; }
-        .bookmark-btn { font-size: 14px; color: #666; background: #f0f2f5; border: 1px solid #ddd; padding: 5px 12px; border-radius: 20px; }
-        .bookmark-btn.active { color: #d35400; background: #fdebd0; border-color: #f39c12; font-weight: bold; }
-        .question-title { font-size: 16px; font-weight: bold; line-height: 1.6; margin-bottom: 15px; }
-        .badge { background: #e8f0fe; color: #1a73e8; padding: 3px 8px; border-radius: 4px; font-size: 12px; margin-right: 5px; vertical-align: middle; }
-        .source-text { font-size: 12px; color: #888; font-weight: normal; display: block; margin-top: 5px; }
+        /* 答题区头部与动态进度条 */
+        .header-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .close-btn { font-size: 24px; color: #afafaf; font-weight: bold; cursor: pointer; }
+        .progress-container { flex: 1; margin: 0 15px; background: #e5e5e5; height: 16px; border-radius: 10px; overflow: hidden; position: relative; }
+        .progress-fill { background: #58cc02; height: 100%; border-radius: 10px; transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1); width: 0%; position: relative; }
+        /* 进度条高光反光效果 */
+        .progress-fill::after { content: ''; position: absolute; top: 3px; left: 10px; right: 10px; height: 4px; background: rgba(255,255,255,0.3); border-radius: 2px; }
         
-        .opt-btn { display: block; width: 100%; padding: 14px; background: #f8fafd; border: 1px solid #dce4ec; border-radius: 8px; margin-bottom: 10px; font-size: 15px; text-align: left; cursor: pointer; line-height: 1.4; transition: 0.2s; }
-        .opt-btn.selected { background: #e8f0fe; border-color: #1a73e8; color: #1a73e8; font-weight: bold; }
-        .opt-btn.correct { background: #d4edda; border-color: #c3e6cb; color: #155724; font-weight: bold; }
-        .opt-btn.wrong { background: #f8d7da; border-color: #f5c6cb; color: #721c24; text-decoration: line-through; }
-        .feedback-box { margin-bottom: 15px; padding: 12px; border-radius: 8px; font-size: 15px; text-align: center; font-weight: bold; }
-        .chunk-box { background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 8px; padding: 15px; margin-bottom: 15px; }
-        .chunk-title { font-size: 14px; font-weight: bold; color: #495057; margin-bottom: 10px; }
-        .chunk-textarea { height: 140px; margin-bottom: 10px; width: 100%; font-family: monospace; font-size: 13px; padding: 8px; border: 1px solid #ccc; border-radius: 4px; }
+        .timer-badge { font-size: 15px; color: #ff9600; font-weight: 800; display: flex; align-items: center; gap: 4px; }
+        .bookmark-btn { font-size: 22px; color: #e5e5e5; cursor: pointer; transition: 0.2s; user-select: none; }
+        .bookmark-btn.active { color: #ff9600; transform: scale(1.1); }
+        
+        .question-title { font-size: 18px; font-weight: 800; line-height: 1.5; margin-bottom: 20px; color: #3c3c3c; margin-top: 15px;}
+        .badge { background: #ce82ff; color: #fff; padding: 4px 10px; border-radius: 8px; font-size: 13px; margin-right: 6px; vertical-align: middle; font-weight: 800; }
+        .source-text { font-size: 12px; color: #afafaf; font-weight: 700; display: block; margin-top: 8px; }
+        
+        /* 选项按钮：加大、加厚、动态反馈 */
+        .duo-opt { display: block; width: 100%; padding: 16px; background: #ffffff; border: 2px solid #e5e5e5; border-bottom: 6px solid #e5e5e5; border-radius: 16px; margin-bottom: 12px; font-size: 16px; font-weight: 700; color: #4b4b4b; text-align: left; cursor: pointer; transition: all 0.1s; user-select: none; }
+        .duo-opt:active:not(.locked) { transform: translateY(4px); border-bottom-width: 2px; margin-bottom: 16px; }
+        .duo-opt.selected { background: #ddf4ff; border-color: #84d8ff; border-bottom-color: #1899d6; color: #1899d6; }
+        .duo-opt.correct { background: #d7ffb8; border-color: #58cc02; border-bottom-color: #58a700; color: #58a700; }
+        .duo-opt.wrong { background: #ffdfe0; border-color: #ff4b4b; border-bottom-color: #ea2b2b; color: #ea2b2b; text-decoration: line-through; }
+        
+        .feedback-box { margin-bottom: 20px; padding: 20px; border-radius: 16px; font-size: 18px; text-align: left; font-weight: 800; display: flex; align-items: center; gap: 10px; }
+        
+        .chunk-box { background: #f7f9fa; border: 2px solid #e5e5e5; border-radius: 16px; padding: 15px; margin-bottom: 15px; }
+        .chunk-title { font-size: 14px; font-weight: 800; color: #afafaf; margin-bottom: 10px; text-transform: uppercase; }
+        .chunk-textarea { height: 140px; margin-bottom: 10px; width: 100%; font-family: monospace; font-size: 13px; padding: 12px; border: 2px solid #e5e5e5; border-radius: 12px; font-weight: 600; color:#4b4b4b; }
     </style>
 </head>
 <body>
 
 <div class="container" id="page-home">
-    <h2>➕ 导入新题目</h2>
-    <textarea id="data-input" placeholder="请将AI转换好的JSON题目粘贴到这里..."></textarea>
-    
-    <div class="flex-row">
-        <input type="text" id="new-bank-name" placeholder="起个名字(如: 2018真题)">
-        <button class="btn" onclick="saveNewBank()">保存新题库</button>
-    </div>
-    
-    <div class="flex-row">
-        <select id="exist-bank-select"></select>
-        <button class="btn btn-green" onclick="appendToBank()">追加去重</button>
+    <div class="duo-card" style="border-bottom: 6px solid #e5e5e5;">
+        <h2>➕ 导入新题目</h2>
+        <textarea id="data-input" placeholder="请粘贴 AI 转换好的 JSON 代码..."></textarea>
+        <div class="flex-row">
+            <input type="text" id="new-bank-name" placeholder="题库名称 (如: 2018真题)">
+            <button class="btn-duo btn-blue" onclick="saveNewBank()">保存</button>
+        </div>
+        <div class="flex-row">
+            <select id="exist-bank-select"></select>
+            <button class="btn-duo btn-green" onclick="appendToBank()">追加去重</button>
+        </div>
     </div>
 
-    <h2 style="margin-top: 25px;">📚 我的题库</h2>
-    
+    <h2>📚 我的题库</h2>
     <div class="controls">
-        <div style="flex: 1; min-width: 100px;">
-            <div style="font-weight:bold; margin-bottom:5px;">模式设定</div>
-            <label><input type="radio" name="mode" value="exam"> 考试模式</label>
-            <label><input type="radio" name="mode" value="instant" checked> 即时反馈</label>
+        <div style="flex: 1; min-width: 110px;">
+            <div style="color:#afafaf; margin-bottom:8px; font-size:13px; text-transform:uppercase;">反馈模式</div>
+            <label><input type="radio" name="mode" value="exam"> 考试统分</label>
+            <label><input type="radio" name="mode" value="instant" checked> 即时对错</label>
         </div>
         <div style="flex: 1; min-width: 100px;">
-            <div style="font-weight:bold; margin-bottom:5px;">额外选项</div>
-            <label><input type="checkbox" id="shuffle-cb" checked> 题目乱序</label>
+            <div style="color:#afafaf; margin-bottom:8px; font-size:13px; text-transform:uppercase;">额外选项</div>
+            <label><input type="checkbox" id="shuffle-cb" checked> 打乱题目</label>
         </div>
-        <div style="flex: 1; min-width: 100px;">
-            <div style="font-weight:bold; margin-bottom:5px;">计时模式</div>
+        <div style="flex: 1; min-width: 120px;">
+            <div style="color:#afafaf; margin-bottom:8px; font-size:13px; text-transform:uppercase;">高压冲刺</div>
             <label><input type="checkbox" id="timer-cb" onclick="document.getElementById('timer-input-box').style.display = this.checked ? 'block' : 'none'"> 开启倒计时</label>
             <div id="timer-input-box" style="display:none; margin-top:5px;">
-                <input type="number" id="timer-minutes" value="30" min="1" max="300" style="width:70px; padding:5px; text-align:center; display:inline-block; margin-right:5px;">分钟
+                <input type="number" id="timer-minutes" value="30" min="1" max="300" style="width:70px; padding:8px; text-align:center; display:inline-block; margin-right:5px;">分
             </div>
         </div>
     </div>
     
     <div id="bank-list"></div>
 
-    <hr style="border: 0; border-top: 1px dashed #ccc; margin: 25px 0;">
-    <h2>☁️ 云端同步与防丢</h2>
-    <div style="font-size: 13px; color: #666; margin-bottom: 12px;">绑定 GitHub 密钥后，一键将题库同步至云端，换手机/清理缓存都不怕！</div>
+    <hr style="border: 0; border-top: 2px dashed #e5e5e5; margin: 30px 0;">
+    <h2>☁️ 护肝防丢区</h2>
+    <div style="font-size: 14px; color: #afafaf; font-weight:700; margin-bottom: 15px;">绑定 GitHub 密钥，全自动云端同步存档！</div>
     
-    <input type="password" id="github-token-input" placeholder="请粘贴您的 GitHub 密钥 (ghp_ 开头)" style="margin-bottom: 12px;">
-    
+    <input type="password" id="github-token-input" placeholder="粘贴你的 GitHub Token (ghp_ 开头)">
     <div class="flex-row">
-        <button class="btn btn-green" id="btn-cloud-backup" onclick="cloudBackup()">☁️ 备份到云端</button>
-        <button class="btn btn-orange" id="btn-cloud-restore" onclick="cloudRestore()">☁️ 从云端恢复</button>
+        <button class="btn-duo btn-blue" id="btn-cloud-backup" onclick="cloudBackup()">⬆️ 云端备份</button>
+        <button class="btn-duo btn-orange" id="btn-cloud-restore" onclick="cloudRestore()">⬇️ 云端恢复</button>
     </div>
     
-    <div style="font-size: 12px; color: #999; margin-top: 5px; text-align:center;">
-        * 也可以使用离线功能：<a href="#" onclick="exportLocalData()" style="color:#1a73e8; text-decoration:none;">下载本地文件</a> | <a href="#" onclick="document.getElementById('import-file').click()" style="color:#1a73e8; text-decoration:none;">导入本地文件</a>
+    <div style="font-size: 13px; color: #afafaf; font-weight:700; margin-top: 10px; text-align:center;">
+        * 传统离线：<a href="#" onclick="exportLocalData()" style="color:#1cb0f6; text-decoration:none;">下载 JSON</a> | <a href="#" onclick="document.getElementById('import-file').click()" style="color:#1cb0f6; text-decoration:none;">导入 JSON</a>
     </div>
     <input type="file" id="import-file" style="display:none;" accept=".json" onchange="importLocalData(event)">
 </div>
 
 <div class="container hidden" id="page-quiz">
     <div class="header-bar">
-        <span class="progress" id="progress-text"></span>
+        <div class="close-btn" onclick="location.reload()">✖</div>
+        <div class="progress-container">
+            <div class="progress-fill" id="progress-fill"></div>
+        </div>
         <span class="timer-badge hidden" id="timer-display">⏳ 00:00</span>
-        <button class="bookmark-btn" id="btn-star" onclick="toggleStar()">☆ 收藏标记</button>
+        <div class="bookmark-btn" id="btn-star" onclick="toggleStar()" style="margin-left:10px;">⭐</div>
     </div>
+    
     <div class="question-title" id="question-text"></div>
     <div id="options-container"></div>
-    <div class="feedback-box hidden" id="feedback-box"></div>
-    <button class="btn" id="btn-action" onclick="handleAction()">确认答案</button>
     
-    <div style="display: flex; gap: 10px; margin-top: 10px;">
-        <button class="btn" style="background:#f1f3f4; color:#555; margin:0; flex:1;" onclick="location.reload()">中途退出 (自动保存)</button>
-        <button class="btn" style="background:#fff0f0; color:#d9534f; border: 1px solid #f5c6cb; margin:0; flex:1;" onclick="giveUpQuiz()">放弃重开</button>
-    </div>
+    <div class="feedback-box hidden" id="feedback-box"></div>
+    
+    <button class="btn-duo btn-green" id="btn-action" onclick="handleAction()" style="margin-top: 10px; font-size:18px; padding:16px;">检查答案</button>
+    <button class="btn-duo btn-ghost" onclick="giveUpQuiz()" style="margin-top: 5px;">重新开始当前试卷</button>
 </div>
 
 <div class="container hidden" id="page-result">
-    <h2>练习结算报告</h2>
-    <div style="font-size: 36px; color: #e67e22; text-align: center; margin: 15px 0 5px 0; font-weight: bold;" id="score-text"></div>
-    <div style="text-align: center; color: #666; font-size: 15px; margin-bottom: 20px; font-weight: bold;" id="stat-text"></div>
+    <div class="duo-card" style="text-align: center; border-bottom: 6px solid #e5e5e5; background: #fffcf0; border-color: #ffc800;">
+        <h2 style="color: #ff9600;">🎉 练习完成！</h2>
+        <div style="font-size: 48px; color: #ff9600; font-weight: 800; margin: 10px 0; text-shadow: 2px 2px 0px #ffe699;" id="score-text"></div>
+        <div style="color: #cda434; font-size: 16px; font-weight: 800;" id="stat-text"></div>
+    </div>
     
-    <div class="flex-row" style="background:#f8f9fa; padding:12px; border-radius:8px; justify-content:center;">
-        <label style="font-weight:bold; color:#444;">错题导出：每</label>
-        <input type="number" id="chunk-size-input" value="5" min="1" max="50" style="width:70px; text-align:center; padding:8px;">
-        <label style="font-weight:bold; color:#444;">题一段</label>
-        <button class="btn" style="margin:0; padding:8px 15px;" onclick="renderChunks()">重新分段</button>
+    <div class="flex-row" style="background:#f7f9fa; padding:15px; border: 2px solid #e5e5e5; border-radius:16px; justify-content:center;">
+        <label style="font-weight:800; color:#afafaf;">错题报告切割：</label>
+        <input type="number" id="chunk-size-input" value="5" min="1" max="50" style="width:70px; margin-bottom:0; text-align:center;">
+        <label style="font-weight:800; color:#afafaf; margin-right:10px;">题 / 段</label>
+        <button class="btn-duo btn-blue" style="margin:0; padding:10px 15px; line-height:normal;" onclick="renderChunks()">刷新切割</button>
     </div>
 
-    <div id="chunks-container"></div>
-    <button class="btn btn-green" style="margin-top: 20px;" onclick="location.reload()">返回我的题库</button>
+    <div id="chunks-container" style="margin-top: 20px;"></div>
+    <button class="btn-duo btn-green" style="margin-top: 25px; font-size: 18px; padding: 16px;" onclick="location.reload()">返回主城 🏠</button>
 </div>
 
 <script>
     let banks = JSON.parse(localStorage.getItem('szys_banks') || '{}');
-    
-    window.onload = function() { 
-        renderBankList(); 
-        // 自动读取之前填过的 token
-        let savedToken = localStorage.getItem('szys_github_token');
-        if(savedToken) document.getElementById('github-token-input').value = savedToken;
-    };
-    
+    window.onload = function() { renderBankList(); let savedToken = localStorage.getItem('szys_github_token'); if(savedToken) document.getElementById('github-token-input').value = savedToken; };
     function saveBanks() { localStorage.setItem('szys_banks', JSON.stringify(banks)); }
     function getFingerprint(str) { return str.replace(/[^\u4e00-\u9fa5a-zA-Z0-9]/g, ''); }
     
-    // ✨ 云端同步引擎 (GitHub API)
+    // --- 云端同步引擎 ---
     async function cloudBackup() {
         let token = document.getElementById('github-token-input').value.trim();
-        if(!token) return alert("⚠️ 请先输入您的 GitHub 密钥 (Token)！");
+        if(!token) return alert("⚠️ 请先粘贴 GitHub 密钥！");
         localStorage.setItem('szys_github_token', token);
         let dataStr = localStorage.getItem('szys_banks');
-        if (!dataStr || dataStr === '{}') return alert("⚠️ 当前没有任何题库，无需备份！");
+        if (!dataStr || dataStr === '{}') return alert("⚠️ 题库空空如也，先建点题库吧！");
 
-        const btn = document.getElementById('btn-cloud-backup');
-        btn.innerText = "⏳ 正在备份至云端...";
-        
+        const btn = document.getElementById('btn-cloud-backup'); btn.innerText = "⏳ 正在发射..."; btn.classList.add('disabled');
         try {
-            // 1. 查找是否已经创建过备份文件
             let res = await fetch('https://api.github.com/gists', { headers: { 'Authorization': 'token ' + token }});
-            if(!res.ok) throw new Error("Token 无效或网络错误");
-            let gists = await res.json();
-            let targetGist = gists.find(g => g.files['szys_backup.json']);
+            if(!res.ok) throw new Error("Token 无效或网络连接失败");
+            let gists = await res.json(); let targetGist = gists.find(g => g.files['szys_backup.json']);
 
             if(targetGist) {
-                // 覆盖更新旧文件
-                let patchRes = await fetch('https://api.github.com/gists/' + targetGist.id, {
-                    method: 'PATCH',
-                    headers: { 'Authorization': 'token ' + token, 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ files: { 'szys_backup.json': { content: dataStr } } })
-                });
-                if(!patchRes.ok) throw new Error("云端更新失败");
+                let patchRes = await fetch('https://api.github.com/gists/' + targetGist.id, { method: 'PATCH', headers: { 'Authorization': 'token ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ files: { 'szys_backup.json': { content: dataStr } } }) });
+                if(!patchRes.ok) throw new Error("覆盖数据失败");
             } else {
-                // 从未备份过，创建新文件
-                let postRes = await fetch('https://api.github.com/gists', {
-                    method: 'POST',
-                    headers: { 'Authorization': 'token ' + token, 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        description: "三支一扶题库云备份 (请勿手动修改此文件)",
-                        public: false,
-                        files: { 'szys_backup.json': { content: dataStr } }
-                    })
-                });
-                if(!postRes.ok) throw new Error("云端创建失败");
+                let postRes = await fetch('https://api.github.com/gists', { method: 'POST', headers: { 'Authorization': 'token ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ description: "三支一扶题库云备份 (V7.0+)", public: false, files: { 'szys_backup.json': { content: dataStr } } }) });
+                if(!postRes.ok) throw new Error("创建数据仓库失败");
             }
-            alert("☁️✅ 题库已成功安全备份至您的 GitHub 专属云端！");
-        } catch(e) {
-            alert("❌ 备份失败：" + e.message + "\n\n排查指南：\n1. 请检查 Token 是否复制完整\n2. 请确保获取 Token 时勾选了 'gist' 权限。");
-        } finally {
-            btn.innerText = "☁️ 备份到云端";
-        }
+            alert("☁️✅ 存档成功！数据已受 GitHub 终极保护！");
+        } catch(e) { alert("❌ 发射失败：" + e.message); } finally { btn.innerText = "⬆️ 云端备份"; btn.classList.remove('disabled'); }
     }
 
     async function cloudRestore() {
         let token = document.getElementById('github-token-input').value.trim();
-        if(!token) return alert("⚠️ 请先输入您的 GitHub 密钥 (Token)！");
+        if(!token) return alert("⚠️ 请先粘贴 GitHub 密钥！");
         localStorage.setItem('szys_github_token', token);
 
-        const btn = document.getElementById('btn-cloud-restore');
-        btn.innerText = "⏳ 正在从云端检索数据...";
-        
+        const btn = document.getElementById('btn-cloud-restore'); btn.innerText = "⏳ 正在读取..."; btn.classList.add('disabled');
         try {
             let res = await fetch('https://api.github.com/gists', { headers: { 'Authorization': 'token ' + token }});
-            if(!res.ok) throw new Error("Token 无效或网络错误");
-            let gists = await res.json();
-            let targetGist = gists.find(g => g.files['szys_backup.json']);
+            if(!res.ok) throw new Error("Token 无效");
+            let gists = await res.json(); let targetGist = gists.find(g => g.files['szys_backup.json']);
+            if(!targetGist) throw new Error("您的云端还没存过数据哦！");
 
-            if(!targetGist) throw new Error("在您的云端空间中未找到备份数据！请确认您之前是否点击过备份。");
-
-            let rawUrl = targetGist.files['szys_backup.json'].raw_url;
-            let fileRes = await fetch(rawUrl);
+            let fileRes = await fetch(targetGist.files['szys_backup.json'].raw_url);
             let importedBanks = await fileRes.json();
-
             let currentBanks = JSON.parse(localStorage.getItem('szys_banks') || '{}');
             let addedCount = 0;
             
             for (let id in importedBanks) {
-                if (!currentBanks[id]) {
-                    currentBanks[id] = importedBanks[id]; addedCount++;
-                } else {
-                    let newId = id + "_restored_" + Date.now(); 
-                    importedBanks[id].name += " (云端恢复)"; 
-                    currentBanks[newId] = importedBanks[id]; 
-                    addedCount++;
-                }
+                if (!currentBanks[id]) { currentBanks[id] = importedBanks[id]; addedCount++; } 
+                else { let newId = id + "_restored_" + Date.now(); importedBanks[id].name += " (云端)"; currentBanks[newId] = importedBanks[id]; addedCount++; }
             }
             localStorage.setItem('szys_banks', JSON.stringify(currentBanks));
-            alert(`☁️✅ 数据恢复大成功！共从云端找回了 ${addedCount} 个题库模块。`);
-            location.reload();
-        } catch(e) {
-            alert("❌ 恢复失败：" + e.message);
-        } finally {
-            btn.innerText = "☁️ 从云端恢复";
-        }
+            alert(`☁️✅ 满血复活！成功找回 ${addedCount} 个题库！`); location.reload();
+        } catch(e) { alert("❌ 读取失败：" + e.message); } finally { btn.innerText = "⬇️ 云端恢复"; btn.classList.remove('disabled'); }
     }
 
-    // 保留本地备份逻辑
+    // --- 本地逻辑 ---
     function exportLocalData() {
-        let dataStr = localStorage.getItem('szys_banks');
-        if (!dataStr || dataStr === '{}') return alert("⚠️ 无数据可备份！");
-        let blob = new Blob([dataStr], { type: "application/json" });
-        let url = URL.createObjectURL(blob); let a = document.createElement('a'); a.href = url;
-        let dateStr = new Date().toISOString().slice(0,10).replace(/-/g,"");
-        a.download = `三支一扶离线备份_${dateStr}.json`;
+        let dataStr = localStorage.getItem('szys_banks'); if (!dataStr || dataStr === '{}') return alert("⚠️ 暂无数据");
+        let blob = new Blob([dataStr], { type: "application/json" }); let url = URL.createObjectURL(blob); let a = document.createElement('a'); a.href = url;
+        a.download = `三支一扶离线备份_${new Date().toISOString().slice(0,10).replace(/-/g,"")}.json`;
         document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
     }
     function importLocalData(event) {
-        let file = event.target.files[0]; if (!file) return;
-        let reader = new FileReader();
+        let file = event.target.files[0]; if (!file) return; let reader = new FileReader();
         reader.onload = function(e) {
             try {
-                let importedBanks = JSON.parse(e.target.result); let currentBanks = JSON.parse(localStorage.getItem('szys_banks') || '{}');
-                let addedCount = 0;
-                for (let id in importedBanks) {
-                    if (!currentBanks[id]) { currentBanks[id] = importedBanks[id]; addedCount++; } 
-                    else { let newId = id + "_restored"; importedBanks[id].name += " (恢复)"; currentBanks[newId] = importedBanks[id]; addedCount++; }
-                }
-                localStorage.setItem('szys_banks', JSON.stringify(currentBanks));
-                alert(`✅ 题库恢复成功！共导入了 ${addedCount} 个题库单元。`); location.reload();
-            } catch(err) { alert("❌ 导入失败！请确保选择的是有效的 JSON 备份文件。"); }
-        };
-        reader.readAsText(file); event.target.value = '';
+                let importedBanks = JSON.parse(e.target.result); let currentBanks = JSON.parse(localStorage.getItem('szys_banks') || '{}'); let addedCount = 0;
+                for (let id in importedBanks) { if (!currentBanks[id]) { currentBanks[id] = importedBanks[id]; addedCount++; } else { let newId = id + "_restored"; importedBanks[id].name += " (恢复)"; currentBanks[newId] = importedBanks[id]; addedCount++; } }
+                localStorage.setItem('szys_banks', JSON.stringify(currentBanks)); alert(`✅ 成功导入 ${addedCount} 个题库！`); location.reload();
+            } catch(err) { alert("❌ JSON 格式错误！"); }
+        }; reader.readAsText(file); event.target.value = '';
     }
 
-    // 以下为题库生成、追加与核心答题引擎
     function parseInput() {
-        let raw = document.getElementById('data-input').value;
-        if (!raw.trim()) { alert("⚠️ 请先粘贴题目数据！"); return null; }
+        let raw = document.getElementById('data-input').value; if (!raw.trim()) { alert("⚠️ 请先粘贴数据！"); return null; }
         raw = raw.replace(/```json/gi, '').replace(/```/g, '').trim(); raw = raw.replace(/[\u200B-\u200D\uFEFF]/g, '');
-        try { let data = JSON.parse(raw); if(Array.isArray(data) && data.length > 0) return data; alert("❌ 数据结构不对！必须是 [ ] 格式。"); return null; } 
-        catch(e) { alert("❌ 解析失败，JSON 格式有误！系统报错：" + e.message); return null; }
+        try { let data = JSON.parse(raw); if(Array.isArray(data) && data.length > 0) return data; alert("❌ 必须是数组 [ ] 格式。"); return null; } catch(e) { alert("❌ JSON 解析报错：" + e.message); return null; }
     }
 
     function saveNewBank() {
-        let qs = parseInput(); if(!qs) return;
-        let name = document.getElementById('new-bank-name').value.trim(); if(!name) return alert("⚠️ 请起个名字！");
-        let id = 'bank_' + Date.now(); banks[id] = { name: name, data: qs };
-        saveBanks(); renderBankList(); document.getElementById('data-input').value = ''; document.getElementById('new-bank-name').value = '';
-        alert(`✅ 题库 [${name}] 创建成功！`);
+        let qs = parseInput(); if(!qs) return; let name = document.getElementById('new-bank-name').value.trim(); if(!name) return alert("⚠️ 给题库起个酷名字吧！");
+        let id = 'bank_' + Date.now(); banks[id] = { name: name, data: qs }; saveBanks(); renderBankList();
+        document.getElementById('data-input').value = ''; document.getElementById('new-bank-name').value = ''; alert(`✅ 成功录入 ${qs.length} 题！`);
     }
 
     function appendToBank() {
-        let qs = parseInput(); if(!qs) return;
-        let bankId = document.getElementById('exist-bank-select').value; if(!bankId) return alert("⚠️ 请选择已有题库！");
-        let bank = banks[bankId]; let existFps = new Set(bank.data.map(q => getFingerprint(q.question)));
-        let added = 0, duplicated = 0;
+        let qs = parseInput(); if(!qs) return; let bankId = document.getElementById('exist-bank-select').value; if(!bankId) return alert("⚠️ 先在下拉框选一个目标！");
+        let bank = banks[bankId]; let existFps = new Set(bank.data.map(q => getFingerprint(q.question))); let added = 0, duplicated = 0;
         qs.forEach(q => { let fp = getFingerprint(q.question); if(existFps.has(fp)) { duplicated++; } else { bank.data.push(q); existFps.add(fp); added++; } });
-        saveBanks(); renderBankList(); document.getElementById('data-input').value = '';
-        alert(`✅ 追加完成！新增 ${added} 道，拦截重复 ${duplicated} 道`);
+        saveBanks(); renderBankList(); document.getElementById('data-input').value = ''; alert(`✅ 追加 ${added} 道，拦截重名 ${duplicated} 道！`);
     }
 
     function deleteBank(id) {
-        if(confirm(`⚠️ 确定要彻底删除题库 [${banks[id].name}] 吗？`)) {
+        if(confirm(`⚠️ 删除后不可恢复！确定要销毁 [${banks[id].name}] 吗？`)) {
             delete banks[id]; saveBanks();
             if (localStorage.getItem('szys_state') && JSON.parse(localStorage.getItem('szys_state')).bankId === id) localStorage.removeItem('szys_state');
             renderBankList();
@@ -310,25 +273,25 @@
 
     function renderBankList() {
         const list = document.getElementById('bank-list'); const sel = document.getElementById('exist-bank-select');
-        list.innerHTML = ''; sel.innerHTML = '<option value="">-- 请选择要追加的题库 --</option>'; let hasBanks = false;
+        list.innerHTML = ''; sel.innerHTML = '<option value="">-- 追加到哪个题库？ --</option>'; let hasBanks = false;
         for (let id in banks) {
             hasBanks = true; let b = banks[id];
             let opt = document.createElement('option'); opt.value = id; opt.innerText = b.name; sel.appendChild(opt);
             let div = document.createElement('div'); div.className = 'bank-item';
-            let savedState = JSON.parse(localStorage.getItem('szys_state') || 'null');
-            let hasResume = (savedState && savedState.bankId === id);
-            let playBtnTxt = hasResume ? '🌟 继续答题' : '开始答题'; let playBtnColor = hasResume ? 'background:#ff9800;' : '';
+            let savedState = JSON.parse(localStorage.getItem('szys_state') || 'null'); let hasResume = (savedState && savedState.bankId === id);
+            let playBtnTxt = hasResume ? '继续战斗' : '开始挑战'; let playBtnClass = hasResume ? 'btn-orange' : 'btn-blue';
             div.innerHTML = `
-                <div class="bank-info"><div class="bank-title">${b.name}</div><div class="bank-meta">共 ${b.data.length} 题</div></div>
-                <div class="bank-actions"><button class="btn" style="${playBtnColor}" onclick="startQuiz('${id}', ${hasResume})">${playBtnTxt}</button><button class="btn btn-red" onclick="deleteBank('${id}')">删除</button></div>
+                <div class="bank-info"><div class="bank-title">${b.name}</div><div class="bank-meta">库存 ${b.data.length} 题</div></div>
+                <div class="bank-actions"><button class="btn-duo ${playBtnClass}" onclick="startQuiz('${id}', ${hasResume})">${playBtnTxt}</button><button class="btn-duo btn-gray" onclick="deleteBank('${id}')">✖</button></div>
             `; list.appendChild(div);
         }
-        if(!hasBanks) list.innerHTML = '<div style="text-align:center; color:#999; padding:20px;">暂无题库，请在上方导入。</div>';
+        if(!hasBanks) list.innerHTML = '<div style="text-align:center; color:#afafaf; padding:20px; font-weight:700;">目前空空如也，快去导入题库吧！</div>';
     }
 
+    // --- 答题核心与游戏化反馈 ---
     const App = { bankId: null, data: [], current: 0, score: 0, mode: 'instant', wrongList: [], stars: new Set(), selected: [], isAnswered: false, timerMode: false, timeRemaining: 0 };
     let timerInterval = null;
-    const DOM = { setup: document.getElementById('page-home'), quiz: document.getElementById('page-quiz'), result: document.getElementById('page-result'), title: document.getElementById('question-text'), opts: document.getElementById('options-container'), progress: document.getElementById('progress-text'), feedback: document.getElementById('feedback-box'), btnAction: document.getElementById('btn-action'), btnStar: document.getElementById('btn-star'), timerDisplay: document.getElementById('timer-display') };
+    const DOM = { setup: document.getElementById('page-home'), quiz: document.getElementById('page-quiz'), result: document.getElementById('page-result'), title: document.getElementById('question-text'), opts: document.getElementById('options-container'), progressFill: document.getElementById('progress-fill'), feedback: document.getElementById('feedback-box'), btnAction: document.getElementById('btn-action'), btnStar: document.getElementById('btn-star'), timerDisplay: document.getElementById('timer-display') };
 
     function saveState() {
         const state = { bankId: App.bankId, current: App.current, score: App.score, mode: App.mode, wrongList: App.wrongList, stars: Array.from(App.stars), isAnswered: App.isAnswered, selected: App.selected, activeData: App.data, timerMode: App.timerMode, timeRemaining: App.timeRemaining };
@@ -355,86 +318,116 @@
         if(timerInterval) clearInterval(timerInterval); updateTimerUI();
         timerInterval = setInterval(() => {
             if(App.timeRemaining > 0) { App.timeRemaining--; updateTimerUI(); if(App.timeRemaining % 5 === 0) saveState(); } 
-            else { clearInterval(timerInterval); alert("⏳ 时间到！系统已为您自动交卷。"); showResult(); }
+            else { clearInterval(timerInterval); alert("⏳ 时间到！已自动交卷。"); showResult(); }
         }, 1000);
     }
-
     function updateTimerUI() {
         let m = Math.floor(App.timeRemaining / 60).toString().padStart(2, '0'); let s = (App.timeRemaining % 60).toString().padStart(2, '0');
-        DOM.timerDisplay.innerText = `⏳ ${m}:${s}`; if(App.timeRemaining < 60) DOM.timerDisplay.style.color = 'red';
+        DOM.timerDisplay.innerText = `⏳ ${m}:${s}`; if(App.timeRemaining < 60) DOM.timerDisplay.style.color = '#ea2b2b';
     }
 
     function giveUpQuiz() {
-        if(confirm("⚠️ 确定要放弃当前答题进度吗？\n放弃后记录将被清空，且无法恢复。")) { if(timerInterval) clearInterval(timerInterval); localStorage.removeItem('szys_state'); location.reload(); }
+        if(confirm("⚠️ 确定要放弃当前进度吗？记录将被抹除。")) { if(timerInterval) clearInterval(timerInterval); localStorage.removeItem('szys_state'); location.reload(); }
     }
 
     function renderQuestion(isRestore = false) {
         if (!isRestore) { App.selected = []; App.isAnswered = false; }
-        const q = App.data[App.current]; DOM.progress.innerText = `${App.current + 1} / ${App.data.length}`;
-        let sourceHtml = q.source ? `<span class="source-text">📄 出处文件: ${q.source}</span>` : '';
+        const q = App.data[App.current]; 
+        // 动态血条计算
+        let progressPercent = ((App.current) / App.data.length) * 100;
+        if(progressPercent < 5) progressPercent = 5; // 保证起步有点颜色
+        DOM.progressFill.style.width = progressPercent + '%';
+        
+        let sourceHtml = q.source ? `<span class="source-text">📄 ${q.source}</span>` : '';
         DOM.title.innerHTML = `<span class="badge">${q.type === 'multiple' ? '多选' : '单选'}</span> ${q.question} ${sourceHtml}`;
-        DOM.btnStar.innerText = App.stars.has(q.id) ? '★ 已收藏' : '☆ 收藏标记'; DOM.btnStar.className = App.stars.has(q.id) ? 'bookmark-btn active' : 'bookmark-btn';
+        
+        DOM.btnStar.className = App.stars.has(q.id) ? 'bookmark-btn active' : 'bookmark-btn';
         DOM.opts.innerHTML = '';
-        for (let key in q.options) { let btn = document.createElement('button'); btn.className = 'opt-btn'; btn.id = `opt-${key}`; btn.innerText = `${key}. ${q.options[key]}`; btn.onclick = () => selectOpt(key, q.type); DOM.opts.appendChild(btn); }
-        DOM.feedback.classList.add('hidden'); DOM.btnAction.innerText = App.mode === 'instant' ? '确认答案' : (App.current === App.data.length - 1 ? '交卷出分' : '下一题');
+        for (let key in q.options) { 
+            let btn = document.createElement('button'); btn.className = 'duo-opt'; btn.id = `opt-${key}`; 
+            btn.innerHTML = `<span style="color:#afafaf; margin-right:8px;">${key}.</span> ${q.options[key]}`; 
+            btn.onclick = () => selectOpt(key, q.type); DOM.opts.appendChild(btn); 
+        }
+        DOM.feedback.classList.add('hidden'); 
+        DOM.btnAction.className = "btn-duo btn-blue";
+        DOM.btnAction.innerText = App.mode === 'instant' ? '检查答案' : (App.current === App.data.length - 1 ? '交卷出分' : '下一题');
+        
         if (isRestore && App.isAnswered) { restoreFeedback(); } else if (isRestore && App.selected.length > 0) { App.selected.forEach(k => { let b = document.getElementById(`opt-${k}`); if(b) b.classList.add('selected'); }); }
         saveState();
     }
 
     function selectOpt(key, type) {
         if (App.isAnswered) return;
-        if (type === 'single') { App.selected = [key]; document.querySelectorAll('.opt-btn').forEach(b => b.classList.remove('selected')); document.getElementById(`opt-${key}`).classList.add('selected'); } 
+        if (type === 'single') { App.selected = [key]; document.querySelectorAll('.duo-opt').forEach(b => b.classList.remove('selected')); document.getElementById(`opt-${key}`).classList.add('selected'); } 
         else { let idx = App.selected.indexOf(key); if (idx > -1) { App.selected.splice(idx, 1); document.getElementById(`opt-${key}`).classList.remove('selected'); } else { App.selected.push(key); document.getElementById(`opt-${key}`).classList.add('selected'); } }
         saveState();
     }
 
     function toggleStar() {
         const id = App.data[App.current].id; App.stars.has(id) ? App.stars.delete(id) : App.stars.add(id);
-        DOM.btnStar.innerText = App.stars.has(id) ? '★ 已收藏' : '☆ 收藏标记'; DOM.btnStar.className = App.stars.has(id) ? 'bookmark-btn active' : 'bookmark-btn'; saveState();
+        DOM.btnStar.className = App.stars.has(id) ? 'bookmark-btn active' : 'bookmark-btn'; saveState();
     }
 
     function handleAction() {
         const q = App.data[App.current];
-        if (App.mode === 'instant' && !App.isAnswered) { if (!App.selected.length) return alert("⚠️ 请先选择答案！"); App.isAnswered = true; processAnswer(q); showFeedbackUI(q); DOM.btnAction.innerText = App.current === App.data.length - 1 ? '结束练习' : '下一题'; saveState(); return; }
-        if (App.mode === 'exam') { if (!App.selected.length && !confirm("未选择答案，确定跳过吗？")) return; processAnswer(q); }
+        if (App.mode === 'instant' && !App.isAnswered) { 
+            if (!App.selected.length) return alert("⚠️ 请先做出选择！"); 
+            App.isAnswered = true; processAnswer(q); showFeedbackUI(q); 
+            DOM.btnAction.className = "btn-duo btn-green";
+            DOM.btnAction.innerText = App.current === App.data.length - 1 ? '完成！查看战报' : '继续下一题'; 
+            saveState(); return; 
+        }
+        if (App.mode === 'exam') { if (!App.selected.length && !confirm("还没选答案呢，确定要跳过吗？")) return; processAnswer(q); }
         App.current++; App.current >= App.data.length ? showResult() : renderQuestion(false);
     }
 
     function processAnswer(q) {
         let myAns = App.selected.sort().join(''); let rightAns = q.answer.split('').sort().join(''); let isRight = (myAns === rightAns);
-        if (isRight) App.score++; if (!isRight || App.stars.has(q.id)) App.wrongList.push({ id: q.id, q: q.question, source: q.source || "未知", my: myAns || "未答", right: q.answer, reason: !isRight ? "答错" : "收藏" });
+        if (isRight) App.score++;
+        if (!isRight || App.stars.has(q.id)) App.wrongList.push({ id: q.id, q: q.question, source: q.source || "未知", my: myAns || "未答", right: q.answer, reason: !isRight ? "答错" : "收藏" });
     }
 
     function showFeedbackUI(q) {
         let myAns = App.selected.sort().join('');
-        document.querySelectorAll('.opt-btn').forEach(btn => { let k = btn.id.replace('opt-', ''); if (q.answer.includes(k)) btn.classList.add('correct'); else if (myAns.includes(k) && !q.answer.includes(k)) btn.classList.add('wrong'); });
+        document.querySelectorAll('.duo-opt').forEach(btn => { 
+            btn.classList.add('locked'); // 锁死动画
+            let k = btn.id.replace('opt-', ''); 
+            if (q.answer.includes(k)) btn.classList.add('correct'); 
+            else if (myAns.includes(k) && !q.answer.includes(k)) btn.classList.add('wrong'); 
+        });
+        
         DOM.feedback.classList.remove('hidden');
-        if (myAns === q.answer.split('').sort().join('')) { DOM.feedback.style.background = '#d4edda'; DOM.feedback.style.color = '#155724'; DOM.feedback.innerText = "🎉 回答正确！"; } 
-        else { DOM.feedback.style.background = '#f8d7da'; DOM.feedback.style.color = '#721c24'; DOM.feedback.innerText = `❌ 错误！答案: ${q.answer}`; }
+        if (myAns === q.answer.split('').sort().join('')) { 
+            DOM.feedback.style.background = '#d7ffb8'; DOM.feedback.style.color = '#58a700'; DOM.feedback.style.border = "2px solid #58cc02";
+            DOM.feedback.innerHTML = "✅ 太棒了！完全正确！"; 
+        } else { 
+            DOM.feedback.style.background = '#ffdfe0'; DOM.feedback.style.color = '#ea2b2b'; DOM.feedback.style.border = "2px solid #ff4b4b";
+            DOM.feedback.innerHTML = `❌ 不对哦，正确答案是：<span style="font-size:22px; margin-left:5px;">${q.answer}</span>`; 
+        }
     }
 
-    function restoreFeedback() { const q = App.data[App.current]; App.selected.forEach(k => { let b = document.getElementById(`opt-${k}`); if(b) b.classList.add('selected'); }); showFeedbackUI(q); DOM.btnAction.innerText = App.current === App.data.length - 1 ? '结束练习' : '下一题'; }
+    function restoreFeedback() { const q = App.data[App.current]; App.selected.forEach(k => { let b = document.getElementById(`opt-${k}`); if(b) b.classList.add('selected'); }); showFeedbackUI(q); DOM.btnAction.className = "btn-duo btn-green"; DOM.btnAction.innerText = App.current === App.data.length - 1 ? '完成！查看战报' : '继续下一题'; }
 
     function showResult() {
         if(timerInterval) clearInterval(timerInterval); localStorage.removeItem('szys_state'); DOM.quiz.classList.add('hidden'); DOM.result.classList.remove('hidden');
         document.getElementById('score-text').innerText = `${Math.round((App.score / App.data.length) * 100)} 分`;
-        document.getElementById('stat-text').innerText = `本次作答总数: ${App.data.length} 题 | 其中错题/收藏: ${App.wrongList.length} 题`; renderChunks();
+        document.getElementById('stat-text').innerText = `作答 ${App.data.length} 题 • 击败错题 ${App.wrongList.length} 道`; renderChunks();
     }
 
     function renderChunks() {
         const container = document.getElementById('chunks-container'); container.innerHTML = '';
-        if (App.wrongList.length === 0) { container.innerHTML = "<div class='chunk-box' style='text-align:center;'>完美通过，没有需要导出的错题！</div>"; return; }
+        if (App.wrongList.length === 0) { container.innerHTML = "<div class='duo-card' style='text-align:center; color:#58a700; border-color:#58cc02;'>✨ 完美通关，没有错题！</div>"; return; }
         let chunkSize = parseInt(document.getElementById('chunk-size-input').value) || 5; if (chunkSize < 1) chunkSize = 1;
         for (let i = 0, batch = 1; i < App.wrongList.length; i += chunkSize, batch++) {
             let chunk = App.wrongList.slice(i, i + chunkSize); 
             let text = `【三支一扶错题解析申请 - 第 ${batch} 批】\n请务必使用工具检索我的“谷歌云盘”。针对每道题提供的【出处文件】，请优先检索该文件或相似答案文件来获取官方解析。严格按4个模块为我逐一解析：\n\n`;
             chunk.forEach((item, index) => { text += `[题目 ${index + 1}]\n题目内容: ${item.q}\n出处文件: ${item.source}\n我的选项: ${item.my} | 正确答案: ${item.right}\n---\n`; });
             let div = document.createElement('div'); div.className = 'chunk-box';
-            div.innerHTML = `<div class="chunk-title">分段报告 ${batch} (包含 ${chunk.length} 题)</div><textarea class="chunk-textarea" id="txt-${batch}" readonly>${text}</textarea><button class="btn btn-green" style="margin:0; padding:10px;" onclick="window.copyRpt(${batch})">复制本段发给解析助手</button>`;
+            div.innerHTML = `<div class="chunk-title">⚔️ 错题清理段落 ${batch} (共 ${chunk.length} 题)</div><textarea class="chunk-textarea" id="txt-${batch}" readonly>${text}</textarea><button class="btn-duo btn-green" style="margin:0; padding:12px;" onclick="window.copyRpt(${batch})">复制并召唤解析助手</button>`;
             container.appendChild(div);
         }
     }
-    window.copyRpt = function(idx) { navigator.clipboard.writeText(document.getElementById(`txt-${idx}`).value).then(() => alert(`✅ 复制成功，快去发给解析助手吧！`)); }
+    window.copyRpt = function(idx) { navigator.clipboard.writeText(document.getElementById(`txt-${idx}`).value).then(() => alert(`✅ 复制成功，快发给 AI 助手吧！`)); }
 </script>
 </body>
 </html>
