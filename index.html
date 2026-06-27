@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>三支一扶题库系统 V8.5 (完全体版)</title>
+    <title>三支一扶题库系统 V8.6 (极简收纳版)</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { background-color: #f0f2f5; color: #2c2c2c; font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; padding: 12px; line-height: 1.6; overflow-x: hidden; }
@@ -130,7 +130,6 @@
         .text-rainbow { animation: rainbow 2s linear infinite; }
         @keyframes pulse-glow { 0%{box-shadow: 0 0 10px #fbbf24;} 50%{box-shadow: 0 0 40px #f59e0b, inset 0 0 20px #fbbf24;} 100%{box-shadow: 0 0 10px #fbbf24;} }
         .anim-glow { animation: pulse-glow 1.5s infinite; border: 2px solid #fbbf24; background: #fffbeb !important; }
-
         .particle { position: fixed; pointer-events: none; width: 8px; height: 8px; border-radius: 50%; opacity: 0; z-index: 9999; }
         @keyframes fly { 0% { transform: translateY(0) scale(1); opacity: 1; } 100% { transform: translateY(-80vh) scale(0); opacity: 0; } }
 
@@ -152,14 +151,9 @@
         .sys-modal-overlay.hidden { opacity: 0; pointer-events: none; }
         .sys-modal-overlay.hidden .sys-modal-box { transform: scale(0.9); }
 
-        /* ✨ V8.5 彻底重构防遗忘红点为刺眼警示牌 */
         .sync-alert-badge { display: inline-flex; align-items: center; background: #fee2e2; color: #ef4444; font-size: 11px; font-weight: 800; padding: 2px 8px; border-radius: 12px; margin-left: 8px; vertical-align: middle; border: 1px solid #fca5a5; box-shadow: 0 0 8px rgba(239, 68, 68, 0.4); animation: pulse-alert 1.5s infinite; letter-spacing: 1px;}
         .sync-alert-btn { position: absolute; top: -8px; right: -8px; background: #ef4444; color: white; font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: 10px; border: 2px solid #fff; box-shadow: 0 0 8px rgba(239, 68, 68, 0.6); animation: pulse-alert 1.5s infinite; letter-spacing: 0px;}
-        @keyframes pulse-alert {
-            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); transform: scale(0.95); }
-            70% { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); transform: scale(1); }
-            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); transform: scale(0.95); }
-        }
+        @keyframes pulse-alert { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); transform: scale(0.95); } 70% { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); transform: scale(1); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); transform: scale(0.95); } }
         
         .epic-modal-box { background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%) !important; border: 2px solid #fde68a; }
         .epic-modal-title { color: #b45309 !important; font-size: 22px !important; margin-top: 10px; }
@@ -172,7 +166,6 @@
 
 <div id="page-home">
 
-    <!-- 开发者沙盒测试面板 -->
     <div class="test-console hidden" id="test-console">
         <div class="tc-title">🚧 沙盒测试终端 <span>(云端接口已物理熔断)</span></div>
         <p style="font-size:12px; color:#b45309; margin-bottom:12px; font-weight:600;">注入假数据验证解锁逻辑，退出时将自动核爆清空所有痕迹。</p>
@@ -186,7 +179,6 @@
         </div>
     </div>
     
-    <!-- ⚙️ 战备中心 -->
     <div class="fold-wrapper" id="fold-tools">
         <div class="fold-header" onclick="toggleFold('fold-tools')">
             <div class="fold-title">⚙️ 战备中心 <span class="fold-meta" id="mini-stats-1">正在加载...</span><span id="sync-dot-header" class="sync-alert-badge hidden">需同步!</span></div>
@@ -236,10 +228,28 @@
         </div></div></div>
     </div>
 
-    <!-- 📚 常驻面板：常规练习库 -->
+    <div class="fold-wrapper" id="fold-sys" style="border-color: #a7f3d0; box-shadow: 0 4px 20px rgba(5, 150, 105, 0.05);">
+        <div class="fold-header" onclick="toggleFold('fold-sys')" style="background: #ecfdf5;">
+            <div class="fold-title" style="color: #047857;">🎯 专项特训 <span class="fold-meta" id="mini-stats-sys" style="background: #d1fae5; color: #065f46;">加载中...</span></div>
+            <div class="fold-icon" style="color: #047857;">▼</div>
+        </div>
+        <div class="fold-content"><div class="fold-inner"><div class="fold-inner-padding">
+            <p style="font-size:12px; color:#059669; margin-bottom:16px; font-weight:600; text-align:center; background:#d1fae5; padding:8px; border-radius:8px;">
+                💡 自动收录您的易错点与星标题，答对错题自动核销。
+            </p>
+            <div id="sys-bank-list"></div>
+        </div></div></div>
+    </div>
+
     <div class="main-panel">
-        <h2 style="font-size: 18px;">📚 常规练习库</h2>
-        <div class="controls">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <h2 style="margin-bottom: 0; font-size: 18px;">📚 常规练习库</h2>
+            <div style="font-size: 13px; color: #3b82f6; cursor: pointer; font-weight: 600; padding: 4px 10px; background: #eff6ff; border-radius: 6px; transition: all 0.2s;" onclick="toggleQuizSettings()" id="quiz-settings-btn">
+                ⚙️ 展开偏好设置
+            </div>
+        </div>
+
+        <div class="controls hidden" id="quiz-settings-panel" style="margin-bottom: 20px;">
             <div style="flex: 1; min-width: 90px;">
                 <div style="color:#94a3b8; margin-bottom:6px; font-size:12px;">答题模式</div>
                 <label><input type="radio" name="mode" value="exam"> 考试统分</label>
@@ -258,11 +268,9 @@
             </div>
         </div>
         
-        <div id="sys-bank-list" style="margin-bottom: 24px;"></div>
         <div id="bank-list"></div>
     </div>
 
-    <!-- ⚔️ 折叠舱 2：终极竞技场 -->
     <div class="fold-wrapper" id="fold-arena" style="border-color: #fde68a; box-shadow: 0 4px 20px rgba(245, 158, 11, 0.08);">
         <div class="fold-header" onclick="toggleFold('fold-arena')" style="background: #fffbeb;">
             <div class="fold-title" style="color: #d97706;">⚔️ 终极竞技场 <span class="fold-meta" id="mini-stats-2" style="background: #fef3c7; color: #b45309;">荣誉加载中...</span></div>
@@ -303,7 +311,6 @@
         </div></div></div>
     </div>
 
-    <!-- 🛠️ 折叠舱 3：开发者与危险选项 -->
     <div class="fold-wrapper" id="fold-dev" style="border-color: #fecaca; margin-top: 40px;">
         <div class="fold-header" onclick="toggleFold('fold-dev')" style="background: #fef2f2;">
             <div class="fold-title" style="color: #dc2626;">🛠️ 开发者选项 <span class="fold-meta" style="background: #fee2e2; color: #b91c1c;">实验室 & 危险区</span></div>
@@ -327,7 +334,6 @@
 
 </div>
 
-<!-- ================= 答题区 ================= -->
 <div class="container hidden" id="page-quiz">
     <div class="nav-header">
         <div class="nav-btn" id="nav-btn-back" onclick="location.reload()">〈 保存并退出</div>
@@ -349,7 +355,6 @@
     <button class="btn btn-danger" id="btn-quit" onclick="giveUpQuiz()">放弃进度，清空重卷</button>
 </div>
 
-<!-- ================= 战报区 ================= -->
 <div class="container hidden" id="page-result">
     <div id="challenge-feedback" class="hidden">
         <div class="cf-title" id="cf-title"></div>
@@ -371,7 +376,6 @@
     <button class="btn btn-primary" style="margin-top: 24px; padding: 14px; font-size: 16px;" onclick="location.reload()">完成，返回主页</button>
 </div>
 
-<!-- 基础系统模态框 -->
 <div class="sys-modal-overlay hidden" id="sys-modal">
     <div class="sys-modal-box">
         <div class="sys-modal-title" id="modal-title">提示</div>
@@ -381,7 +385,6 @@
     </div>
 </div>
 
-<!-- 史诗级成就弹窗 -->
 <div class="sys-modal-overlay hidden" id="epic-modal">
     <div class="sys-modal-box epic-modal-box">
         <div style="font-size: 48px; margin-bottom: 10px; line-height: 1;">🏆</div>
@@ -430,9 +433,11 @@
     if(!globalStats.challenge) globalStats.challenge = { easy:0, normal:0, hard:0, extreme:0 };
     
     let isTestMode = localStorage.getItem('szys_test_mode') === 'true';
-    
     let needSync = localStorage.getItem('szys_need_sync') === 'true';
-    let foldState = JSON.parse(localStorage.getItem('szys_fold_state') || '{"fold-tools":false, "fold-arena":false, "fold-dev":false}');
+    
+    // ✨ 增加系统舱和偏好设置的记忆状态
+    let foldState = JSON.parse(localStorage.getItem('szys_fold_state') || '{"fold-tools":false, "fold-sys":false, "fold-arena":false, "fold-dev":false}');
+    let isSettingsOpen = localStorage.getItem('szys_settings_open') === 'true';
 
     const UNLOCK_REQS_Q = { 'easy': 70, 'normal': 210, 'hard': 420, 'extreme': 630 };
     const UNLOCK_REQS_C = { 'easy': 30, 'normal': 90, 'hard': 180, 'extreme': 300 };
@@ -444,6 +449,7 @@
         updateDashboard();
         initUIState();
         applyFoldState();
+        applyQuizSettingsState();
         setNeedSync(needSync); 
 
         let savedToken = localStorage.getItem('szys_github_token'); 
@@ -465,14 +471,11 @@
 
     function setNeedSync(state) {
         if(isTestMode && state) return; 
-        needSync = state;
-        localStorage.setItem('szys_need_sync', state);
+        needSync = state; localStorage.setItem('szys_need_sync', state);
         if(state) {
-            document.getElementById('sync-dot-header').classList.remove('hidden');
-            document.getElementById('sync-dot-btn').classList.remove('hidden');
+            document.getElementById('sync-dot-header').classList.remove('hidden'); document.getElementById('sync-dot-btn').classList.remove('hidden');
         } else {
-            document.getElementById('sync-dot-header').classList.add('hidden');
-            document.getElementById('sync-dot-btn').classList.add('hidden');
+            document.getElementById('sync-dot-header').classList.add('hidden'); document.getElementById('sync-dot-btn').classList.add('hidden');
         }
     }
 
@@ -486,9 +489,27 @@
         foldState[id] = el.classList.contains('open'); localStorage.setItem('szys_fold_state', JSON.stringify(foldState));
     }
     
-    function initUIState() {
-        if (Object.keys(banks).length > 2) { hideImportSection(); } else { showImportSection(); }
+    // ✨ 答题偏好设置极简收纳控制
+    function toggleQuizSettings() {
+        isSettingsOpen = !isSettingsOpen;
+        localStorage.setItem('szys_settings_open', isSettingsOpen);
+        applyQuizSettingsState();
     }
+    function applyQuizSettingsState() {
+        const panel = document.getElementById('quiz-settings-panel');
+        const btn = document.getElementById('quiz-settings-btn');
+        if (isSettingsOpen) {
+            panel.classList.remove('hidden');
+            btn.innerText = '收起设置 ▲';
+            btn.style.color = '#64748b'; btn.style.background = '#f1f5f9';
+        } else {
+            panel.classList.add('hidden');
+            btn.innerText = '⚙️ 展开偏好设置';
+            btn.style.color = '#3b82f6'; btn.style.background = '#eff6ff';
+        }
+    }
+    
+    function initUIState() { if (Object.keys(banks).length > 2) { hideImportSection(); } else { showImportSection(); } }
     function showImportSection() { document.getElementById('import-section-collapsed').classList.add('hidden'); document.getElementById('import-section-expanded').classList.remove('hidden'); }
     function hideImportSection() { document.getElementById('import-section-collapsed').classList.remove('hidden'); document.getElementById('import-section-expanded').classList.add('hidden'); }
     
@@ -497,6 +518,12 @@
         for (let id in banks) { if(!banks[id].isSystem) totalQ += banks[id].data.length; }
         
         document.getElementById('mini-stats-1').innerText = `| 库容 ${totalQ} 题 · 答对 ${globalStats.totalCorrect}`;
+        
+        // 更新专项特训折叠舱的数据
+        let wrongCount = banks['sys_wrong'] ? banks['sys_wrong'].data.length : 0;
+        let starCount = banks['sys_star'] ? banks['sys_star'].data.length : 0;
+        document.getElementById('mini-stats-sys').innerText = `| 错题 ${wrongCount} · 收藏 ${starCount}`;
+
         let totalClear = (globalStats.challenge.easy||0) + (globalStats.challenge.normal||0) + (globalStats.challenge.hard||0) + (globalStats.challenge.extreme||0);
         document.getElementById('mini-stats-2').innerText = `| 累计过关 ${totalClear} 次`;
 
@@ -591,7 +618,7 @@
 
     async function executeCloudBackup(token) {
         localStorage.setItem('szys_github_token', token);
-        let backupPayload = { version: "8.5", banks: banks, state: JSON.parse(localStorage.getItem('szys_state') || 'null'), stats: globalStats };
+        let backupPayload = { version: "8.6", banks: banks, state: JSON.parse(localStorage.getItem('szys_state') || 'null'), stats: globalStats };
         let payloadStr = JSON.stringify(backupPayload);
         const btn = document.getElementById('btn-cloud-backup'); let oriTxt = "⬆️ 备份全状态"; btn.innerText = "⏳ 加密上传中..."; btn.disabled = true;
         try {
@@ -599,7 +626,7 @@
             if(!res.ok) throw new Error("密钥验证失败");
             let gists = await res.json(); let targetGist = gists.find(g => g.files['szys_backup.json']);
             if(targetGist) { await fetch('https://api.github.com/gists/' + targetGist.id, { method: 'PATCH', headers: { 'Authorization': 'token ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ files: { 'szys_backup.json': { content: payloadStr } } }) }); } 
-            else { await fetch('https://api.github.com/gists', { method: 'POST', headers: { 'Authorization': 'token ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ description: "三支一扶 V8.5 题库备份", public: false, files: { 'szys_backup.json': { content: payloadStr } } }) }); }
+            else { await fetch('https://api.github.com/gists', { method: 'POST', headers: { 'Authorization': 'token ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ description: "三支一扶 V8.6 题库备份", public: false, files: { 'szys_backup.json': { content: payloadStr } } }) }); }
             setNeedSync(false); 
             alert("✅ 漫游数据备份成功！");
         } catch(e) { alert("❌ 备份出错：" + e.message); } finally { btn.innerHTML = oriTxt + ' <span id="sync-dot-btn" class="sync-alert-btn hidden">待备份</span>'; btn.disabled = false; if(needSync) document.getElementById('sync-dot-btn').classList.remove('hidden');}
@@ -634,7 +661,7 @@
 
     function exportLocalData() {
         if (Object.keys(banks).length <= 2 && banks['sys_wrong'].data.length===0) return alert("暂无数据可导出");
-        let backupPayload = { version: "8.5", banks: banks, state: JSON.parse(localStorage.getItem('szys_state') || 'null'), stats: globalStats };
+        let backupPayload = { version: "8.6", banks: banks, state: JSON.parse(localStorage.getItem('szys_state') || 'null'), stats: globalStats };
         let blob = new Blob([JSON.stringify(backupPayload)], { type: "application/json" }); let url = URL.createObjectURL(blob); let a = document.createElement('a'); a.href = url;
         a.download = `题库全量备份_${new Date().toISOString().slice(0,10).replace(/-/g,"")}.json`; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
     }
@@ -683,6 +710,7 @@
         const sysList = document.getElementById('sys-bank-list'); const customList = document.getElementById('bank-list'); const sel = document.getElementById('exist-bank-select');
         sysList.innerHTML = ''; customList.innerHTML = ''; sel.innerHTML = '<option value="">-- 追加至目标题库 --</option>'; let hasCustomBanks = false;
         
+        // 渲染系统库至专项特训区
         ['sys_wrong', 'sys_star'].forEach(id => {
             let b = banks[id]; if(!b) return;
             let div = document.createElement('div'); div.className = `bank-item bank-sys-${b.sysType}`;
@@ -695,6 +723,7 @@
             `; sysList.appendChild(div);
         });
 
+        // 渲染自定义库至首屏常规练习区
         for (let id in banks) {
             if(banks[id].isSystem) continue;
             hasCustomBanks = true; let b = banks[id];
@@ -713,7 +742,7 @@
                 <button class="btn ${playBtnClass}" style="margin-bottom:0; margin-top:4px;" onclick="startQuiz('${id}', ${hasResume})">${playBtnTxt}</button>
             `; customList.appendChild(div);
         }
-        if(!hasCustomBanks) customList.innerHTML = '<div style="text-align:center; color:#94a3b8; padding:24px; font-size:14px; border:1px dashed #cbd5e1; border-radius:12px;">您的自定义题库空空如也，请去战备中心导入。</div>';
+        if(!hasCustomBanks) customList.innerHTML = '<div style="text-align:center; color:#94a3b8; padding:24px; font-size:14px; border:1px dashed #cbd5e1; border-radius:12px;">您的自定义题库空空如也，请前往上方 [战备中心] 导入。</div>';
     }
 
     const App = { bankId: null, data: [], current: 0, score: 0, mode: 'instant', wrongList: [], stars: new Set(), selected: [], isAnswered: false, timerMode: false, timeRemaining: 0, isChallenge: false, challengeDiff: null, optShuffle: false, isCompletedBank: false, isSystemBank: false };
@@ -736,41 +765,28 @@
         });
     }
 
-    // ✨ V8.5 最终阶：AI 智能弱点打击抽取引擎
     function startChallenge(difficulty) {
         let totalQ = parseInt(document.getElementById('global-total-q').innerText);
         let totalC = globalStats.totalCorrect;
         let reqQ = UNLOCK_REQS_Q[difficulty]; let reqC = UNLOCK_REQS_C[difficulty]; let preReqMode = UNLOCK_PRE[difficulty];
+        let diffName = PRE_NAMES[difficulty];
 
         let isQLocked = totalQ < reqQ; let isCLocked = totalC < reqC; let isPreLocked = preReqMode ? (globalStats.challenge[preReqMode] || 0) < 1 : false;
         if(isQLocked || isCLocked || isPreLocked) return alert(`🔒 挑战受限！请先满足解锁条件。`);
         
-        let reqMap = { 'easy': 10, 'normal': 30, 'hard': 60, 'extreme': 90 }; 
-        let req = reqMap[difficulty];
+        let reqMap = { 'easy': 10, 'normal': 30, 'hard': 60, 'extreme': 90 }; let req = reqMap[difficulty];
 
-        // 1. 优先从错题本和收藏夹构建【优先池】
         let priorityQs = []; let priorityFps = new Set();
-        if (banks['sys_wrong']) {
-            banks['sys_wrong'].data.forEach(q => { let fp = getFingerprint(q.question); if(!priorityFps.has(fp)) { priorityQs.push(q); priorityFps.add(fp); } });
-        }
-        if (banks['sys_star']) {
-            banks['sys_star'].data.forEach(q => { let fp = getFingerprint(q.question); if(!priorityFps.has(fp)) { priorityQs.push(q); priorityFps.add(fp); } });
-        }
+        if (banks['sys_wrong']) banks['sys_wrong'].data.forEach(q => { let fp = getFingerprint(q.question); if(!priorityFps.has(fp)) { priorityQs.push(q); priorityFps.add(fp); } });
+        if (banks['sys_star']) banks['sys_star'].data.forEach(q => { let fp = getFingerprint(q.question); if(!priorityFps.has(fp)) { priorityQs.push(q); priorityFps.add(fp); } });
         for (let i = priorityQs.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [priorityQs[i], priorityQs[j]] = [priorityQs[j], priorityQs[i]]; }
 
-        // 2. 从常规题库构建【普通池】（排除已经在优先池里的题）
         let regularQs = []; 
         for(let id in banks) { 
-            if(!banks[id].isSystem) {
-                banks[id].data.forEach(q => {
-                    let fp = getFingerprint(q.question);
-                    if(!priorityFps.has(fp)) { regularQs.push(q); }
-                });
-            } 
+            if(!banks[id].isSystem) { banks[id].data.forEach(q => { let fp = getFingerprint(q.question); if(!priorityFps.has(fp)) { regularQs.push(q); } }); } 
         }
         for (let i = regularQs.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [regularQs[i], regularQs[j]] = [regularQs[j], regularQs[i]]; }
 
-        // 3. 智能拼接：优先用错题塞满，不够的用常规题补齐
         let finalQs = [];
         let pCount = Math.min(priorityQs.length, req);
         finalQs = finalQs.concat(priorityQs.slice(0, pCount));
@@ -778,7 +794,6 @@
         let rCount = req - finalQs.length;
         if (rCount > 0) { finalQs = finalQs.concat(regularQs.slice(0, rCount)); }
 
-        // 4. 再次全局打乱，不让用户发现哪些是错题
         for (let i = finalQs.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [finalQs[i], finalQs[j]] = [finalQs[j], finalQs[i]]; }
 
         App.data = finalQs; App.isChallenge = true; App.challengeDiff = difficulty; App.mode = 'exam';
