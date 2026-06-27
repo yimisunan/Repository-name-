@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>三支一扶题库系统 V7.8 (流体折叠版)</title>
+    <title>三支一扶题库系统 V7.9 (选项乱序版)</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { background-color: #f0f2f5; color: #2c2c2c; font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; padding: 12px; line-height: 1.6; overflow-x: hidden; }
@@ -29,7 +29,6 @@
         .flex-row input, .flex-row select { flex: 1; }
         .flex-row .btn { width: auto; padding: 0 20px; line-height: 42px; padding-top: 0; padding-bottom: 0; }
 
-        /* ✨ 核心：流体 3D 悬浮折叠舱 */
         .fold-wrapper { background: #ffffff; border-radius: 16px; margin-bottom: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.04); border: 1px solid #e2e8f0; overflow: hidden; transition: all 0.3s;}
         .fold-header { padding: 18px 20px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; background: #ffffff; user-select: none; transition: background 0.3s; }
         .fold-header:active { background: #f8fafc; }
@@ -40,19 +39,14 @@
         .fold-wrapper.open .fold-icon { transform: rotate(180deg); }
         .fold-wrapper.open .fold-header { border-bottom: 1px dashed #e2e8f0; background: #fcfcfc;}
 
-        /* CSS Grid 魔法实现丝滑自动高度动画 */
         .fold-content { display: grid; grid-template-rows: 0fr; transition: grid-template-rows 0.4s cubic-bezier(0.25, 1, 0.5, 1); }
         .fold-wrapper.open .fold-content { grid-template-rows: 1fr; }
         .fold-inner { overflow: hidden; }
-        
-        /* 内部 3D 弹出动效 */
         .fold-inner-padding { padding: 20px; opacity: 0; transform: translateY(-15px) scale(0.98); transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1); transition-delay: 0.05s;}
         .fold-wrapper.open .fold-inner-padding { opacity: 1; transform: translateY(0) scale(1); }
 
-        /* 常驻面板（练习库） */
         .main-panel { background: #ffffff; padding: 24px 20px; border-radius: 16px; box-shadow: 0 4px 24px rgba(0, 0, 0, 0.04); margin-bottom: 16px; position: relative;}
 
-        /* 大盘卡片 */
         .dashboard-card { background: linear-gradient(135deg, #f8fafc 0%, #eff6ff 100%); border: 1px solid #e0e7ff; padding: 16px; border-radius: 12px; margin-bottom: 12px; display: flex; justify-content: space-around; align-items: center; }
         .dash-item { text-align: center; flex: 1; }
         .dash-num { font-size: 22px; font-weight: 800; color: #1e40af; line-height: 1.2; font-family: monospace; }
@@ -75,7 +69,6 @@
         .arena-extreme { background: linear-gradient(135deg, #1f2937 0%, #000000 100%); box-shadow: 0 4px 12px rgba(0,0,0,0.3); border: 1px solid #fbbf24; }
         .arena-extreme h3 { color: #fbbf24; }
         
-        /* 强化的视觉锁 */
         .locked-mode { filter: grayscale(1) opacity(0.5); cursor: not-allowed; }
         .lock-msg { display: block; font-size: 10px; font-weight: 800; margin-top: 8px; padding-top: 6px; border-top: 1px dashed rgba(255,255,255,0.4); color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.5); line-height: 1.4;}
         .arena-extreme .lock-msg { color: #fbbf24; border-top-color: rgba(251, 191, 36, 0.4); }
@@ -136,7 +129,7 @@
 
         .chunk-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; margin-bottom: 16px; }
         .chunk-title { font-size: 14px; font-weight: 600; color: #64748b; margin-bottom: 10px; }
-        .chunk-textarea { height: 120px; margin-bottom: 12px; border: 1px solid #cbd5e1; border-radius: 8px; }
+        .chunk-textarea { height: 120px; margin-bottom: 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-family: monospace;}
     </style>
 </head>
 <body>
@@ -186,20 +179,24 @@
     <div class="main-panel">
         <h2 style="font-size: 18px;">📚 常规练习库</h2>
         <div class="controls">
-            <div style="flex: 1; min-width: 100px;">
+            <div style="flex: 1; min-width: 90px;">
                 <div style="color:#94a3b8; margin-bottom:6px; font-size:12px;">答题模式</div>
                 <label><input type="radio" name="mode" value="exam"> 考试统分</label>
                 <label><input type="radio" name="mode" value="instant" checked> 边答边看</label>
             </div>
-            <div style="flex: 1; min-width: 100px;">
-                <div style="color:#94a3b8; margin-bottom:6px; font-size:12px;">选项设置</div>
-                <label><input type="checkbox" id="shuffle-cb" checked> 题目打乱</label>
+            <div style="flex: 1; min-width: 90px;">
+                <div style="color:#94a3b8; margin-bottom:6px; font-size:12px;">题目顺序</div>
+                <label><input type="checkbox" id="shuffle-cb" checked> 题目乱序</label>
+            </div>
+            <div style="flex: 1; min-width: 90px;">
+                <div style="color:#94a3b8; margin-bottom:6px; font-size:12px;">实验功能</div>
+                <label><input type="checkbox" id="opt-shuffle-cb"> 选项乱序 <span style="color:#f59e0b; font-size:12px;">(防背)</span></label>
             </div>
             <div style="flex: 1; min-width: 110px;">
                 <div style="color:#94a3b8; margin-bottom:6px; font-size:12px;">限时挑战</div>
                 <label><input type="checkbox" id="timer-cb" onclick="document.getElementById('timer-input-box').style.display = this.checked ? 'block' : 'none'"> 开启倒计时</label>
                 <div id="timer-input-box" style="display:none; margin-top:4px;">
-                    <input type="number" id="timer-minutes" value="30" min="1" max="300" style="width:70px; padding:6px; text-align:center; display:inline-block;">
+                    <input type="number" id="timer-minutes" value="30" min="1" max="300" style="width:60px; padding:6px; text-align:center; display:inline-block;">分钟
                 </div>
             </div>
         </div>
@@ -286,16 +283,13 @@
 </div>
 
 <script>
-    // ---------------- 基础数据初始化 ----------------
     let banks = JSON.parse(localStorage.getItem('szys_banks') || '{}');
     let globalStats = JSON.parse(localStorage.getItem('szys_global_stats') || '{"totalAnswered": 0, "totalCorrect": 0, "challenge": {}}');
     if(globalStats.totalCorrect === undefined) globalStats.totalCorrect = 0;
     if(!globalStats.challenge) globalStats.challenge = { easy:0, normal:0, hard:0, extreme:0 };
     
-    // ✨ 级联三重阈值配置
     const UNLOCK_REQS_Q = { 'easy': 70, 'normal': 210, 'hard': 420, 'extreme': 630 };
     const UNLOCK_REQS_C = { 'easy': 30, 'normal': 90, 'hard': 180, 'extreme': 300 };
-    // 级联前置需求：此难度需要哪个难度通关至少1次
     const UNLOCK_PRE = { 'easy': null, 'normal': 'easy', 'hard': 'normal', 'extreme': 'hard' };
     const PRE_NAMES = { 'easy': '简单', 'normal': '普通', 'hard': '困难', 'extreme': '极限' };
 
@@ -310,22 +304,15 @@
     function saveGlobalStats() { localStorage.setItem('szys_global_stats', JSON.stringify(globalStats)); updateDashboard(); }
     function getFingerprint(str) { return str.replace(/[^\u4e00-\u9fa5a-zA-Z0-9]/g, ''); }
 
-    // ✨ 丝滑折叠控制
-    function toggleFold(id) {
-        let el = document.getElementById(id);
-        el.classList.toggle('open');
-    }
+    function toggleFold(id) { document.getElementById(id).classList.toggle('open'); }
     
-    // ✨ 更新大盘与智能多重视觉锁
     function updateDashboard() {
         let totalQ = 0; for (let id in banks) { totalQ += banks[id].data.length; }
         
-        // 更新折叠舱的缩略信息
         document.getElementById('mini-stats-1').innerText = `| 库容 ${totalQ} 题 · 答对 ${globalStats.totalCorrect}`;
         let totalClear = (globalStats.challenge.easy||0) + (globalStats.challenge.normal||0) + (globalStats.challenge.hard||0) + (globalStats.challenge.extreme||0);
         document.getElementById('mini-stats-2').innerText = `| 累计过关 ${totalClear} 次`;
 
-        // 详细大盘数字
         document.getElementById('global-total-q').innerText = totalQ;
         document.getElementById('global-total-ans').innerText = globalStats.totalAnswered;
         document.getElementById('global-total-cor').innerText = globalStats.totalCorrect;
@@ -340,51 +327,38 @@
             let el = document.getElementById('arena-' + mode);
             let msgEl = document.getElementById('lock-msg-' + mode);
             
-            let reqQ = UNLOCK_REQS_Q[mode];
-            let reqC = UNLOCK_REQS_C[mode];
-            let preReqMode = UNLOCK_PRE[mode];
-            
-            let isQLocked = totalQ < reqQ;
-            let isCLocked = globalStats.totalCorrect < reqC;
-            let isPreLocked = preReqMode ? (globalStats.challenge[preReqMode] || 0) < 1 : false;
+            let reqQ = UNLOCK_REQS_Q[mode]; let reqC = UNLOCK_REQS_C[mode]; let preReqMode = UNLOCK_PRE[mode];
+            let isQLocked = totalQ < reqQ; let isCLocked = globalStats.totalCorrect < reqC; let isPreLocked = preReqMode ? (globalStats.challenge[preReqMode] || 0) < 1 : false;
 
             if(isQLocked || isCLocked || isPreLocked) {
-                el.classList.add('locked-mode');
-                let lockReasons = [];
+                el.classList.add('locked-mode'); let lockReasons = [];
                 if(isPreLocked) lockReasons.push(`需先通关[${PRE_NAMES[preReqMode]}]`);
                 if(isQLocked) lockReasons.push(`库存>${reqQ}`);
                 if(isCLocked) lockReasons.push(`答对>${reqC}`);
                 msgEl.innerHTML = '🔒 锁定: ' + lockReasons.join(' <br> ');
-            } else {
-                el.classList.remove('locked-mode');
-                msgEl.innerText = '';
-            }
+            } else { el.classList.remove('locked-mode'); msgEl.innerText = ''; }
         });
     }
 
     // --- 云端同步逻辑 ---
     async function cloudBackup() {
-        let token = document.getElementById('github-token-input').value.trim();
-        if(!token) return alert("请先填写 GitHub 密钥！");
-        localStorage.setItem('szys_github_token', token);
+        let token = document.getElementById('github-token-input').value.trim(); if(!token) return alert("请先填写 GitHub 密钥！"); localStorage.setItem('szys_github_token', token);
         if (Object.keys(banks).length === 0) return alert("您的本地题库为空，无需备份。");
         const btn = document.getElementById('btn-cloud-backup'); btn.innerText = "正在打包全状态..."; btn.disabled = true;
         try {
-            let backupPayload = { version: "7.8", banks: banks, state: JSON.parse(localStorage.getItem('szys_state') || 'null'), stats: globalStats };
+            let backupPayload = { version: "7.9", banks: banks, state: JSON.parse(localStorage.getItem('szys_state') || 'null'), stats: globalStats };
             let payloadStr = JSON.stringify(backupPayload);
             let res = await fetch('https://api.github.com/gists', { headers: { 'Authorization': 'token ' + token }});
             if(!res.ok) throw new Error("密钥验证失败");
             let gists = await res.json(); let targetGist = gists.find(g => g.files['szys_backup.json']);
             if(targetGist) { await fetch('https://api.github.com/gists/' + targetGist.id, { method: 'PATCH', headers: { 'Authorization': 'token ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ files: { 'szys_backup.json': { content: payloadStr } } }) }); } 
-            else { await fetch('https://api.github.com/gists', { method: 'POST', headers: { 'Authorization': 'token ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ description: "三支一扶 V7.8 题库备份", public: false, files: { 'szys_backup.json': { content: payloadStr } } }) }); }
+            else { await fetch('https://api.github.com/gists', { method: 'POST', headers: { 'Authorization': 'token ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ description: "三支一扶 V7.9 题库备份", public: false, files: { 'szys_backup.json': { content: payloadStr } } }) }); }
             alert("✅ 全状态备份成功！");
         } catch(e) { alert("❌ 备份出错：" + e.message); } finally { btn.innerText = "⬆️ 备份全状态"; btn.disabled = false; }
     }
 
     async function cloudRestore() {
-        let token = document.getElementById('github-token-input').value.trim();
-        if(!token) return alert("请先填写 GitHub 密钥！");
-        localStorage.setItem('szys_github_token', token);
+        let token = document.getElementById('github-token-input').value.trim(); if(!token) return alert("请先填写 GitHub 密钥！"); localStorage.setItem('szys_github_token', token);
         const btn = document.getElementById('btn-cloud-restore'); btn.innerText = "强制穿透拉取中..."; btn.disabled = true;
         try {
             let res = await fetch('https://api.github.com/gists', { headers: { 'Authorization': 'token ' + token }});
@@ -398,28 +372,26 @@
             if (importedData.version && importedData.version >= "7.3") {
                 for (let id in importedData.banks) {
                     if (!currentBanks[id]) { currentBanks[id] = importedData.banks[id]; addedCount++; } 
-                    else { let newId = id + "_" + Date.now(); importedData.banks[id].name += " (云端恢复)"; currentBanks[newId] = importedData.banks[id]; addedCount++; }
+                    else { let newId = id + "_" + Date.now(); importedData.banks[id].name += " (云端)"; currentBanks[newId] = importedData.banks[id]; addedCount++; }
                 }
                 if (importedData.stats) { 
-                    globalStats = importedData.stats; 
-                    if(globalStats.totalCorrect === undefined) globalStats.totalCorrect = 0;
-                    if(!globalStats.challenge) globalStats.challenge = { easy:0, normal:0, hard:0, extreme:0 };
-                    saveGlobalStats(); 
+                    globalStats = importedData.stats; if(globalStats.totalCorrect === undefined) globalStats.totalCorrect = 0;
+                    if(!globalStats.challenge) globalStats.challenge = { easy:0, normal:0, hard:0, extreme:0 }; saveGlobalStats(); 
                 }
                 if (importedData.state) { localStorage.setItem('szys_state', JSON.stringify(importedData.state)); } else { localStorage.removeItem('szys_state'); }
             } else {
                 for (let id in importedData) {
                     if (!currentBanks[id]) { currentBanks[id] = importedData[id]; addedCount++; } 
-                    else { let newId = id + "_" + Date.now(); importedData[id].name += " (云端恢复)"; currentBanks[newId] = importedData[id]; addedCount++; }
+                    else { let newId = id + "_" + Date.now(); importedData[id].name += " (云端)"; currentBanks[newId] = importedData[id]; addedCount++; }
                 }
             }
             localStorage.setItem('szys_banks', JSON.stringify(currentBanks)); alert(`✅ 恢复成功！找回 ${addedCount} 个题库。`); location.reload();
-        } catch(e) { alert("❌ 恢复出错：" + e.message); } finally { btn.innerText = "⬇️ 强制拉取恢复"; btn.disabled = false; }
+        } catch(e) { alert("❌ 恢复出错：" + e.message); } finally { btn.innerText = "⬇️ 强制拉取"; btn.disabled = false; }
     }
 
     function exportLocalData() {
         if (Object.keys(banks).length === 0) return alert("暂无数据可导出");
-        let backupPayload = { version: "7.8", banks: banks, state: JSON.parse(localStorage.getItem('szys_state') || 'null'), stats: globalStats };
+        let backupPayload = { version: "7.9", banks: banks, state: JSON.parse(localStorage.getItem('szys_state') || 'null'), stats: globalStats };
         let blob = new Blob([JSON.stringify(backupPayload)], { type: "application/json" }); let url = URL.createObjectURL(blob); let a = document.createElement('a'); a.href = url;
         a.download = `题库全量备份_${new Date().toISOString().slice(0,10).replace(/-/g,"")}.json`; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
     }
@@ -476,52 +448,64 @@
         if(!hasBanks) list.innerHTML = '<div style="text-align:center; color:#94a3b8; padding:24px; font-size:14px;">练习库空空如也，请在上方导入中心添加题目。</div>';
     }
 
-    // --- 答题与挑战引擎 ---
-    const App = { bankId: null, data: [], current: 0, score: 0, mode: 'instant', wrongList: [], stars: new Set(), selected: [], isAnswered: false, timerMode: false, timeRemaining: 0, isChallenge: false, challengeDiff: null };
+    // ---------------- 答题与选项乱序引擎 ----------------
+    const App = { 
+        bankId: null, data: [], current: 0, score: 0, mode: 'instant', 
+        wrongList: [], stars: new Set(), selected: [], isAnswered: false, 
+        timerMode: false, timeRemaining: 0, isChallenge: false, challengeDiff: null,
+        optShuffle: false // ✨ 新增：选项乱序标志
+    };
     let timerInterval = null;
     const DOM = { setup: document.getElementById('page-home'), quiz: document.getElementById('page-quiz'), result: document.getElementById('page-result'), title: document.getElementById('question-text'), opts: document.getElementById('options-container'), progressFill: document.getElementById('progress-fill'), progressText: document.getElementById('progress-text'), feedback: document.getElementById('feedback-box'), btnAction: document.getElementById('btn-action'), btnStar: document.getElementById('btn-star'), timerDisplay: document.getElementById('timer-display') };
 
     function saveState() {
         if(App.isChallenge) return;
-        const state = { bankId: App.bankId, current: App.current, score: App.score, mode: App.mode, wrongList: App.wrongList, stars: Array.from(App.stars), isAnswered: App.isAnswered, selected: App.selected, activeData: App.data, timerMode: App.timerMode, timeRemaining: App.timeRemaining };
+        const state = { bankId: App.bankId, current: App.current, score: App.score, mode: App.mode, wrongList: App.wrongList, stars: Array.from(App.stars), isAnswered: App.isAnswered, selected: App.selected, activeData: App.data, timerMode: App.timerMode, timeRemaining: App.timeRemaining, optShuffle: App.optShuffle };
         localStorage.setItem('szys_state', JSON.stringify(state));
+    }
+
+    // ✨ 选项乱序预处理核心逻辑
+    function preprocessOptions(dataArray, isShuffle) {
+        dataArray.forEach(q => {
+            let dKeys = Object.keys(q.options).sort();
+            q.optMap = {}; // 映射关系：{ '屏幕上的A': '原始的C' }
+            if (isShuffle) {
+                let oKeys = [...dKeys];
+                for (let i = oKeys.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [oKeys[i], oKeys[j]] = [oKeys[j], oKeys[i]];
+                }
+                dKeys.forEach((dk, i) => { q.optMap[dk] = oKeys[i]; });
+            } else {
+                dKeys.forEach(dk => { q.optMap[dk] = dk; });
+            }
+        });
     }
 
     function startChallenge(difficulty) {
         let totalQ = parseInt(document.getElementById('global-total-q').innerText);
         let totalC = globalStats.totalCorrect;
-        let reqQ = UNLOCK_REQS_Q[difficulty];
-        let reqC = UNLOCK_REQS_C[difficulty];
-        let preReqMode = UNLOCK_PRE[difficulty];
-        
+        let reqQ = UNLOCK_REQS_Q[difficulty]; let reqC = UNLOCK_REQS_C[difficulty]; let preReqMode = UNLOCK_PRE[difficulty];
         let diffName = PRE_NAMES[difficulty];
 
-        let isQLocked = totalQ < reqQ;
-        let isCLocked = totalC < reqC;
-        let isPreLocked = preReqMode ? (globalStats.challenge[preReqMode] || 0) < 1 : false;
-
-        if(isQLocked || isCLocked || isPreLocked) {
-            let reasons = [];
-            if(isPreLocked) reasons.push(`- 必须先通关一次【${PRE_NAMES[preReqMode]}】模式`);
-            if(isQLocked) reasons.push(`- 导入全库题数达到 ${reqQ} (当前 ${totalQ})`);
-            if(isCLocked) reasons.push(`- 历史累计答对数达到 ${reqC} (当前 ${totalC})`);
-            return alert(`🔒 挑战受限！\n\n开启【${diffName}】模式需同时满足以下条件：\n\n${reasons.join('\n')}\n\n稳扎稳打，快去常规题库积累实力吧！`);
-        }
+        let isQLocked = totalQ < reqQ; let isCLocked = totalC < reqC; let isPreLocked = preReqMode ? (globalStats.challenge[preReqMode] || 0) < 1 : false;
+        if(isQLocked || isCLocked || isPreLocked) return alert(`🔒 挑战受限！请先满足解锁条件。`);
         
         let allQs = []; for(let id in banks) { allQs = allQs.concat(banks[id].data); }
-        let reqMap = { 'easy': 10, 'normal': 30, 'hard': 60, 'extreme': 90 };
-        let req = reqMap[difficulty];
-        
+        let reqMap = { 'easy': 10, 'normal': 30, 'hard': 60, 'extreme': 90 }; let req = reqMap[difficulty];
         for (let i = allQs.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [allQs[i], allQs[j]] = [allQs[j], allQs[i]]; }
         
         App.data = allQs.slice(0, req); App.isChallenge = true; App.challengeDiff = difficulty; App.mode = 'exam';
+        
+        // 读取选项乱序开关
+        App.optShuffle = document.getElementById('opt-shuffle-cb') ? document.getElementById('opt-shuffle-cb').checked : false;
+        preprocessOptions(App.data, App.optShuffle);
+
         App.current = 0; App.score = 0; App.wrongList = []; App.stars.clear(); App.selected = []; App.isAnswered = false;
 
         if(difficulty === 'extreme') { App.timerMode = true; App.timeRemaining = 90 * 60; } else { App.timerMode = false; }
-
         DOM.setup.classList.add('hidden'); DOM.quiz.classList.remove('hidden');
         document.getElementById('nav-btn-back').innerText = '〈 放弃挑战 (判负)'; document.getElementById('btn-quit').innerText = '投降退出';
-        
         if(App.timerMode) { DOM.timerDisplay.classList.remove('hidden'); startTimerLogic(); } else { DOM.timerDisplay.classList.add('hidden'); }
         renderQuestion(false);
     }
@@ -531,11 +515,20 @@
         document.getElementById('nav-btn-back').innerText = '〈 保存并退出'; document.getElementById('btn-quit').innerText = '放弃当前进度，清空重卷';
         if (isResume) {
             let s = JSON.parse(localStorage.getItem('szys_state'));
-            App.bankId = s.bankId; App.data = s.activeData; App.current = s.current; App.score = s.score; App.mode = s.mode; App.wrongList = s.wrongList; App.stars = new Set(s.stars); App.isAnswered = s.isAnswered; App.selected = s.selected; App.timerMode = s.timerMode || false; App.timeRemaining = s.timeRemaining || 0;
+            App.bankId = s.bankId; App.data = s.activeData; App.current = s.current; App.score = s.score; App.mode = s.mode; App.wrongList = s.wrongList; App.stars = new Set(s.stars); App.isAnswered = s.isAnswered; App.selected = s.selected; App.timerMode = s.timerMode || false; App.timeRemaining = s.timeRemaining || 0; App.optShuffle = s.optShuffle || false;
+            
+            // 安全防沉降：如果旧版存档没有 optMap，在这里修补
+            App.data.forEach(q => { if(!q.optMap) { q.optMap={}; Object.keys(q.options).sort().forEach(k=>q.optMap[k]=k); }});
+            
             DOM.setup.classList.add('hidden'); DOM.quiz.classList.remove('hidden'); renderQuestion(true);
         } else {
             App.bankId = bankId; App.data = JSON.parse(JSON.stringify(banks[bankId].data)); App.mode = document.querySelector('input[name="mode"]:checked').value;
             if (document.getElementById('shuffle-cb').checked) { for (let i = App.data.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [App.data[i], App.data[j]] = [App.data[j], App.data[i]]; } }
+            
+            // 处理选项乱序
+            App.optShuffle = document.getElementById('opt-shuffle-cb') ? document.getElementById('opt-shuffle-cb').checked : false;
+            preprocessOptions(App.data, App.optShuffle);
+
             App.current = 0; App.score = 0; App.wrongList = []; App.stars.clear(); App.selected = []; App.isAnswered = false;
             App.timerMode = document.getElementById('timer-cb').checked;
             if(App.timerMode) { let mins = parseInt(document.getElementById('timer-minutes').value) || 30; App.timeRemaining = mins * 60; }
@@ -561,6 +554,7 @@
         else { if(confirm("⚠️ 确定要清空重来吗？本次进度将被删除。")) { if(timerInterval) clearInterval(timerInterval); localStorage.removeItem('szys_state'); location.reload(); } }
     }
 
+    // ✨ 选项呈现：利用 optMap 将内部乱序在外部呈现
     function renderQuestion(isRestore = false) {
         if (!isRestore) { App.selected = []; App.isAnswered = false; }
         const q = App.data[App.current]; 
@@ -569,12 +563,18 @@
         let sourceHtml = q.source ? `<span class="source-text">📄 出处：${q.source}</span>` : '';
         DOM.title.innerHTML = `<span class="badge">${q.type === 'multiple' ? '多选题' : '单选题'}</span> ${q.question} ${sourceHtml}`;
         DOM.btnStar.innerHTML = App.stars.has(q.id) ? '★ 已收藏' : '☆ 收藏本题'; DOM.btnStar.className = App.stars.has(q.id) ? 'nav-btn bookmark-btn active' : 'nav-btn bookmark-btn';
+        
         DOM.opts.innerHTML = '';
-        for (let key in q.options) { 
-            let btn = document.createElement('button'); btn.className = 'opt-btn'; btn.id = `opt-${key}`; 
-            btn.innerHTML = `<span class="opt-letter">${key}.</span> <span>${q.options[key]}</span>`; 
-            btn.onclick = () => selectOpt(key, q.type); DOM.opts.appendChild(btn); 
+        let dKeys = Object.keys(q.optMap).sort();
+        for (let dk of dKeys) { 
+            let oKey = q.optMap[dk]; // oKey 是原始的 A B C D
+            let btn = document.createElement('button'); btn.className = 'opt-btn'; btn.id = `opt-${oKey}`; 
+            btn.innerHTML = `<span class="opt-letter">${dk}.</span> <span>${q.options[oKey]}</span>`; 
+            // 按钮点击时，传递给逻辑层的永远是【最原始】的那个字母，而不是屏幕上显示的打乱字母！
+            btn.onclick = () => selectOpt(oKey, q.type); 
+            DOM.opts.appendChild(btn); 
         }
+        
         DOM.feedback.classList.add('hidden'); DOM.btnAction.className = "btn btn-primary";
         DOM.btnAction.innerText = App.mode === 'instant' ? '确认选择' : (App.current === App.data.length - 1 ? (App.isChallenge?'斩杀！查看战果':'交卷并查看成绩') : '下一题');
         if (isRestore && App.isAnswered) { restoreFeedback(); } else if (isRestore && App.selected.length > 0) { App.selected.forEach(k => { let b = document.getElementById(`opt-${k}`); if(b) b.classList.add('selected'); }); }
@@ -605,25 +605,36 @@
     }
 
     function processAnswer(q) {
+        // App.selected 里存的全是原始字母，q.answer 也是原始字母，匹配完美进行。
         let myAns = App.selected.sort().join(''); let rightAns = q.answer.split('').sort().join(''); let isRight = (myAns === rightAns);
         if (isRight) { App.score++; if(!App.isChallenge) { globalStats.totalCorrect++; } }
+        // 记录进错题本的，依然是毫无防备的原始字母，以适配 AI
         if (!isRight || App.stars.has(q.id)) App.wrongList.push({ id: q.id, q: q.question, source: q.source || "未知", my: myAns || "未答", right: q.answer, reason: !isRight ? "答错" : "收藏" });
         if(!App.isChallenge) { globalStats.totalAnswered++; saveGlobalStats(); }
     }
 
+    // ✨ UI 视觉层的还原魔法
     function showFeedbackUI(q) {
         let myAns = App.selected.sort().join('');
         document.querySelectorAll('.opt-btn').forEach(btn => { 
-            btn.classList.add('locked'); let k = btn.id.replace('opt-', ''); 
+            btn.classList.add('locked'); 
+            let k = btn.id.replace('opt-', ''); // 取出原始字母
             if (q.answer.includes(k)) btn.classList.add('correct'); else if (myAns.includes(k) && !q.answer.includes(k)) btn.classList.add('wrong'); 
         });
+        
         DOM.feedback.classList.remove('hidden');
         if (myAns === q.answer.split('').sort().join('')) { 
             DOM.feedback.style.background = '#f0fdf4'; DOM.feedback.style.color = '#166534'; DOM.feedback.style.border = "1px solid #bbf7d0"; DOM.feedback.innerHTML = "✅ 回答完全正确！"; 
         } else { 
-            DOM.feedback.style.background = '#fef2f2'; DOM.feedback.style.color = '#991b1b'; DOM.feedback.style.border = "1px solid #fecaca"; DOM.feedback.innerHTML = `❌ 哎呀选错了。正确答案是：<span style="font-size:18px; font-weight:700; margin-left:6px;">${q.answer}</span>`; 
+            // 算一下原始的正确字母，现在在屏幕上披着哪件外衣？
+            let revMap = {}; for(let dk in q.optMap) { revMap[q.optMap[dk]] = dk; }
+            let displayRightAns = q.answer.split('').map(k => revMap[k] || k).sort().join('');
+            DOM.feedback.style.background = '#fef2f2'; DOM.feedback.style.color = '#991b1b'; DOM.feedback.style.border = "1px solid #fecaca"; 
+            DOM.feedback.innerHTML = `❌ 哎呀选错了。正确答案是：<span style="font-size:18px; font-weight:700; margin-left:6px;">${displayRightAns}</span>`; 
         }
     }
+
+    function restoreFeedback() { const q = App.data[App.current]; App.selected.forEach(k => { let b = document.getElementById(`opt-${k}`); if(b) b.classList.add('selected'); }); showFeedbackUI(q); DOM.btnAction.className = "btn"; DOM.btnAction.innerText = App.current === App.data.length - 1 ? '查看练习报告' : '进入下一题'; }
 
     function createParticles() {
         for(let i=0; i<60; i++) {
@@ -667,6 +678,7 @@
         renderChunks();
     }
 
+    // ✨ 错题本引擎：坚守底层原始字母阵地，喂给AI最标准的数据
     function renderChunks() {
         const container = document.getElementById('chunks-container'); container.innerHTML = '';
         if (App.wrongList.length === 0) { container.innerHTML = "<div class='chunk-box' style='text-align:center; color:#166534; background:#f0fdf4; border-color:#86efac;'>✨ 恭喜，本次练习全对，完美通关！</div>"; return; }
