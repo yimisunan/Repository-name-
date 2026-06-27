@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>三支一扶题库系统 V8.2 (呼吸排版版)</title>
+    <title>三支一扶题库系统 V8.3 (错题闭环版)</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { background-color: #f0f2f5; color: #2c2c2c; font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; padding: 12px; line-height: 1.6; overflow-x: hidden; }
@@ -39,7 +39,6 @@
         .fold-icon { transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1); font-size: 14px; color: #94a3b8;}
         .fold-wrapper.open .fold-icon { transform: rotate(180deg); }
         .fold-wrapper.open .fold-header { border-bottom: 1px dashed #e2e8f0; background: #fcfcfc;}
-
         .fold-content { display: grid; grid-template-rows: 0fr; transition: grid-template-rows 0.4s cubic-bezier(0.25, 1, 0.5, 1); }
         .fold-wrapper.open .fold-content { grid-template-rows: 1fr; }
         .fold-inner { overflow: hidden; }
@@ -47,7 +46,6 @@
         .fold-wrapper.open .fold-inner-padding { opacity: 1; transform: translateY(0) scale(1); }
 
         .main-panel { background: #ffffff; padding: 24px 20px; border-radius: 16px; box-shadow: 0 4px 24px rgba(0, 0, 0, 0.04); margin-bottom: 16px; position: relative;}
-
         .dashboard-card { background: linear-gradient(135deg, #f8fafc 0%, #eff6ff 100%); border: 1px solid #e0e7ff; padding: 16px; border-radius: 12px; margin-bottom: 12px; display: flex; justify-content: space-around; align-items: center; }
         .dash-item { text-align: center; flex: 1; }
         .dash-num { font-size: 22px; font-weight: 800; color: #1e40af; line-height: 1.2; font-family: monospace; }
@@ -75,23 +73,24 @@
         .arena-hard { background: linear-gradient(135deg, #a78bfa 0%, #7c3aed 100%); box-shadow: 0 4px 12px rgba(124,58,237,0.2); }
         .arena-extreme { background: linear-gradient(135deg, #1f2937 0%, #000000 100%); box-shadow: 0 4px 12px rgba(0,0,0,0.3); border: 1px solid #fbbf24; }
         .arena-extreme h3 { color: #fbbf24; }
-        
         .locked-mode { filter: grayscale(1) opacity(0.5); cursor: not-allowed; }
         .lock-msg { display: block; font-size: 10.5px; font-weight: 800; margin-top: 8px; padding-top: 6px; border-top: 1px dashed rgba(255,255,255,0.4); color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.5); line-height: 1.3;}
         .arena-extreme .lock-msg { color: #fbbf24; border-top-color: rgba(251, 191, 36, 0.4); }
 
-        /* ✨ V8.2 题库卡片垂直重构，告别拥挤 */
         .bank-item { background: #ffffff; border: 1px solid #e2e8f0; padding: 18px 16px; border-radius: 14px; margin-bottom: 14px; display: flex; flex-direction: column; gap: 14px; transition: box-shadow 0.2s; position: relative; overflow: hidden;}
         .bank-header-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
         .bank-title { font-size: 16px; font-weight: 700; color: #1e293b; line-height: 1.4; flex: 1; word-break: break-all;}
-        
-        /* 弱化的删除文本按钮，防误触 */
         .bank-delete-text { font-size: 13px; color: #ef4444; font-weight: 600; cursor: pointer; padding: 4px 8px; border-radius: 6px; transition: background 0.2s; flex-shrink: 0;}
         .bank-delete-text:active { background: #fef2f2; }
-        
         .bank-meta-row { display: flex; gap: 10px; flex-wrap: wrap; }
         .bank-meta-tag { font-size: 12px; color: #64748b; background: #f1f5f9; padding: 4px 10px; border-radius: 6px; font-weight: 600; display: inline-flex; align-items: center;}
         .bank-meta-tag.highlight { color: #d97706; background: #fffbeb; border: 1px solid #fef08a;}
+
+        /* ✨ 系统常驻卡片专属样式 */
+        .bank-sys-wrong { border-color: #fca5a5; background: #fef2f2; }
+        .bank-sys-wrong .bank-meta-tag { background: #fee2e2; color: #b91c1c; }
+        .bank-sys-star { border-color: #fde047; background: #fffdf5; }
+        .bank-sys-star .bank-meta-tag { background: #fef08a; color: #a16207; }
 
         .bank-completed { background: #f8fafc; border-color: #cbd5e1; }
         .bank-completed .bank-title, .bank-completed .bank-meta-row { opacity: 0.6; }
@@ -186,15 +185,24 @@
                 <div class="dash-item"><div class="dash-num" id="global-total-cor" style="color: #f59e0b;">0</div><div class="dash-label">累计答对</div></div>
             </div>
 
-            <h2>导入新题库</h2>
-            <textarea id="data-input" placeholder="请粘贴 JSON 格式的题库代码..."></textarea>
-            <div class="flex-row">
-                <input type="text" id="new-bank-name" placeholder="题库名称 (如: 2018年真题)">
-                <button class="btn btn-primary" onclick="saveNewBank()">保存题库</button>
+            <div id="import-section-collapsed">
+                <button class="btn btn-primary" onclick="showImportSection()" style="margin-top: 10px; background: #e0e7ff; color: #1e40af; border: none; box-shadow: none;">[ + ] 添加新题库</button>
             </div>
-            <div class="flex-row">
-                <select id="exist-bank-select"></select>
-                <button class="btn" onclick="appendToBank()">追加题目</button>
+
+            <div id="import-section-expanded" class="hidden">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <h2>导入新题库</h2>
+                    <span style="font-size: 12px; color: #64748b; cursor: pointer;" onclick="hideImportSection()">收起 ▲</span>
+                </div>
+                <textarea id="data-input" placeholder="请粘贴 JSON 格式的题库代码..."></textarea>
+                <div class="flex-row">
+                    <input type="text" id="new-bank-name" placeholder="题库名称 (如: 2018年真题)">
+                    <button class="btn btn-primary" onclick="saveNewBank()">保存题库</button>
+                </div>
+                <div class="flex-row">
+                    <select id="exist-bank-select"></select>
+                    <button class="btn" onclick="appendToBank()">追加题目</button>
+                </div>
             </div>
 
             <h2 style="margin-top: 24px;">云端漫游存档</h2>
@@ -211,7 +219,6 @@
         </div></div></div>
     </div>
 
-    <!-- 📚 常驻面板：常规练习库 -->
     <div class="main-panel">
         <h2 style="font-size: 18px;">📚 常规练习库</h2>
         <div class="controls">
@@ -232,6 +239,9 @@
                 </div>
             </div>
         </div>
+        
+        <div id="sys-bank-list" style="margin-bottom: 24px;"></div>
+        
         <div id="bank-list"></div>
     </div>
 
@@ -284,7 +294,7 @@
 
             <h3 style="font-size: 14px; color: #1e293b; margin-bottom: 8px;">🚧 沙盒测试环境</h3>
             <button class="btn btn-warning" id="test-mode-toggle-btn" onclick="toggleTestMode()">开启测试模式 (注入假数据测试解锁)</button>
-            <p style="font-size: 12px; color: #64748b; margin-top: 4px; margin-bottom: 24px;">需在纯净态（题库与大盘为0）下开启，开启后强制禁用云端。</p>
+            <p style="font-size: 12px; color: #64748b; margin-top: 4px; margin-bottom: 24px;">需在纯净态下开启，开启后强制禁用云端。</p>
             
             <h3 style="font-size: 14px; color: #991b1b; margin-bottom: 8px;">🔥 危险操作</h3>
             <button class="btn btn-danger" onclick="resetAllStatsFlow()">一键重置所有进度与大盘 (保留题库本身)</button>
@@ -294,7 +304,6 @@
 
 </div>
 
-<!-- ================= 答题区 ================= -->
 <div class="container hidden" id="page-quiz">
     <div class="nav-header">
         <div class="nav-btn" id="nav-btn-back" onclick="location.reload()">〈 保存并退出</div>
@@ -316,7 +325,6 @@
     <button class="btn btn-danger" id="btn-quit" onclick="giveUpQuiz()">放弃进度，清空重卷</button>
 </div>
 
-<!-- ================= 战报区 ================= -->
 <div class="container hidden" id="page-result">
     <div id="challenge-feedback" class="hidden">
         <div class="cf-title" id="cf-title"></div>
@@ -377,6 +385,11 @@
     };
 
     let banks = JSON.parse(localStorage.getItem('szys_banks') || '{}');
+    
+    // ✨ 核心初始化：确保两大系统库永远存在，且不可删除
+    if (!banks['sys_wrong']) banks['sys_wrong'] = { name: "💔 我的错题本", data: [], isSystem: true, sysType: 'wrong' };
+    if (!banks['sys_star']) banks['sys_star'] = { name: "⭐ 专属收藏夹", data: [], isSystem: true, sysType: 'star' };
+
     let globalStats = JSON.parse(localStorage.getItem('szys_global_stats') || '{"totalAnswered": 0, "totalCorrect": 0, "challenge": {}}');
     if(globalStats.totalCorrect === undefined) globalStats.totalCorrect = 0;
     if(!globalStats.challenge) globalStats.challenge = { easy:0, normal:0, hard:0, extreme:0 };
@@ -391,6 +404,7 @@
     window.onload = function() { 
         renderBankList(); 
         updateDashboard();
+        initUIState();
         let savedToken = localStorage.getItem('szys_github_token'); 
         if(savedToken) document.getElementById('github-token-input').value = savedToken; 
         
@@ -408,10 +422,36 @@
     function saveGlobalStats() { localStorage.setItem('szys_global_stats', JSON.stringify(globalStats)); updateDashboard(); }
     function getFingerprint(str) { return str.replace(/[^\u4e00-\u9fa5a-zA-Z0-9]/g, ''); }
 
-    function toggleFold(id) { document.getElementById(id).classList.toggle('open'); }
+    function toggleFold(id) { 
+        document.getElementById(id).classList.toggle('open'); 
+    }
+    
+    // ✨ 智能判断是否显示“导入区”
+    function initUIState() {
+        // 如果自定义题库数量 > 0 (减去两个系统库)，则默认隐藏导入大窗口，显示精致按钮
+        if (Object.keys(banks).length > 2) {
+            hideImportSection();
+        } else {
+            showImportSection();
+        }
+    }
+    function showImportSection() {
+        document.getElementById('import-section-collapsed').classList.add('hidden');
+        document.getElementById('import-section-expanded').classList.remove('hidden');
+    }
+    function hideImportSection() {
+        document.getElementById('import-section-collapsed').classList.remove('hidden');
+        document.getElementById('import-section-expanded').classList.add('hidden');
+    }
     
     function updateDashboard() {
-        let totalQ = 0; for (let id in banks) { totalQ += banks[id].data.length; }
+        let totalQ = 0; 
+        for (let id in banks) { 
+            // 系统题库的数量不计入全库大盘和解锁条件
+            if(!banks[id].isSystem) {
+                totalQ += banks[id].data.length; 
+            }
+        }
         
         document.getElementById('mini-stats-1').innerText = `| 库容 ${totalQ} 题 · 答对 ${globalStats.totalCorrect}`;
         let totalClear = (globalStats.challenge.easy||0) + (globalStats.challenge.normal||0) + (globalStats.challenge.hard||0) + (globalStats.challenge.extreme||0);
@@ -430,14 +470,13 @@
         modes.forEach(mode => {
             let el = document.getElementById('arena-' + mode);
             let msgEl = document.getElementById('lock-msg-' + mode);
-            
             let reqQ = UNLOCK_REQS_Q[mode]; let reqC = UNLOCK_REQS_C[mode]; let preReqMode = UNLOCK_PRE[mode];
             let isQLocked = totalQ < reqQ; let isCLocked = globalStats.totalCorrect < reqC; let isPreLocked = preReqMode ? (globalStats.challenge[preReqMode] || 0) < 1 : false;
 
             if(isQLocked || isCLocked || isPreLocked) {
                 el.classList.add('locked-mode'); let lockReasons = [];
                 if(isPreLocked) lockReasons.push(`需先通关[${PRE_NAMES[preReqMode]}]`);
-                if(isQLocked) lockReasons.push(`库存>${reqQ}`);
+                if(isQLocked) lockReasons.push(`库容>${reqQ}`);
                 if(isCLocked) lockReasons.push(`答对>${reqC}`);
                 msgEl.innerHTML = '🔒 锁定: ' + lockReasons.join(' <br> ');
             } else { el.classList.remove('locked-mode'); msgEl.innerText = ''; }
@@ -446,14 +485,18 @@
 
     function toggleTestMode() {
         if (!isTestMode) {
-            let totalQ = 0; for (let id in banks) { totalQ += banks[id].data.length; }
+            let totalQ = 0; for (let id in banks) { if(!banks[id].isSystem) totalQ += banks[id].data.length; }
             if (totalQ > 0 || globalStats.totalAnswered > 0 || globalStats.totalCorrect > 0) {
                 return alert("⚠️ 无法开启测试模式！\n\n为了防止假数据污染您的心血存档，测试模式仅能在【0题库、0进度】的纯净状态下开启。\n请先使用下方红色的“一键重置”并在上方删除所有题库。");
             }
             localStorage.setItem('szys_test_mode', 'true');
             alert("🔧 开发者沙盒已激活！"); location.reload();
         } else {
-            banks = {}; globalStats = { totalAnswered: 0, totalCorrect: 0, challenge: { easy:0, normal:0, hard:0, extreme:0 } };
+            banks = { 
+                'sys_wrong': { name: "💔 我的错题本", data: [], isSystem: true, sysType: 'wrong' },
+                'sys_star': { name: "⭐ 专属收藏夹", data: [], isSystem: true, sysType: 'star' } 
+            }; 
+            globalStats = { totalAnswered: 0, totalCorrect: 0, challenge: { easy:0, normal:0, hard:0, extreme:0 } };
             saveBanks(); saveGlobalStats(); localStorage.removeItem('szys_state');
             localStorage.setItem('szys_test_mode', 'false');
             alert("✅ 已退出测试模式，所有测试假数据已核爆销毁，系统恢复纯净！"); location.reload();
@@ -464,21 +507,21 @@
         let dummyData = [];
         for(let i=0; i<100; i++) { dummyData.push({question: `[沙盒测试题目 ${i+1}] 这是一道由开发者引擎生成的虚假题目用于撑起库容。`, options: {A:"选项甲", B:"选项乙", C:"选项丙", D:"选项丁"}, answer: "A", type: "single", source: "测试引擎"}); }
         banks['test_' + Date.now()] = { name: "🧪 100题测试容量包", data: dummyData, completed: false, maxRate: 0 };
-        saveBanks(); renderBankList(); alert("✅ 成功注入 100 道假题");
+        saveBanks(); renderBankList(); initUIState(); alert("✅ 成功注入 100 道假题");
     }
     
     function testInjectStats() { globalStats.totalAnswered += 50; globalStats.totalCorrect += 50; saveGlobalStats(); alert("✅ 全局答对数 +50"); }
     function testInjectHonor() { let modes = ['easy', 'normal', 'hard', 'extreme']; let m = modes[Math.floor(Math.random()*modes.length)]; globalStats.challenge[m]++; saveGlobalStats(); alert(`✅ [${PRE_NAMES[m]}] 通关荣誉 +1`); }
     function testForceComplete() {
-        let keys = Object.keys(banks); if(keys.length === 0) return alert("请先注入假题库");
+        let keys = Object.keys(banks).filter(k => !banks[k].isSystem); if(keys.length === 0) return alert("请先注入假题库");
         banks[keys[0]].completed = true; banks[keys[0]].maxRate = 100; saveBanks(); renderBankList(); alert("✅ 已强制给第一个题库盖上 100% 毕业印章");
     }
 
     function cloudBackupFlow() {
         if(isTestMode) return alert("⛔ 物理熔断：沙盒测试模式下严禁上传假数据至云端！");
         let token = document.getElementById('github-token-input').value.trim(); if(!token) return alert("请先填写 GitHub 密钥！");
-        if (Object.keys(banks).length === 0) return alert("本地暂无题库可备份。");
-        SysModal.show("☁️ 确认备份至云端？", "此操作会将您当前的<span style='color:#3b82f6;font-weight:bold;'>题库、答题进度、挑战荣誉</span>全部上传，覆盖云端的旧存档。", false, () => { executeCloudBackup(token); });
+        if (Object.keys(banks).length <= 2 && banks['sys_wrong'].data.length===0 && banks['sys_star'].data.length===0) return alert("本地暂无有效题库数据可备份。");
+        SysModal.show("☁️ 确认备份至云端？", "此操作会将您当前的<span style='color:#3b82f6;font-weight:bold;'>题库、错题本、答题进度、挑战荣誉</span>全部上传，覆盖云端的旧存档。", false, () => { executeCloudBackup(token); });
     }
 
     function cloudRestoreFlow() {
@@ -488,24 +531,25 @@
     }
 
     function resetAllStatsFlow() {
-        SysModal.show("🔥 最高级危险：清除个人进度", "您正在试图清空<span style='color:#ef4444;font-weight:bold;'>所有大盘数据、挑战荣誉及各题库的100%打卡章</span>（题库题目本身会被保留）。<br><br>清空后绝无找回可能，请慎重决定！", true, () => {
+        SysModal.show("🔥 最高级危险：清除个人进度", "您正在试图清空<span style='color:#ef4444;font-weight:bold;'>所有大盘数据、挑战荣誉、100%打卡章以及【错题本和收藏本】</span>（题库题目本身会被保留）。<br><br>清空后绝无找回可能，请慎重决定！", true, () => {
             globalStats = { totalAnswered: 0, totalCorrect: 0, challenge: { easy:0, normal:0, hard:0, extreme:0 } };
-            for(let id in banks) { banks[id].completed = false; banks[id].maxRate = 0; }
+            banks['sys_wrong'].data = []; banks['sys_star'].data = [];
+            for(let id in banks) { if(!banks[id].isSystem) { banks[id].completed = false; banks[id].maxRate = 0; } }
             saveBanks(); saveGlobalStats(); localStorage.removeItem('szys_state');
-            alert("✅ 所有进度数据已彻底重置。"); location.reload();
+            alert("✅ 所有进度数据、错题本与收藏夹已彻底重置。"); location.reload();
         });
     }
 
     async function executeCloudBackup(token) {
         localStorage.setItem('szys_github_token', token);
-        let backupPayload = { version: "8.2", banks: banks, state: JSON.parse(localStorage.getItem('szys_state') || 'null'), stats: globalStats };
+        let backupPayload = { version: "8.3", banks: banks, state: JSON.parse(localStorage.getItem('szys_state') || 'null'), stats: globalStats };
         let payloadStr = JSON.stringify(backupPayload);
         try {
             let res = await fetch('https://api.github.com/gists', { headers: { 'Authorization': 'token ' + token }});
             if(!res.ok) throw new Error("密钥验证失败");
             let gists = await res.json(); let targetGist = gists.find(g => g.files['szys_backup.json']);
             if(targetGist) { await fetch('https://api.github.com/gists/' + targetGist.id, { method: 'PATCH', headers: { 'Authorization': 'token ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ files: { 'szys_backup.json': { content: payloadStr } } }) }); } 
-            else { await fetch('https://api.github.com/gists', { method: 'POST', headers: { 'Authorization': 'token ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ description: "三支一扶 V8.2 题库备份", public: false, files: { 'szys_backup.json': { content: payloadStr } } }) }); }
+            else { await fetch('https://api.github.com/gists', { method: 'POST', headers: { 'Authorization': 'token ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ description: "三支一扶 V8.3 题库备份", public: false, files: { 'szys_backup.json': { content: payloadStr } } }) }); }
             alert("✅ 漫游数据备份成功！");
         } catch(e) { alert("❌ 备份出错：" + e.message); }
     }
@@ -522,17 +566,25 @@
             
             if (importedData.version && importedData.version >= "7.3") {
                 banks = importedData.banks;
+                // 恢复兼容：旧版可能没有这两个系统库，强制补齐
+                if (!banks['sys_wrong']) banks['sys_wrong'] = { name: "💔 我的错题本", data: [], isSystem: true, sysType: 'wrong' };
+                if (!banks['sys_star']) banks['sys_star'] = { name: "⭐ 专属收藏夹", data: [], isSystem: true, sysType: 'star' };
+                
                 globalStats = importedData.stats || {totalAnswered: 0, totalCorrect: 0, challenge: {easy:0,normal:0,hard:0,extreme:0}};
                 if (importedData.state) { localStorage.setItem('szys_state', JSON.stringify(importedData.state)); } else { localStorage.removeItem('szys_state'); }
-            } else { banks = importedData; }
+            } else { 
+                banks = importedData; 
+                if (!banks['sys_wrong']) banks['sys_wrong'] = { name: "💔 我的错题本", data: [], isSystem: true, sysType: 'wrong' };
+                if (!banks['sys_star']) banks['sys_star'] = { name: "⭐ 专属收藏夹", data: [], isSystem: true, sysType: 'star' };
+            }
             saveBanks(); saveGlobalStats();
             alert(`✅ 云端覆盖成功！已全量恢复您的专属状态。`); location.reload();
         } catch(e) { alert("❌ 恢复出错：" + e.message); }
     }
 
     function exportLocalData() {
-        if (Object.keys(banks).length === 0) return alert("暂无数据可导出");
-        let backupPayload = { version: "8.2", banks: banks, state: JSON.parse(localStorage.getItem('szys_state') || 'null'), stats: globalStats };
+        if (Object.keys(banks).length <= 2 && banks['sys_wrong'].data.length===0) return alert("暂无数据可导出");
+        let backupPayload = { version: "8.3", banks: banks, state: JSON.parse(localStorage.getItem('szys_state') || 'null'), stats: globalStats };
         let blob = new Blob([JSON.stringify(backupPayload)], { type: "application/json" }); let url = URL.createObjectURL(blob); let a = document.createElement('a'); a.href = url;
         a.download = `题库全量备份_${new Date().toISOString().slice(0,10).replace(/-/g,"")}.json`; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
     }
@@ -543,6 +595,8 @@
                 let importedData = JSON.parse(e.target.result); let count = 0;
                 if (importedData.version && importedData.version >= "7.3") {
                     banks = importedData.banks;
+                    if (!banks['sys_wrong']) banks['sys_wrong'] = { name: "💔 我的错题本", data: [], isSystem: true, sysType: 'wrong' };
+                    if (!banks['sys_star']) banks['sys_star'] = { name: "⭐ 专属收藏夹", data: [], isSystem: true, sysType: 'star' };
                     globalStats = importedData.stats; if(globalStats.totalCorrect === undefined) globalStats.totalCorrect = 0; if(!globalStats.challenge) globalStats.challenge = { easy:0, normal:0, hard:0, extreme:0 };
                     if (importedData.state) { localStorage.setItem('szys_state', JSON.stringify(importedData.state)); } else { localStorage.removeItem('szys_state'); }
                 } else { banks = importedData; }
@@ -558,25 +612,60 @@
     }
     function saveNewBank() {
         let qs = parseInput(); if(!qs) return; let name = document.getElementById('new-bank-name').value.trim(); if(!name) return alert("请命名");
-        let id = 'bank_' + Date.now(); banks[id] = { name: name, data: qs, completed: false, maxRate: 0 }; saveBanks(); renderBankList(); document.getElementById('data-input').value = ''; document.getElementById('new-bank-name').value = ''; alert(`✅ 保存成功！`);
+        let id = 'bank_' + Date.now(); banks[id] = { name: name, data: qs, completed: false, maxRate: 0 }; 
+        saveBanks(); renderBankList(); initUIState();
+        document.getElementById('data-input').value = ''; document.getElementById('new-bank-name').value = ''; alert(`✅ 保存成功！`);
     }
     function appendToBank() {
         let qs = parseInput(); if(!qs) return; let bankId = document.getElementById('exist-bank-select').value; if(!bankId) return alert("请选择题库");
+        if(banks[bankId].isSystem) return alert("系统题库不可手动追加！");
         let bank = banks[bankId]; let existFps = new Set(bank.data.map(q => getFingerprint(q.question))); let added = 0; let dup = 0;
         qs.forEach(q => { let fp = getFingerprint(q.question); if(!existFps.has(fp)) { bank.data.push(q); existFps.add(fp); added++; } else { dup++; } });
         bank.completed = false; bank.maxRate = 0;
-        saveBanks(); renderBankList(); document.getElementById('data-input').value = ''; alert(`✅ 新增 ${added} 道，拦截重复 ${dup} 道。印章已重置，请再次挑战满分！`);
+        saveBanks(); renderBankList(); document.getElementById('data-input').value = ''; alert(`✅ 新增 ${added} 道，拦截重复 ${dup} 道。印章已重置！`);
     }
     function deleteBank(id) {
-        if(confirm(`确定删除吗？`)) { delete banks[id]; saveBanks(); if (localStorage.getItem('szys_state') && JSON.parse(localStorage.getItem('szys_state')).bankId === id) localStorage.removeItem('szys_state'); renderBankList(); }
+        if(banks[id].isSystem) return alert("系统题库不可删除！");
+        if(confirm(`确定删除吗？`)) { delete banks[id]; saveBanks(); if (localStorage.getItem('szys_state') && JSON.parse(localStorage.getItem('szys_state')).bankId === id) localStorage.removeItem('szys_state'); renderBankList(); initUIState();}
     }
     
-    // ✨ V8.2 垂直排版的卡片渲染
+    // ✨ 渲染列表：分离渲染 系统库 和 用户库
     function renderBankList() {
-        const list = document.getElementById('bank-list'); const sel = document.getElementById('exist-bank-select');
-        list.innerHTML = ''; sel.innerHTML = '<option value="">-- 追加至目标题库 --</option>'; let hasBanks = false;
+        const sysList = document.getElementById('sys-bank-list');
+        const customList = document.getElementById('bank-list'); 
+        const sel = document.getElementById('exist-bank-select');
+        
+        sysList.innerHTML = ''; customList.innerHTML = ''; 
+        sel.innerHTML = '<option value="">-- 追加至目标题库 --</option>'; 
+        
+        let hasCustomBanks = false;
+        
+        // 优先渲染系统库
+        ['sys_wrong', 'sys_star'].forEach(id => {
+            let b = banks[id];
+            if(!b) return; // 防御性判断
+            let div = document.createElement('div'); 
+            div.className = `bank-item bank-sys-${b.sysType}`;
+            
+            let savedState = JSON.parse(localStorage.getItem('szys_state') || 'null'); let hasResume = (savedState && savedState.bankId === id);
+            let playBtnTxt = hasResume ? '继续清剿' : '开始攻克'; 
+            let playBtnClass = b.data.length === 0 ? 'btn disabled' : (hasResume ? 'btn-primary' : 'btn');
+            
+            div.innerHTML = `
+                <div class="bank-header-row">
+                    <div class="bank-title">${b.name}</div>
+                </div>
+                <div class="bank-meta-row">
+                    <span class="bank-meta-tag">收录 ${b.data.length} 题</span>
+                </div>
+                <button class="btn ${playBtnClass}" style="margin-bottom:0; margin-top:4px;" ${b.data.length===0?'disabled':''} onclick="startQuiz('${id}', ${hasResume})">${b.data.length===0?'当前暂无数据':playBtnTxt}</button>
+            `; sysList.appendChild(div);
+        });
+
+        // 渲染自定义库
         for (let id in banks) {
-            hasBanks = true; let b = banks[id];
+            if(banks[id].isSystem) continue;
+            hasCustomBanks = true; let b = banks[id];
             let opt = document.createElement('option'); opt.value = id; opt.innerText = b.name; sel.appendChild(opt);
             
             let div = document.createElement('div'); 
@@ -587,7 +676,6 @@
             
             let stampHtml = b.completed ? `<div class="stamp-completed">已完成</div>` : '';
             
-            // 垂直呼吸排版重构
             div.innerHTML = `
                 ${stampHtml}
                 <div class="bank-header-row">
@@ -599,16 +687,16 @@
                     <span class="bank-meta-tag highlight">★ 最高 ${b.maxRate || 0}%</span>
                 </div>
                 <button class="btn ${playBtnClass}" style="margin-bottom:0; margin-top:4px;" onclick="startQuiz('${id}', ${hasResume})">${playBtnTxt}</button>
-            `; list.appendChild(div);
+            `; customList.appendChild(div);
         }
-        if(!hasBanks) list.innerHTML = '<div style="text-align:center; color:#94a3b8; padding:24px; font-size:14px;">练习库空空如也，请去战备中心导入。</div>';
+        if(!hasCustomBanks) customList.innerHTML = '<div style="text-align:center; color:#94a3b8; padding:24px; font-size:14px; border:1px dashed #cbd5e1; border-radius:12px;">您的自定义题库空空如也，请去战备中心导入。</div>';
     }
 
     const App = { 
         bankId: null, data: [], current: 0, score: 0, mode: 'instant', 
         wrongList: [], stars: new Set(), selected: [], isAnswered: false, 
         timerMode: false, timeRemaining: 0, isChallenge: false, challengeDiff: null,
-        optShuffle: false, isCompletedBank: false
+        optShuffle: false, isCompletedBank: false, isSystemBank: false
     };
     let timerInterval = null;
     const DOM = { setup: document.getElementById('page-home'), quiz: document.getElementById('page-quiz'), result: document.getElementById('page-result'), title: document.getElementById('question-text'), opts: document.getElementById('options-container'), progressFill: document.getElementById('progress-fill'), progressText: document.getElementById('progress-text'), feedback: document.getElementById('feedback-box'), btnAction: document.getElementById('btn-action'), btnStar: document.getElementById('btn-star'), timerDisplay: document.getElementById('timer-display') };
@@ -638,14 +726,17 @@
         let isQLocked = totalQ < reqQ; let isCLocked = totalC < reqC; let isPreLocked = preReqMode ? (globalStats.challenge[preReqMode] || 0) < 1 : false;
         if(isQLocked || isCLocked || isPreLocked) return alert(`🔒 挑战受限！请先满足解锁条件。`);
         
-        let allQs = []; for(let id in banks) { allQs = allQs.concat(banks[id].data); }
+        let allQs = []; 
+        for(let id in banks) { 
+            if(!banks[id].isSystem) allQs = allQs.concat(banks[id].data); 
+        }
         let reqMap = { 'easy': 10, 'normal': 30, 'hard': 60, 'extreme': 90 }; let req = reqMap[difficulty];
         for (let i = allQs.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [allQs[i], allQs[j]] = [allQs[j], allQs[i]]; }
         
         App.data = allQs.slice(0, req); App.isChallenge = true; App.challengeDiff = difficulty; App.mode = 'exam';
         App.optShuffle = document.getElementById('opt-shuffle-cb') ? document.getElementById('opt-shuffle-cb').checked : false;
         preprocessOptions(App.data, App.optShuffle);
-        App.current = 0; App.score = 0; App.wrongList = []; App.stars.clear(); App.selected = []; App.isAnswered = false; App.isCompletedBank = false;
+        App.current = 0; App.score = 0; App.wrongList = []; App.stars.clear(); App.selected = []; App.isAnswered = false; App.isCompletedBank = false; App.isSystemBank = false;
 
         if(difficulty === 'extreme') { App.timerMode = true; App.timeRemaining = 90 * 60; } else { App.timerMode = false; }
         DOM.setup.classList.add('hidden'); DOM.quiz.classList.remove('hidden');
@@ -658,6 +749,7 @@
         App.isChallenge = false;
         document.getElementById('nav-btn-back').innerText = '〈 保存并退出'; document.getElementById('btn-quit').innerText = '放弃当前进度，清空重卷';
         App.isCompletedBank = banks[bankId].completed || false;
+        App.isSystemBank = banks[bankId].isSystem || false;
 
         if (isResume) {
             let s = JSON.parse(localStorage.getItem('szys_state'));
@@ -704,7 +796,10 @@
         let sourceHtml = q.source ? `<span class="source-text">📄 出处：${q.source}</span>` : '';
         DOM.title.innerHTML = `<span class="badge">${q.type === 'multiple' ? '多选题' : '单选题'}</span> ${q.question} ${completedNote} ${sourceHtml}`;
         
-        DOM.btnStar.innerHTML = App.stars.has(q.id) ? '★ 已收藏' : '☆ 收藏本题'; DOM.btnStar.className = App.stars.has(q.id) ? 'nav-btn bookmark-btn active' : 'nav-btn bookmark-btn';
+        // 判断是否已在系统的星标库中
+        let isStarred = banks['sys_star'].data.some(x => getFingerprint(x.question) === getFingerprint(q.question));
+        DOM.btnStar.innerHTML = isStarred ? '★ 已收藏' : '☆ 收藏本题'; 
+        DOM.btnStar.className = isStarred ? 'nav-btn bookmark-btn active' : 'nav-btn bookmark-btn';
         
         DOM.opts.innerHTML = '';
         let dKeys = Object.keys(q.optMap).sort();
@@ -728,9 +823,21 @@
         saveState();
     }
 
+    // ✨ 错题本联动：点击收藏
     function toggleStar() {
-        const id = App.data[App.current].id; App.stars.has(id) ? App.stars.delete(id) : App.stars.add(id);
-        DOM.btnStar.innerHTML = App.stars.has(id) ? '★ 已收藏' : '☆ 收藏本题'; DOM.btnStar.className = App.stars.has(id) ? 'nav-btn bookmark-btn active' : 'nav-btn bookmark-btn'; saveState();
+        const q = App.data[App.current];
+        const fp = getFingerprint(q.question);
+        let starBank = banks['sys_star'];
+        
+        let isStarred = starBank.data.some(x => getFingerprint(x.question) === fp);
+        if (isStarred) {
+            starBank.data = starBank.data.filter(x => getFingerprint(x.question) !== fp);
+            DOM.btnStar.innerHTML = '☆ 收藏本题'; DOM.btnStar.className = 'nav-btn bookmark-btn';
+        } else {
+            starBank.data.push(JSON.parse(JSON.stringify(q))); // 深拷贝存入
+            DOM.btnStar.innerHTML = '★ 已收藏'; DOM.btnStar.className = 'nav-btn bookmark-btn active';
+        }
+        saveBanks(); saveState();
     }
 
     function handleAction() {
@@ -744,14 +851,34 @@
         App.current++; App.current >= App.data.length ? showResult() : renderQuestion(false);
     }
 
+    // ✨ 错题本联动：底层自动闭环
     function processAnswer(q) {
         let myAns = App.selected.sort().join(''); let rightAns = q.answer.split('').sort().join(''); let isRight = (myAns === rightAns);
+        let fp = getFingerprint(q.question);
+        let wrongBank = banks['sys_wrong'];
+        let isStarred = banks['sys_star'].data.some(x => getFingerprint(x.question) === fp);
+
         if (isRight) {
             App.score++; 
-            if(!App.isChallenge && !App.isCompletedBank && !isTestMode) { globalStats.totalCorrect++; }
+            if(!App.isChallenge && !App.isCompletedBank && !App.isSystemBank && !isTestMode) { globalStats.totalCorrect++; }
+            
+            // ✨ 错题核销机制：如果在错题本做对了，把它踢出租题本
+            if(App.bankId === 'sys_wrong') {
+                wrongBank.data = wrongBank.data.filter(x => getFingerprint(x.question) !== fp);
+                saveBanks();
+            }
+        } else {
+            // ✨ 错题收容机制：不管在哪做错的，统统抓进去（去重）
+            let alreadyInWrong = wrongBank.data.some(x => getFingerprint(x.question) === fp);
+            if (!alreadyInWrong && !isTestMode) {
+                wrongBank.data.push(JSON.parse(JSON.stringify(q)));
+                saveBanks();
+            }
         }
-        if (!isRight || App.stars.has(q.id)) App.wrongList.push({ id: q.id, q: q.question, source: q.source || "未知", my: myAns || "未答", right: q.answer, reason: !isRight ? "答错" : "收藏" });
-        if(!App.isChallenge && !App.isCompletedBank && !isTestMode) { globalStats.totalAnswered++; saveGlobalStats(); }
+        
+        // 记录进当前练习的错题本提取器
+        if (!isRight || isStarred) App.wrongList.push({ id: q.id, q: q.question, source: q.source || "未知", my: myAns || "未答", right: q.answer, reason: !isRight ? "答错" : "收藏" });
+        if(!App.isChallenge && !App.isCompletedBank && !App.isSystemBank && !isTestMode) { globalStats.totalAnswered++; saveGlobalStats(); }
     }
 
     function showFeedbackUI(q) {
@@ -809,7 +936,7 @@
         
         if (!App.isChallenge) {
             let completeMsg = "";
-            if(!isTestMode) {
+            if(!isTestMode && !App.isSystemBank) {
                 let b = banks[App.bankId];
                 if (!b.maxRate || pctStr > b.maxRate) b.maxRate = pctStr;
                 if (pctStr === 100 && !b.completed) {
@@ -819,11 +946,14 @@
                     completeMsg = "<br><span style='color:#64748b;'>（此题库已毕业，本次不增加大盘数值）</span>";
                 }
                 saveBanks();
+            } else if (App.isSystemBank) {
+                completeMsg = "<br><span style='color:#f59e0b;'>（系统题库不计入大盘数据，错题答对已自动销毁）</span>";
             }
+            
             document.getElementById('result-page-title').innerText = "练习战报"; document.getElementById('challenge-feedback').classList.add('hidden'); 
             document.getElementById('stat-text').innerHTML = `本次作答 ${App.data.length} 题 | 收录错题 ${App.wrongList.length} 题${completeMsg}`;
         } else {
-            document.getElementById('result-page-title').innerText = "⚔️ 竞技场战报"; document.getElementById('stat-text').innerText = `本次极限操作：${App.data.length} 题 | 收录高压错题 ${App.wrongList.length} 题`;
+            document.getElementById('result-page-title').innerText = "⚔️ 竞技场战报"; document.getElementById('stat-text').innerText = `本次极限操作：${App.data.length} 题 | 期间所有错题已全自动收录至错题本`;
             triggerChallengeFeedback(App.challengeDiff, pct);
         }
         renderChunks();
