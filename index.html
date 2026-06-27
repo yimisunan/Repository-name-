@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>三支一扶题库系统 V7.3 (全状态漫游版)</title>
+    <title>三支一扶题库系统 V7.4 (终极同步版)</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { background-color: #f4f5f7; color: #2c2c2c; font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; padding: 12px; line-height: 1.6; }
@@ -29,7 +29,6 @@
         .flex-row input, .flex-row select { flex: 1; }
         .flex-row .btn { width: auto; padding: 0 20px; line-height: 42px; padding-top: 0; padding-bottom: 0; }
 
-        /* ✨ V7.3 核心升级：个人学习大盘卡片 */
         .dashboard-card { background: linear-gradient(135deg, #f8fafc 0%, #eff6ff 100%); border: 1px solid #e0e7ff; padding: 20px; border-radius: 12px; margin-bottom: 24px; display: flex; justify-content: space-around; align-items: center; box-shadow: inset 0 2px 4px rgba(255,255,255,0.5); }
         .dash-item { text-align: center; }
         .dash-num { font-size: 28px; font-weight: 800; color: #1e40af; line-height: 1.2; font-family: monospace; }
@@ -80,6 +79,7 @@
 </head>
 <body>
 
+<!-- 页面一：题库管理首页 -->
 <div class="container" id="page-home">
     
     <div class="dashboard-card">
@@ -141,6 +141,7 @@
     <input type="file" id="import-file" style="display:none;" accept=".json" onchange="importLocalData(event)">
 </div>
 
+<!-- 页面二：答题区 -->
 <div class="container hidden" id="page-quiz">
     <div class="nav-header">
         <div class="nav-btn" onclick="location.reload()">〈 保存并退出</div>
@@ -162,6 +163,7 @@
     <button class="btn btn-danger" onclick="giveUpQuiz()">放弃当前进度，清空重卷</button>
 </div>
 
+<!-- 页面三：结算报告 -->
 <div class="container hidden" id="page-result">
     <h2 style="text-align: center; border: none; font-size: 22px; padding: 0;">练习战报</h2>
     <div style="font-size: 48px; color: #3b82f6; font-weight: 700; text-align: center; margin: 12px 0;" id="score-text"></div>
@@ -179,13 +181,12 @@
 </div>
 
 <script>
-    // ---------------- 全局数据与大盘初始化 ----------------
     let banks = JSON.parse(localStorage.getItem('szys_banks') || '{}');
     let globalStats = JSON.parse(localStorage.getItem('szys_global_stats') || '{"totalAnswered": 0}');
     
     window.onload = function() { 
         renderBankList(); 
-        updateDashboard(); // 初始化时更新看板
+        updateDashboard();
         let savedToken = localStorage.getItem('szys_github_token'); 
         if(savedToken) document.getElementById('github-token-input').value = savedToken; 
     };
@@ -194,7 +195,6 @@
     function saveGlobalStats() { localStorage.setItem('szys_global_stats', JSON.stringify(globalStats)); updateDashboard(); }
     function getFingerprint(str) { return str.replace(/[^\u4e00-\u9fa5a-zA-Z0-9]/g, ''); }
     
-    // 更新首页的【全库总题数】和【累计已刷题】
     function updateDashboard() {
         let totalQ = 0;
         for (let id in banks) { totalQ += banks[id].data.length; }
@@ -202,7 +202,6 @@
         document.getElementById('global-total-ans').innerText = globalStats.totalAnswered;
     }
 
-    // ---------------- 终极全状态云同步引擎 ----------------
     async function cloudBackup() {
         let token = document.getElementById('github-token-input').value.trim();
         if(!token) return alert("请先填写 GitHub 密钥！");
@@ -212,9 +211,8 @@
         const btn = document.getElementById('btn-cloud-backup'); btn.innerText = "正在打包全状态..."; btn.disabled = true;
         
         try {
-            // ✨ V7.3 核心：打包【题库】+【进度状态】+【全局数据】
             let backupPayload = {
-                version: "7.3",
+                version: "7.4",
                 banks: banks,
                 state: JSON.parse(localStorage.getItem('szys_state') || 'null'),
                 stats: globalStats
@@ -229,18 +227,19 @@
                 let patchRes = await fetch('https://api.github.com/gists/' + targetGist.id, { method: 'PATCH', headers: { 'Authorization': 'token ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ files: { 'szys_backup.json': { content: payloadStr } } }) });
                 if(!patchRes.ok) throw new Error("云端数据更新失败");
             } else {
-                let postRes = await fetch('https://api.github.com/gists', { method: 'POST', headers: { 'Authorization': 'token ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ description: "三支一扶 V7.3 题库与进度备份", public: false, files: { 'szys_backup.json': { content: payloadStr } } }) });
+                let postRes = await fetch('https://api.github.com/gists', { method: 'POST', headers: { 'Authorization': 'token ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ description: "三支一扶 V7.4 题库与进度备份", public: false, files: { 'szys_backup.json': { content: payloadStr } } }) });
                 if(!postRes.ok) throw new Error("云端空间创建失败");
             }
             alert("✅ 全状态备份成功！题库与当前答题进度均已上云！");
         } catch(e) { alert("❌ 备份出错：" + e.message); } finally { btn.innerText = "⬆️ 备份全状态至云端"; btn.disabled = false; }
     }
 
+    // ✨ V7.4 核心修复：强制时间戳穿透缓存，获取毫秒级最新数据
     async function cloudRestore() {
         let token = document.getElementById('github-token-input').value.trim();
         if(!token) return alert("请先填写 GitHub 密钥！");
         localStorage.setItem('szys_github_token', token);
-        const btn = document.getElementById('btn-cloud-restore'); btn.innerText = "正在检索全状态..."; btn.disabled = true;
+        const btn = document.getElementById('btn-cloud-restore'); btn.innerText = "正在穿透缓存拉取..."; btn.disabled = true;
         
         try {
             let res = await fetch('https://api.github.com/gists', { headers: { 'Authorization': 'token ' + token }});
@@ -248,26 +247,25 @@
             let gists = await res.json(); let targetGist = gists.find(g => g.files['szys_backup.json']);
             if(!targetGist) throw new Error("您的云端空间中未找到备份数据");
             
-            let fileRes = await fetch(targetGist.files['szys_backup.json'].raw_url);
+            // 穿透 CDN 缓存机制：在链接末尾添加当前时间戳，强迫 GitHub 返回最新文件
+            let rawUrl = targetGist.files['szys_backup.json'].raw_url;
+            let fileRes = await fetch(rawUrl + (rawUrl.includes('?') ? '&' : '?') + 't=' + Date.now());
             let importedData = await fileRes.json();
             
             let currentBanks = JSON.parse(localStorage.getItem('szys_banks') || '{}');
             let addedCount = 0;
 
-            // ✨ 兼容 V7.3 新架构解析
             if (importedData.version && importedData.version >= "7.3") {
-                // 1. 恢复题库
                 for (let id in importedData.banks) {
                     if (!currentBanks[id]) { currentBanks[id] = importedData.banks[id]; addedCount++; } 
                     else { let newId = id + "_" + Date.now(); importedData.banks[id].name += " (云端恢复)"; currentBanks[newId] = importedData.banks[id]; addedCount++; }
                 }
-                // 2. 覆盖恢复全局统计数据
                 if (importedData.stats) { globalStats = importedData.stats; saveGlobalStats(); }
-                // 3. 覆盖恢复答题进度状态
+                
+                // 精准覆盖状态进度
                 if (importedData.state) { localStorage.setItem('szys_state', JSON.stringify(importedData.state)); } 
                 else { localStorage.removeItem('szys_state'); }
             } else {
-                // 兼容旧版本的纯题库恢复
                 for (let id in importedData) {
                     if (!currentBanks[id]) { currentBanks[id] = importedData[id]; addedCount++; } 
                     else { let newId = id + "_" + Date.now(); importedData[id].name += " (云端恢复)"; currentBanks[newId] = importedData[id]; addedCount++; }
@@ -275,37 +273,36 @@
             }
 
             localStorage.setItem('szys_banks', JSON.stringify(currentBanks));
-            alert(`✅ 全状态恢复成功！\n找回题库：${addedCount} 个\n进度与统计数据已同步。`); 
+            alert(`✅ 全状态恢复成功！\n找回题库：${addedCount} 个\n【中断的答题进度】与【统计大盘】均已同步就绪。`); 
             location.reload();
         } catch(e) { alert("❌ 恢复出错：" + e.message); } finally { btn.innerText = "⬇️ 从云端恢复全状态"; btn.disabled = false; }
     }
 
-    // ---------------- 离线备份同步升级 ----------------
     function exportLocalData() {
         if (Object.keys(banks).length === 0) return alert("暂无数据可导出");
-        let backupPayload = { version: "7.3", banks: banks, state: JSON.parse(localStorage.getItem('szys_state') || 'null'), stats: globalStats };
+        let backupPayload = { version: "7.4", banks: banks, state: JSON.parse(localStorage.getItem('szys_state') || 'null'), stats: globalStats };
         let blob = new Blob([JSON.stringify(backupPayload)], { type: "application/json" }); let url = URL.createObjectURL(blob); let a = document.createElement('a'); a.href = url;
         a.download = `题库与进度全量备份_${new Date().toISOString().slice(0,10).replace(/-/g,"")}.json`;
         document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
     }
+    
     function importLocalData(event) {
         let file = event.target.files[0]; if (!file) return; let reader = new FileReader();
         reader.onload = function(e) {
             try {
                 let importedData = JSON.parse(e.target.result); let currentBanks = JSON.parse(localStorage.getItem('szys_banks') || '{}'); let count = 0;
                 if (importedData.version && importedData.version >= "7.3") {
-                    for (let id in importedData.banks) { if (!currentBanks[id]) { currentBanks[id] = importedData.banks[id]; count++; } else { currentBanks[id+"_local"] = importedData.banks[id]; count++; } }
+                    for (let id in importedData.banks) { if (!currentBanks[id]) { currentBanks[id] = importedData.banks[id]; count++; } else { currentBanks[id+"_local_" + Date.now()] = importedData.banks[id]; count++; } }
                     if (importedData.stats) { globalStats = importedData.stats; saveGlobalStats(); }
-                    if (importedData.state) { localStorage.setItem('szys_state', JSON.stringify(importedData.state)); }
+                    if (importedData.state) { localStorage.setItem('szys_state', JSON.stringify(importedData.state)); } else { localStorage.removeItem('szys_state'); }
                 } else {
-                    for (let id in importedData) { if (!currentBanks[id]) { currentBanks[id] = importedData[id]; count++; } else { currentBanks[id+"_local"] = importedData[id]; count++; } }
+                    for (let id in importedData) { if (!currentBanks[id]) { currentBanks[id] = importedData[id]; count++; } else { currentBanks[id+"_local_" + Date.now()] = importedData[id]; count++; } }
                 }
                 localStorage.setItem('szys_banks', JSON.stringify(currentBanks)); alert(`✅ 成功导入 ${count} 个题库及关联进度！`); location.reload();
             } catch(err) { alert("文件解析错误，请确保选择的是有效的备份文件。"); }
         }; reader.readAsText(file); event.target.value = '';
     }
 
-    // ---------------- 基础操作逻辑 ----------------
     function parseInput() {
         let raw = document.getElementById('data-input').value; if (!raw.trim()) { alert("请先粘贴题库数据"); return null; }
         raw = raw.replace(/```json/gi, '').replace(/```/g, '').trim(); raw = raw.replace(/[\u200B-\u200D\uFEFF]/g, '');
@@ -357,7 +354,6 @@
         if(!hasBanks) list.innerHTML = '<div style="text-align:center; color:#94a3b8; padding:24px; font-size:14px;">您的练习库空空如也，请先在上方导入题目。</div>';
     }
 
-    // ---------------- 核心答题逻辑 ----------------
     const App = { bankId: null, data: [], current: 0, score: 0, mode: 'instant', wrongList: [], stars: new Set(), selected: [], isAnswered: false, timerMode: false, timeRemaining: 0 };
     let timerInterval = null;
     const DOM = { setup: document.getElementById('page-home'), quiz: document.getElementById('page-quiz'), result: document.getElementById('page-result'), title: document.getElementById('question-text'), opts: document.getElementById('options-container'), progressFill: document.getElementById('progress-fill'), progressText: document.getElementById('progress-text'), feedback: document.getElementById('feedback-box'), btnAction: document.getElementById('btn-action'), btnStar: document.getElementById('btn-star'), timerDisplay: document.getElementById('timer-display') };
@@ -456,10 +452,7 @@
         let myAns = App.selected.sort().join(''); let rightAns = q.answer.split('').sort().join(''); let isRight = (myAns === rightAns);
         if (isRight) App.score++;
         if (!isRight || App.stars.has(q.id)) App.wrongList.push({ id: q.id, q: q.question, source: q.source || "未知", my: myAns || "未答", right: q.answer, reason: !isRight ? "答错" : "收藏" });
-        
-        // ✨ 全局打卡数 +1
-        globalStats.totalAnswered++;
-        saveGlobalStats();
+        globalStats.totalAnswered++; saveGlobalStats();
     }
 
     function showFeedbackUI(q) {
