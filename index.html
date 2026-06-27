@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>三支一扶题库系统 V7.9 (选项乱序版)</title>
+    <title>三支一扶题库系统 V8.1 (沙盒测试版)</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { background-color: #f0f2f5; color: #2c2c2c; font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; padding: 12px; line-height: 1.6; overflow-x: hidden; }
@@ -18,10 +18,12 @@
         
         .btn { display: inline-flex; justify-content: center; align-items: center; width: 100%; padding: 12px 16px; border: 1px solid #e2e8f0; background: #ffffff; color: #475569; border-radius: 10px; font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.2s; margin-bottom: 12px; user-select: none; -webkit-tap-highlight-color: transparent; }
         .btn:active:not(:disabled) { background: #f1f5f9; transform: scale(0.98); }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
         .btn-primary { background: #3b82f6; color: #ffffff; border-color: #3b82f6; }
         .btn-primary:active:not(:disabled) { background: #2563eb; }
         .btn-danger { color: #ef4444; border-color: #fee2e2; background: #fef2f2; }
         .btn-danger:active:not(:disabled) { background: #fecaca; }
+        .btn-warning { color: #d97706; border-color: #fef08a; background: #fffbeb; }
         
         .hidden { display: none !important; }
         .flex-row { display: flex; gap: 12px; margin-bottom: 16px; align-items: center; }
@@ -35,7 +37,6 @@
         .fold-title { font-size: 17px; font-weight: 800; color: #1e293b; display: flex; align-items: center; gap: 8px;}
         .fold-meta { font-size: 13px; color: #64748b; font-weight: 600; background: #f1f5f9; padding: 4px 10px; border-radius: 20px;}
         .fold-icon { transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1); font-size: 14px; color: #94a3b8;}
-        
         .fold-wrapper.open .fold-icon { transform: rotate(180deg); }
         .fold-wrapper.open .fold-header { border-bottom: 1px dashed #e2e8f0; background: #fcfcfc;}
 
@@ -58,6 +59,13 @@
         .honor-num { font-size: 18px; font-weight: 800; font-family: monospace; }
         .honor-label { font-size: 11px; font-weight: 700; margin-top: 2px; }
 
+        /* ✨ 开发者测试舱 UI */
+        .test-console { background: #fffbeb; border: 2px dashed #f59e0b; padding: 16px; border-radius: 12px; margin-bottom: 16px; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.15); animation: pulse-border 2s infinite;}
+        @keyframes pulse-border { 0% {border-color: #f59e0b;} 50% {border-color: #fbbf24;} 100% {border-color: #f59e0b;} }
+        .tc-title { font-weight: 800; color: #b45309; margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
+        .tc-btn { background: #ffffff; border: 1px solid #fcd34d; color: #d97706; font-size: 13px; font-weight: 700; padding: 8px 12px; border-radius: 8px; cursor: pointer; transition: 0.2s; box-shadow: 0 2px 4px rgba(245, 158, 11, 0.05);}
+        .tc-btn:active { transform: scale(0.95); background: #fef3c7; }
+
         .arena-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         .arena-card { padding: 16px; border-radius: 12px; cursor: pointer; transition: all 0.3s; color: #fff; text-align: left; position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between;}
         .arena-card:active:not(.locked-mode) { transform: scale(0.95); }
@@ -70,15 +78,20 @@
         .arena-extreme h3 { color: #fbbf24; }
         
         .locked-mode { filter: grayscale(1) opacity(0.5); cursor: not-allowed; }
-        .lock-msg { display: block; font-size: 10px; font-weight: 800; margin-top: 8px; padding-top: 6px; border-top: 1px dashed rgba(255,255,255,0.4); color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.5); line-height: 1.4;}
+        .lock-msg { display: block; font-size: 10.5px; font-weight: 800; margin-top: 8px; padding-top: 6px; border-top: 1px dashed rgba(255,255,255,0.4); color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.5); line-height: 1.3;}
         .arena-extreme .lock-msg { color: #fbbf24; border-top-color: rgba(251, 191, 36, 0.4); }
 
-        .bank-item { background: #f8fafc; border: 1px solid #e2e8f0; padding: 16px; border-radius: 12px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; transition: box-shadow 0.2s; }
-        .bank-info { flex: 1; }
+        .bank-item { background: #f8fafc; border: 1px solid #e2e8f0; padding: 16px; border-radius: 12px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; transition: box-shadow 0.2s; position: relative; overflow: hidden;}
+        .bank-info { flex: 1; transition: opacity 0.3s; }
         .bank-title { font-size: 16px; font-weight: 600; color: #1e293b; margin-bottom: 6px; }
-        .bank-meta { font-size: 13px; color: #64748b; background: #e2e8f0; display: inline-block; padding: 2px 8px; border-radius: 6px;}
-        .bank-actions { display: flex; gap: 8px; }
+        .bank-meta { font-size: 13px; color: #64748b; background: #e2e8f0; display: inline-flex; gap:8px; padding: 2px 8px; border-radius: 6px; align-items: center;}
+        .bank-actions { display: flex; gap: 8px; transition: opacity 0.3s; }
         .bank-actions .btn { padding: 8px 14px; font-size: 13px; margin: 0; }
+        
+        .bank-completed { background: #f1f5f9; border-color: #cbd5e1; }
+        .bank-completed .bank-info { opacity: 0.6; }
+        .bank-completed .bank-actions { filter: grayscale(1); opacity: 0.8; }
+        .stamp-completed { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-15deg); color: #ef4444; border: 3px solid #ef4444; padding: 2px 12px; font-size: 16px; font-weight: 800; letter-spacing: 2px; border-radius: 6px; opacity: 0.7; pointer-events: none; z-index: 10; text-shadow: 0 0 2px rgba(239,68,68,0.2); }
 
         .controls { background: #f8fafc; border: 1px dashed #cbd5e1; padding: 16px; border-radius: 12px; margin-bottom: 20px; font-size: 14px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
         .controls label { display: flex; align-items: center; margin-bottom: 6px; cursor: pointer; color: #475569; font-weight: 500;}
@@ -130,11 +143,30 @@
         .chunk-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; margin-bottom: 16px; }
         .chunk-title { font-size: 14px; font-weight: 600; color: #64748b; margin-bottom: 10px; }
         .chunk-textarea { height: 120px; margin-bottom: 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-family: monospace;}
+
+        /* 系统模态框 */
+        .sys-modal-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(4px); z-index: 9999; display: flex; justify-content: center; align-items: center; transition: opacity 0.3s; }
+        .sys-modal-box { background: #ffffff; width: 88%; max-width: 380px; border-radius: 20px; padding: 24px; box-shadow: 0 20px 40px rgba(0,0,0,0.2); text-align: center; transform: scale(1); transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1); }
+        .sys-modal-title { font-size: 18px; font-weight: 800; color: #1e293b; margin-bottom: 12px; }
+        .sys-modal-desc { font-size: 14px; color: #475569; line-height: 1.5; margin-bottom: 24px; }
+        .sys-modal-overlay.hidden { opacity: 0; pointer-events: none; }
+        .sys-modal-overlay.hidden .sys-modal-box { transform: scale(0.9); }
     </style>
 </head>
 <body>
 
 <div id="page-home">
+
+    <div class="test-console hidden" id="test-console">
+        <div class="tc-title">🚧 沙盒测试终端 <span>(云端接口已物理熔断)</span></div>
+        <p style="font-size:12px; color:#b45309; margin-bottom:12px; font-weight:600;">注入假数据验证解锁逻辑，退出时将自动核爆清空所有痕迹。</p>
+        <div style="display:flex; flex-wrap:wrap; gap:8px;">
+            <button class="tc-btn" onclick="testInjectBanks()">+ 注入 100 题容量</button>
+            <button class="tc-btn" onclick="testInjectStats()">+ 增加 50 答对数</button>
+            <button class="tc-btn" onclick="testInjectHonor()">+ 随机通关荣誉</button>
+            <button class="tc-btn" onclick="testForceComplete()">给题库盖100%章</button>
+        </div>
+    </div>
     
     <div class="fold-wrapper" id="fold-tools">
         <div class="fold-header" onclick="toggleFold('fold-tools')">
@@ -165,8 +197,8 @@
             <h2 style="margin-top: 24px;">云端漫游存档</h2>
             <input type="password" id="github-token-input" placeholder="输入 GitHub 密钥 (ghp_ 开头)">
             <div class="flex-row">
-                <button class="btn btn-primary" id="btn-cloud-backup" onclick="cloudBackup()">⬆️ 备份全状态</button>
-                <button class="btn" id="btn-cloud-restore" onclick="cloudRestore()">⬇️ 强制拉取</button>
+                <button class="btn btn-primary" id="btn-cloud-backup" onclick="cloudBackupFlow()">⬆️ 备份全状态</button>
+                <button class="btn btn-warning" id="btn-cloud-restore" onclick="cloudRestoreFlow()">⬇️ 强制云覆盖</button>
             </div>
             <div style="font-size: 12px; color: #94a3b8; text-align:center;">
                 离线工具：<a href="#" onclick="exportLocalData()" style="color:#3b82f6;">下载备份</a> | <a href="#" onclick="document.getElementById('import-file').click()" style="color:#3b82f6;">导入备份</a>
@@ -187,10 +219,6 @@
             <div style="flex: 1; min-width: 90px;">
                 <div style="color:#94a3b8; margin-bottom:6px; font-size:12px;">题目顺序</div>
                 <label><input type="checkbox" id="shuffle-cb" checked> 题目乱序</label>
-            </div>
-            <div style="flex: 1; min-width: 90px;">
-                <div style="color:#94a3b8; margin-bottom:6px; font-size:12px;">实验功能</div>
-                <label><input type="checkbox" id="opt-shuffle-cb"> 选项乱序 <span style="color:#f59e0b; font-size:12px;">(防背)</span></label>
             </div>
             <div style="flex: 1; min-width: 110px;">
                 <div style="color:#94a3b8; margin-bottom:6px; font-size:12px;">限时挑战</div>
@@ -238,6 +266,28 @@
             
         </div></div></div>
     </div>
+
+    <div class="fold-wrapper" id="fold-dev" style="border-color: #fecaca; margin-top: 40px;">
+        <div class="fold-header" onclick="toggleFold('fold-dev')" style="background: #fef2f2;">
+            <div class="fold-title" style="color: #dc2626;">🛠️ 开发者选项 <span class="fold-meta" style="background: #fee2e2; color: #b91c1c;">实验室 & 危险区</span></div>
+            <div class="fold-icon" style="color: #dc2626;">▼</div>
+        </div>
+        <div class="fold-content"><div class="fold-inner"><div class="fold-inner-padding">
+            <h3 style="font-size: 14px; color: #1e293b; margin-bottom: 8px;">🧪 实验性功能 (Beta)</h3>
+            <div class="controls" style="background: #ffffff; border-color: #e2e8f0; margin-bottom: 24px;">
+                <label><input type="checkbox" id="opt-shuffle-cb"> 强制选项乱序 (防背与防幻觉双擎激活)</label>
+            </div>
+
+            <h3 style="font-size: 14px; color: #1e293b; margin-bottom: 8px;">🚧 沙盒测试环境</h3>
+            <button class="btn btn-warning" id="test-mode-toggle-btn" onclick="toggleTestMode()">开启测试模式 (注入假数据测试解锁)</button>
+            <p style="font-size: 12px; color: #64748b; margin-top: 4px; margin-bottom: 24px;">需在纯净态（题库与大盘为0）下开启，开启后强制禁用云端。</p>
+            
+            <h3 style="font-size: 14px; color: #991b1b; margin-bottom: 8px;">🔥 危险操作</h3>
+            <button class="btn btn-danger" onclick="resetAllStatsFlow()">一键重置所有进度与大盘 (保留题库本身)</button>
+            <p style="font-size: 12px; color: #ef4444; margin-top: 4px;">注意：此操作将清空所有累计数据、荣誉及100%打卡印章，且不可逆。</p>
+        </div></div></div>
+    </div>
+
 </div>
 
 <div class="container hidden" id="page-quiz">
@@ -282,12 +332,57 @@
     <button class="btn btn-primary" style="margin-top: 24px; padding: 14px; font-size: 16px;" onclick="location.reload()">完成，返回主页</button>
 </div>
 
+<div class="sys-modal-overlay hidden" id="sys-modal">
+    <div class="sys-modal-box">
+        <div class="sys-modal-title" id="modal-title">提示</div>
+        <div class="sys-modal-desc" id="modal-desc">内容</div>
+        <button class="btn btn-primary" id="modal-btn-confirm" style="margin-bottom: 8px;">确认 (3s)</button>
+        <button class="btn" id="modal-btn-cancel" style="background: #f1f5f9; border-color: #cbd5e1; color:#475569;">取消</button>
+    </div>
+</div>
+
 <script>
+    // ---------------- 系统底层弹窗防误触 ----------------
+    const SysModal = {
+        timer: null,
+        show: function(title, desc, isDanger, onConfirm) {
+            document.getElementById('sys-modal').classList.remove('hidden');
+            document.getElementById('modal-title').innerText = title;
+            document.getElementById('modal-desc').innerHTML = desc;
+            
+            let btnC = document.getElementById('modal-btn-confirm');
+            let btnCancel = document.getElementById('modal-btn-cancel');
+            
+            btnC.className = isDanger ? "btn btn-danger" : "btn btn-primary";
+            btnC.disabled = true;
+            btnCancel.onclick = () => { this.hide(); };
+            
+            let cd = 3; btnC.innerText = `强制等待 (${cd}s)`;
+            if(this.timer) clearInterval(this.timer);
+            this.timer = setInterval(() => {
+                cd--;
+                if(cd <= 0) {
+                    clearInterval(this.timer); btnC.disabled = false;
+                    btnC.innerText = isDanger ? "我已知晓，确认执行" : "确认执行";
+                    btnC.onclick = () => { this.hide(); onConfirm(); };
+                } else { btnC.innerText = `强制等待 (${cd}s)`; }
+            }, 1000);
+        },
+        hide: function() {
+            document.getElementById('sys-modal').classList.add('hidden');
+            if(this.timer) clearInterval(this.timer);
+        }
+    };
+
+    // ---------------- 基础数据与进度机制 ----------------
     let banks = JSON.parse(localStorage.getItem('szys_banks') || '{}');
     let globalStats = JSON.parse(localStorage.getItem('szys_global_stats') || '{"totalAnswered": 0, "totalCorrect": 0, "challenge": {}}');
     if(globalStats.totalCorrect === undefined) globalStats.totalCorrect = 0;
     if(!globalStats.challenge) globalStats.challenge = { easy:0, normal:0, hard:0, extreme:0 };
     
+    // ✨ 测试模式状态变量
+    let isTestMode = localStorage.getItem('szys_test_mode') === 'true';
+
     const UNLOCK_REQS_Q = { 'easy': 70, 'normal': 210, 'hard': 420, 'extreme': 630 };
     const UNLOCK_REQS_C = { 'easy': 30, 'normal': 90, 'hard': 180, 'extreme': 300 };
     const UNLOCK_PRE = { 'easy': null, 'normal': 'easy', 'hard': 'normal', 'extreme': 'hard' };
@@ -298,6 +393,16 @@
         updateDashboard();
         let savedToken = localStorage.getItem('szys_github_token'); 
         if(savedToken) document.getElementById('github-token-input').value = savedToken; 
+        
+        // 渲染测试模式 UI
+        if(isTestMode) {
+            document.getElementById('test-console').classList.remove('hidden');
+            let tBtn = document.getElementById('test-mode-toggle-btn');
+            tBtn.innerText = "关闭测试模式 (将核爆清空所有假数据)";
+            tBtn.className = "btn btn-danger";
+            document.getElementById('btn-cloud-backup').disabled = true;
+            document.getElementById('btn-cloud-restore').disabled = true;
+        }
     };
     
     function saveBanks() { localStorage.setItem('szys_banks', JSON.stringify(banks)); updateDashboard(); }
@@ -340,26 +445,87 @@
         });
     }
 
-    // --- 云端同步逻辑 ---
-    async function cloudBackup() {
-        let token = document.getElementById('github-token-input').value.trim(); if(!token) return alert("请先填写 GitHub 密钥！"); localStorage.setItem('szys_github_token', token);
-        if (Object.keys(banks).length === 0) return alert("您的本地题库为空，无需备份。");
-        const btn = document.getElementById('btn-cloud-backup'); btn.innerText = "正在打包全状态..."; btn.disabled = true;
+    // ---------------- 🧪 开发者沙盒测试引擎 ----------------
+    function toggleTestMode() {
+        if (!isTestMode) {
+            let totalQ = 0; for (let id in banks) { totalQ += banks[id].data.length; }
+            if (totalQ > 0 || globalStats.totalAnswered > 0 || globalStats.totalCorrect > 0) {
+                return alert("⚠️ 无法开启测试模式！\n\n为了防止假数据污染您的心血存档，测试模式仅能在【0题库、0进度】的纯净状态下开启。\n请先使用下方红色的“一键重置”并在上方删除所有题库。");
+            }
+            localStorage.setItem('szys_test_mode', 'true');
+            alert("🔧 开发者沙盒已激活！"); location.reload();
+        } else {
+            // 退出测试模式时，执行核弹级清理
+            banks = {}; globalStats = { totalAnswered: 0, totalCorrect: 0, challenge: { easy:0, normal:0, hard:0, extreme:0 } };
+            saveBanks(); saveGlobalStats(); localStorage.removeItem('szys_state');
+            localStorage.setItem('szys_test_mode', 'false');
+            alert("✅ 已退出测试模式，所有测试假数据已核爆销毁，系统恢复纯净！"); location.reload();
+        }
+    }
+
+    function testInjectBanks() {
+        let dummyData = [];
+        for(let i=0; i<100; i++) { dummyData.push({question: `[沙盒测试题目 ${i+1}] 这是一道由开发者引擎生成的虚假题目用于撑起库容。`, options: {A:"选项甲", B:"选项乙", C:"选项丙", D:"选项丁"}, answer: "A", type: "single", source: "测试引擎"}); }
+        banks['test_' + Date.now()] = { name: "🧪 100题测试容量包", data: dummyData, completed: false, maxRate: 0 };
+        saveBanks(); renderBankList(); alert("✅ 成功注入 100 道假题");
+    }
+    
+    function testInjectStats() {
+        globalStats.totalAnswered += 50; globalStats.totalCorrect += 50; saveGlobalStats(); alert("✅ 全局答对数 +50");
+    }
+
+    function testInjectHonor() {
+        let modes = ['easy', 'normal', 'hard', 'extreme'];
+        let m = modes[Math.floor(Math.random()*modes.length)];
+        globalStats.challenge[m]++; saveGlobalStats(); alert(`✅ [${PRE_NAMES[m]}] 通关荣誉 +1`);
+    }
+
+    function testForceComplete() {
+        let keys = Object.keys(banks);
+        if(keys.length === 0) return alert("请先注入假题库");
+        banks[keys[0]].completed = true; banks[keys[0]].maxRate = 100; saveBanks(); renderBankList(); alert("✅ 已强制给第一个题库盖上 100% 毕业印章");
+    }
+
+    // --- 强制危险提示流程引擎 ---
+    function cloudBackupFlow() {
+        if(isTestMode) return alert("⛔ 物理熔断：沙盒测试模式下严禁上传假数据至云端！");
+        let token = document.getElementById('github-token-input').value.trim(); if(!token) return alert("请先填写 GitHub 密钥！");
+        if (Object.keys(banks).length === 0) return alert("本地暂无题库可备份。");
+        SysModal.show("☁️ 确认备份至云端？", "此操作会将您当前的<span style='color:#3b82f6;font-weight:bold;'>题库、答题进度、挑战荣誉</span>全部上传，覆盖云端的旧存档。", false, () => { executeCloudBackup(token); });
+    }
+
+    function cloudRestoreFlow() {
+        if(isTestMode) return alert("⛔ 物理熔断：沙盒测试模式下严禁从云端拉取数据！");
+        let token = document.getElementById('github-token-input').value.trim(); if(!token) return alert("请先填写 GitHub 密钥！");
+        SysModal.show("⚠️ 严重警告：云端强制覆盖", "系统将直接拉取云端存档，并<span style='color:#ef4444;font-weight:bold;'>完全抹除替换</span>您当前手机上的所有题库与进度！<br><br>一旦覆盖，本地丢失数据将无法找回。", true, () => { executeCloudRestore(token); });
+    }
+
+    function resetAllStatsFlow() {
+        SysModal.show("🔥 最高级危险：清除个人进度", "您正在试图清空<span style='color:#ef4444;font-weight:bold;'>所有大盘数据、挑战荣誉及各题库的100%打卡章</span>（题库题目本身会被保留）。<br><br>清空后绝无找回可能，请慎重决定！", true, () => {
+            globalStats = { totalAnswered: 0, totalCorrect: 0, challenge: { easy:0, normal:0, hard:0, extreme:0 } };
+            for(let id in banks) { banks[id].completed = false; banks[id].maxRate = 0; }
+            saveBanks(); saveGlobalStats(); localStorage.removeItem('szys_state');
+            alert("✅ 所有进度数据已彻底重置。"); location.reload();
+        });
+    }
+
+    // --- 云端执行引擎 ---
+    async function executeCloudBackup(token) {
+        localStorage.setItem('szys_github_token', token);
+        let backupPayload = { version: "8.1", banks: banks, state: JSON.parse(localStorage.getItem('szys_state') || 'null'), stats: globalStats };
+        let payloadStr = JSON.stringify(backupPayload);
         try {
-            let backupPayload = { version: "7.9", banks: banks, state: JSON.parse(localStorage.getItem('szys_state') || 'null'), stats: globalStats };
-            let payloadStr = JSON.stringify(backupPayload);
             let res = await fetch('https://api.github.com/gists', { headers: { 'Authorization': 'token ' + token }});
             if(!res.ok) throw new Error("密钥验证失败");
             let gists = await res.json(); let targetGist = gists.find(g => g.files['szys_backup.json']);
             if(targetGist) { await fetch('https://api.github.com/gists/' + targetGist.id, { method: 'PATCH', headers: { 'Authorization': 'token ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ files: { 'szys_backup.json': { content: payloadStr } } }) }); } 
-            else { await fetch('https://api.github.com/gists', { method: 'POST', headers: { 'Authorization': 'token ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ description: "三支一扶 V7.9 题库备份", public: false, files: { 'szys_backup.json': { content: payloadStr } } }) }); }
-            alert("✅ 全状态备份成功！");
-        } catch(e) { alert("❌ 备份出错：" + e.message); } finally { btn.innerText = "⬆️ 备份全状态"; btn.disabled = false; }
+            else { await fetch('https://api.github.com/gists', { method: 'POST', headers: { 'Authorization': 'token ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ description: "三支一扶 V8.1 题库备份", public: false, files: { 'szys_backup.json': { content: payloadStr } } }) }); }
+            alert("✅ 漫游数据备份成功！");
+        } catch(e) { alert("❌ 备份出错：" + e.message); }
     }
 
-    async function cloudRestore() {
-        let token = document.getElementById('github-token-input').value.trim(); if(!token) return alert("请先填写 GitHub 密钥！"); localStorage.setItem('szys_github_token', token);
-        const btn = document.getElementById('btn-cloud-restore'); btn.innerText = "强制穿透拉取中..."; btn.disabled = true;
+    async function executeCloudRestore(token) {
+        localStorage.setItem('szys_github_token', token);
         try {
             let res = await fetch('https://api.github.com/gists', { headers: { 'Authorization': 'token ' + token }});
             if(!res.ok) throw new Error("密钥验证失败");
@@ -368,30 +534,19 @@
             let fileRes = await fetch(rawUrl + (rawUrl.includes('?') ? '&' : '?') + 't=' + Date.now());
             let importedData = await fileRes.json();
             
-            let currentBanks = JSON.parse(localStorage.getItem('szys_banks') || '{}'); let addedCount = 0;
             if (importedData.version && importedData.version >= "7.3") {
-                for (let id in importedData.banks) {
-                    if (!currentBanks[id]) { currentBanks[id] = importedData.banks[id]; addedCount++; } 
-                    else { let newId = id + "_" + Date.now(); importedData.banks[id].name += " (云端)"; currentBanks[newId] = importedData.banks[id]; addedCount++; }
-                }
-                if (importedData.stats) { 
-                    globalStats = importedData.stats; if(globalStats.totalCorrect === undefined) globalStats.totalCorrect = 0;
-                    if(!globalStats.challenge) globalStats.challenge = { easy:0, normal:0, hard:0, extreme:0 }; saveGlobalStats(); 
-                }
+                banks = importedData.banks;
+                globalStats = importedData.stats || {totalAnswered: 0, totalCorrect: 0, challenge: {easy:0,normal:0,hard:0,extreme:0}};
                 if (importedData.state) { localStorage.setItem('szys_state', JSON.stringify(importedData.state)); } else { localStorage.removeItem('szys_state'); }
-            } else {
-                for (let id in importedData) {
-                    if (!currentBanks[id]) { currentBanks[id] = importedData[id]; addedCount++; } 
-                    else { let newId = id + "_" + Date.now(); importedData[id].name += " (云端)"; currentBanks[newId] = importedData[id]; addedCount++; }
-                }
-            }
-            localStorage.setItem('szys_banks', JSON.stringify(currentBanks)); alert(`✅ 恢复成功！找回 ${addedCount} 个题库。`); location.reload();
-        } catch(e) { alert("❌ 恢复出错：" + e.message); } finally { btn.innerText = "⬇️ 强制拉取"; btn.disabled = false; }
+            } else { banks = importedData; }
+            saveBanks(); saveGlobalStats();
+            alert(`✅ 云端覆盖成功！已全量恢复您的专属状态。`); location.reload();
+        } catch(e) { alert("❌ 恢复出错：" + e.message); }
     }
 
     function exportLocalData() {
         if (Object.keys(banks).length === 0) return alert("暂无数据可导出");
-        let backupPayload = { version: "7.9", banks: banks, state: JSON.parse(localStorage.getItem('szys_state') || 'null'), stats: globalStats };
+        let backupPayload = { version: "8.1", banks: banks, state: JSON.parse(localStorage.getItem('szys_state') || 'null'), stats: globalStats };
         let blob = new Blob([JSON.stringify(backupPayload)], { type: "application/json" }); let url = URL.createObjectURL(blob); let a = document.createElement('a'); a.href = url;
         a.download = `题库全量备份_${new Date().toISOString().slice(0,10).replace(/-/g,"")}.json`; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
     }
@@ -399,15 +554,13 @@
         let file = event.target.files[0]; if (!file) return; let reader = new FileReader();
         reader.onload = function(e) {
             try {
-                let importedData = JSON.parse(e.target.result); let currentBanks = JSON.parse(localStorage.getItem('szys_banks') || '{}'); let count = 0;
+                let importedData = JSON.parse(e.target.result); let count = 0;
                 if (importedData.version && importedData.version >= "7.3") {
-                    for (let id in importedData.banks) { if (!currentBanks[id]) { currentBanks[id] = importedData.banks[id]; count++; } else { currentBanks[id+"_local_" + Date.now()] = importedData.banks[id]; count++; } }
-                    if (importedData.stats) { globalStats = importedData.stats; if(globalStats.totalCorrect === undefined) globalStats.totalCorrect = 0; if(!globalStats.challenge) globalStats.challenge = { easy:0, normal:0, hard:0, extreme:0 }; saveGlobalStats(); }
+                    banks = importedData.banks;
+                    globalStats = importedData.stats; if(globalStats.totalCorrect === undefined) globalStats.totalCorrect = 0; if(!globalStats.challenge) globalStats.challenge = { easy:0, normal:0, hard:0, extreme:0 };
                     if (importedData.state) { localStorage.setItem('szys_state', JSON.stringify(importedData.state)); } else { localStorage.removeItem('szys_state'); }
-                } else {
-                    for (let id in importedData) { if (!currentBanks[id]) { currentBanks[id] = importedData[id]; count++; } else { currentBanks[id+"_local_" + Date.now()] = importedData[id]; count++; } }
-                }
-                localStorage.setItem('szys_banks', JSON.stringify(currentBanks)); alert(`✅ 成功导入 ${count} 个题库！`); location.reload();
+                } else { banks = importedData; }
+                saveBanks(); saveGlobalStats(); alert(`✅ 成功从本地文件全量覆盖恢复！`); location.reload();
             } catch(err) { alert("文件解析错误。"); }
         }; reader.readAsText(file); event.target.value = '';
     }
@@ -420,13 +573,14 @@
     }
     function saveNewBank() {
         let qs = parseInput(); if(!qs) return; let name = document.getElementById('new-bank-name').value.trim(); if(!name) return alert("请命名");
-        let id = 'bank_' + Date.now(); banks[id] = { name: name, data: qs }; saveBanks(); renderBankList(); document.getElementById('data-input').value = ''; document.getElementById('new-bank-name').value = ''; alert(`✅ 保存成功！`);
+        let id = 'bank_' + Date.now(); banks[id] = { name: name, data: qs, completed: false, maxRate: 0 }; saveBanks(); renderBankList(); document.getElementById('data-input').value = ''; document.getElementById('new-bank-name').value = ''; alert(`✅ 保存成功！`);
     }
     function appendToBank() {
         let qs = parseInput(); if(!qs) return; let bankId = document.getElementById('exist-bank-select').value; if(!bankId) return alert("请选择题库");
         let bank = banks[bankId]; let existFps = new Set(bank.data.map(q => getFingerprint(q.question))); let added = 0; let dup = 0;
         qs.forEach(q => { let fp = getFingerprint(q.question); if(!existFps.has(fp)) { bank.data.push(q); existFps.add(fp); added++; } else { dup++; } });
-        saveBanks(); renderBankList(); document.getElementById('data-input').value = ''; alert(`✅ 新增 ${added} 道，拦截重复 ${dup} 道`);
+        bank.completed = false; bank.maxRate = 0;
+        saveBanks(); renderBankList(); document.getElementById('data-input').value = ''; alert(`✅ 新增 ${added} 道，拦截重复 ${dup} 道。印章已重置，请再次挑战满分！`);
     }
     function deleteBank(id) {
         if(confirm(`确定删除吗？`)) { delete banks[id]; saveBanks(); if (localStorage.getItem('szys_state') && JSON.parse(localStorage.getItem('szys_state')).bankId === id) localStorage.removeItem('szys_state'); renderBankList(); }
@@ -437,15 +591,31 @@
         for (let id in banks) {
             hasBanks = true; let b = banks[id];
             let opt = document.createElement('option'); opt.value = id; opt.innerText = b.name; sel.appendChild(opt);
-            let div = document.createElement('div'); div.className = 'bank-item';
+            
+            let div = document.createElement('div'); 
+            div.className = b.completed ? 'bank-item bank-completed' : 'bank-item';
+            
             let savedState = JSON.parse(localStorage.getItem('szys_state') || 'null'); let hasResume = (savedState && savedState.bankId === id);
-            let playBtnTxt = hasResume ? '继续答题' : '开始练习'; let playBtnClass = hasResume ? 'btn-primary' : 'btn';
+            let playBtnTxt = hasResume ? '继续作答' : '开始作答'; let playBtnClass = hasResume ? 'btn-primary' : 'btn';
+            
+            let stampHtml = b.completed ? `<div class="stamp-completed">已完成</div>` : '';
+            
             div.innerHTML = `
-                <div class="bank-info"><div class="bank-title">${b.name}</div><div class="bank-meta">共 ${b.data.length} 题</div></div>
-                <div class="bank-actions"><button class="btn ${playBtnClass}" onclick="startQuiz('${id}', ${hasResume})">${playBtnTxt}</button><button class="btn" style="color:#ef4444; border-color:#fca5a5; background:#fef2f2;" onclick="deleteBank('${id}')">删除</button></div>
+                ${stampHtml}
+                <div class="bank-info">
+                    <div class="bank-title">${b.name}</div>
+                    <div class="bank-meta">
+                        <span>共 ${b.data.length} 题</span>
+                        <span style="color:#d97706; font-weight:700;">★ 最高 ${b.maxRate || 0}%</span>
+                    </div>
+                </div>
+                <div class="bank-actions">
+                    <button class="btn ${playBtnClass}" onclick="startQuiz('${id}', ${hasResume})">${playBtnTxt}</button>
+                    <button class="btn" style="color:#ef4444; border-color:#fca5a5; background:#fef2f2;" onclick="deleteBank('${id}')">删除</button>
+                </div>
             `; list.appendChild(div);
         }
-        if(!hasBanks) list.innerHTML = '<div style="text-align:center; color:#94a3b8; padding:24px; font-size:14px;">练习库空空如也，请在上方导入中心添加题目。</div>';
+        if(!hasBanks) list.innerHTML = '<div style="text-align:center; color:#94a3b8; padding:24px; font-size:14px;">练习库空空如也，请去战备中心导入。</div>';
     }
 
     // ---------------- 答题与选项乱序引擎 ----------------
@@ -453,32 +623,24 @@
         bankId: null, data: [], current: 0, score: 0, mode: 'instant', 
         wrongList: [], stars: new Set(), selected: [], isAnswered: false, 
         timerMode: false, timeRemaining: 0, isChallenge: false, challengeDiff: null,
-        optShuffle: false // ✨ 新增：选项乱序标志
+        optShuffle: false, isCompletedBank: false
     };
     let timerInterval = null;
     const DOM = { setup: document.getElementById('page-home'), quiz: document.getElementById('page-quiz'), result: document.getElementById('page-result'), title: document.getElementById('question-text'), opts: document.getElementById('options-container'), progressFill: document.getElementById('progress-fill'), progressText: document.getElementById('progress-text'), feedback: document.getElementById('feedback-box'), btnAction: document.getElementById('btn-action'), btnStar: document.getElementById('btn-star'), timerDisplay: document.getElementById('timer-display') };
 
     function saveState() {
-        if(App.isChallenge) return;
+        if(App.isChallenge || isTestMode) return; // 挑战或测试模式不存档
         const state = { bankId: App.bankId, current: App.current, score: App.score, mode: App.mode, wrongList: App.wrongList, stars: Array.from(App.stars), isAnswered: App.isAnswered, selected: App.selected, activeData: App.data, timerMode: App.timerMode, timeRemaining: App.timeRemaining, optShuffle: App.optShuffle };
         localStorage.setItem('szys_state', JSON.stringify(state));
     }
 
-    // ✨ 选项乱序预处理核心逻辑
     function preprocessOptions(dataArray, isShuffle) {
         dataArray.forEach(q => {
-            let dKeys = Object.keys(q.options).sort();
-            q.optMap = {}; // 映射关系：{ '屏幕上的A': '原始的C' }
+            let dKeys = Object.keys(q.options).sort(); q.optMap = {}; 
             if (isShuffle) {
-                let oKeys = [...dKeys];
-                for (let i = oKeys.length - 1; i > 0; i--) {
-                    const j = Math.floor(Math.random() * (i + 1));
-                    [oKeys[i], oKeys[j]] = [oKeys[j], oKeys[i]];
-                }
+                let oKeys = [...dKeys]; for (let i = oKeys.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [oKeys[i], oKeys[j]] = [oKeys[j], oKeys[i]]; }
                 dKeys.forEach((dk, i) => { q.optMap[dk] = oKeys[i]; });
-            } else {
-                dKeys.forEach(dk => { q.optMap[dk] = dk; });
-            }
+            } else { dKeys.forEach(dk => { q.optMap[dk] = dk; }); }
         });
     }
 
@@ -497,11 +659,10 @@
         
         App.data = allQs.slice(0, req); App.isChallenge = true; App.challengeDiff = difficulty; App.mode = 'exam';
         
-        // 读取选项乱序开关
         App.optShuffle = document.getElementById('opt-shuffle-cb') ? document.getElementById('opt-shuffle-cb').checked : false;
         preprocessOptions(App.data, App.optShuffle);
 
-        App.current = 0; App.score = 0; App.wrongList = []; App.stars.clear(); App.selected = []; App.isAnswered = false;
+        App.current = 0; App.score = 0; App.wrongList = []; App.stars.clear(); App.selected = []; App.isAnswered = false; App.isCompletedBank = false;
 
         if(difficulty === 'extreme') { App.timerMode = true; App.timeRemaining = 90 * 60; } else { App.timerMode = false; }
         DOM.setup.classList.add('hidden'); DOM.quiz.classList.remove('hidden');
@@ -513,19 +674,17 @@
     function startQuiz(bankId, isResume) {
         App.isChallenge = false;
         document.getElementById('nav-btn-back').innerText = '〈 保存并退出'; document.getElementById('btn-quit').innerText = '放弃当前进度，清空重卷';
+        App.isCompletedBank = banks[bankId].completed || false;
+
         if (isResume) {
             let s = JSON.parse(localStorage.getItem('szys_state'));
             App.bankId = s.bankId; App.data = s.activeData; App.current = s.current; App.score = s.score; App.mode = s.mode; App.wrongList = s.wrongList; App.stars = new Set(s.stars); App.isAnswered = s.isAnswered; App.selected = s.selected; App.timerMode = s.timerMode || false; App.timeRemaining = s.timeRemaining || 0; App.optShuffle = s.optShuffle || false;
-            
-            // 安全防沉降：如果旧版存档没有 optMap，在这里修补
             App.data.forEach(q => { if(!q.optMap) { q.optMap={}; Object.keys(q.options).sort().forEach(k=>q.optMap[k]=k); }});
-            
             DOM.setup.classList.add('hidden'); DOM.quiz.classList.remove('hidden'); renderQuestion(true);
         } else {
             App.bankId = bankId; App.data = JSON.parse(JSON.stringify(banks[bankId].data)); App.mode = document.querySelector('input[name="mode"]:checked').value;
             if (document.getElementById('shuffle-cb').checked) { for (let i = App.data.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [App.data[i], App.data[j]] = [App.data[j], App.data[i]]; } }
             
-            // 处理选项乱序
             App.optShuffle = document.getElementById('opt-shuffle-cb') ? document.getElementById('opt-shuffle-cb').checked : false;
             preprocessOptions(App.data, App.optShuffle);
 
@@ -554,25 +713,25 @@
         else { if(confirm("⚠️ 确定要清空重来吗？本次进度将被删除。")) { if(timerInterval) clearInterval(timerInterval); localStorage.removeItem('szys_state'); location.reload(); } }
     }
 
-    // ✨ 选项呈现：利用 optMap 将内部乱序在外部呈现
     function renderQuestion(isRestore = false) {
         if (!isRestore) { App.selected = []; App.isAnswered = false; }
         const q = App.data[App.current]; 
         DOM.progressText.innerText = `${App.current + 1} / ${App.data.length}`;
         DOM.progressFill.style.width = (((App.current) / App.data.length) * 100) + '%';
+        
+        let completedNote = App.isCompletedBank ? `<span style="color:#ef4444; font-size:12px; margin-left:8px;">[此题库已达100%，作答不计入大盘]</span>` : '';
         let sourceHtml = q.source ? `<span class="source-text">📄 出处：${q.source}</span>` : '';
-        DOM.title.innerHTML = `<span class="badge">${q.type === 'multiple' ? '多选题' : '单选题'}</span> ${q.question} ${sourceHtml}`;
+        DOM.title.innerHTML = `<span class="badge">${q.type === 'multiple' ? '多选题' : '单选题'}</span> ${q.question} ${completedNote} ${sourceHtml}`;
+        
         DOM.btnStar.innerHTML = App.stars.has(q.id) ? '★ 已收藏' : '☆ 收藏本题'; DOM.btnStar.className = App.stars.has(q.id) ? 'nav-btn bookmark-btn active' : 'nav-btn bookmark-btn';
         
         DOM.opts.innerHTML = '';
         let dKeys = Object.keys(q.optMap).sort();
         for (let dk of dKeys) { 
-            let oKey = q.optMap[dk]; // oKey 是原始的 A B C D
+            let oKey = q.optMap[dk]; 
             let btn = document.createElement('button'); btn.className = 'opt-btn'; btn.id = `opt-${oKey}`; 
             btn.innerHTML = `<span class="opt-letter">${dk}.</span> <span>${q.options[oKey]}</span>`; 
-            // 按钮点击时，传递给逻辑层的永远是【最原始】的那个字母，而不是屏幕上显示的打乱字母！
-            btn.onclick = () => selectOpt(oKey, q.type); 
-            DOM.opts.appendChild(btn); 
+            btn.onclick = () => selectOpt(oKey, q.type); DOM.opts.appendChild(btn); 
         }
         
         DOM.feedback.classList.add('hidden'); DOM.btnAction.className = "btn btn-primary";
@@ -605,28 +764,27 @@
     }
 
     function processAnswer(q) {
-        // App.selected 里存的全是原始字母，q.answer 也是原始字母，匹配完美进行。
         let myAns = App.selected.sort().join(''); let rightAns = q.answer.split('').sort().join(''); let isRight = (myAns === rightAns);
-        if (isRight) { App.score++; if(!App.isChallenge) { globalStats.totalCorrect++; } }
-        // 记录进错题本的，依然是毫无防备的原始字母，以适配 AI
+        
+        if (isRight) {
+            App.score++; 
+            if(!App.isChallenge && !App.isCompletedBank && !isTestMode) { globalStats.totalCorrect++; }
+        }
+        
         if (!isRight || App.stars.has(q.id)) App.wrongList.push({ id: q.id, q: q.question, source: q.source || "未知", my: myAns || "未答", right: q.answer, reason: !isRight ? "答错" : "收藏" });
-        if(!App.isChallenge) { globalStats.totalAnswered++; saveGlobalStats(); }
+        if(!App.isChallenge && !App.isCompletedBank && !isTestMode) { globalStats.totalAnswered++; saveGlobalStats(); }
     }
 
-    // ✨ UI 视觉层的还原魔法
     function showFeedbackUI(q) {
         let myAns = App.selected.sort().join('');
         document.querySelectorAll('.opt-btn').forEach(btn => { 
-            btn.classList.add('locked'); 
-            let k = btn.id.replace('opt-', ''); // 取出原始字母
+            btn.classList.add('locked'); let k = btn.id.replace('opt-', ''); 
             if (q.answer.includes(k)) btn.classList.add('correct'); else if (myAns.includes(k) && !q.answer.includes(k)) btn.classList.add('wrong'); 
         });
-        
         DOM.feedback.classList.remove('hidden');
         if (myAns === q.answer.split('').sort().join('')) { 
             DOM.feedback.style.background = '#f0fdf4'; DOM.feedback.style.color = '#166534'; DOM.feedback.style.border = "1px solid #bbf7d0"; DOM.feedback.innerHTML = "✅ 回答完全正确！"; 
         } else { 
-            // 算一下原始的正确字母，现在在屏幕上披着哪件外衣？
             let revMap = {}; for(let dk in q.optMap) { revMap[q.optMap[dk]] = dk; }
             let displayRightAns = q.answer.split('').map(k => revMap[k] || k).sort().join('');
             DOM.feedback.style.background = '#fef2f2'; DOM.feedback.style.color = '#991b1b'; DOM.feedback.style.border = "1px solid #fecaca"; 
@@ -650,7 +808,7 @@
         if (pct < 0.5) {
             box.classList.add('cf-bronze'); title.innerText = "💀 挑战失败"; title.style.color = "#ef4444"; desc.innerText = `你在【${diffName}】模式下正确率未达50%，已被无情淘汰。再接再厉！`;
         } else {
-            globalStats.challenge[diff]++; saveGlobalStats();
+            if(!isTestMode) { globalStats.challenge[diff]++; saveGlobalStats(); }
             if(pct === 1) {
                 box.classList.add('cf-gold'); title.innerText = "🏆 完美通关！神级操作！"; desc.innerText = `你在【${diffName}】模式下一题未错，绝对的碾压局！荣誉神殿已为你刻上勋章！`;
                 if(diff === 'extreme') { document.body.classList.add('anim-shake'); setTimeout(()=>document.body.classList.remove('anim-shake'), 500); title.classList.add('text-rainbow'); box.classList.add('anim-glow'); createParticles(); } 
@@ -666,19 +824,33 @@
     function showResult() {
         if(timerInterval) clearInterval(timerInterval); if(!App.isChallenge) localStorage.removeItem('szys_state'); 
         DOM.quiz.classList.add('hidden'); DOM.result.classList.remove('hidden');
-        let pct = App.score / App.data.length; let pctStr = Math.round(pct * 100) + '%';
-        document.getElementById('score-text').innerText = `${App.score} / ${App.data.length} (${pctStr})`;
         
-        if (App.isChallenge) {
+        let pct = App.score / App.data.length; let pctStr = Math.round(pct * 100);
+        document.getElementById('score-text').innerText = `${App.score} / ${App.data.length} (${pctStr}%)`;
+        
+        if (!App.isChallenge) {
+            let completeMsg = "";
+            if(!isTestMode) {
+                let b = banks[App.bankId];
+                if (!b.maxRate || pctStr > b.maxRate) b.maxRate = pctStr;
+                if (pctStr === 100 && !b.completed) {
+                    b.completed = true;
+                    completeMsg = "<br><span style='color:#ef4444; font-weight:800; font-size:16px;'>🎉 恭喜！您已100%拿下此题库，获得毕业印章！</span>";
+                } else if (b.completed) {
+                    completeMsg = "<br><span style='color:#64748b;'>（此题库已毕业，本次不增加大盘数值）</span>";
+                }
+                saveBanks();
+            }
+            
+            document.getElementById('result-page-title').innerText = "练习战报"; document.getElementById('challenge-feedback').classList.add('hidden'); 
+            document.getElementById('stat-text').innerHTML = `本次作答 ${App.data.length} 题 | 收录错题 ${App.wrongList.length} 题${completeMsg}`;
+        } else {
             document.getElementById('result-page-title').innerText = "⚔️ 竞技场战报"; document.getElementById('stat-text').innerText = `本次极限操作：${App.data.length} 题 | 收录高压错题 ${App.wrongList.length} 题`;
             triggerChallengeFeedback(App.challengeDiff, pct);
-        } else {
-            document.getElementById('result-page-title').innerText = "练习战报"; document.getElementById('challenge-feedback').classList.add('hidden'); document.getElementById('stat-text').innerText = `本次共作答 ${App.data.length} 题 | 收录错题/星标 ${App.wrongList.length} 题`;
         }
         renderChunks();
     }
 
-    // ✨ 错题本引擎：坚守底层原始字母阵地，喂给AI最标准的数据
     function renderChunks() {
         const container = document.getElementById('chunks-container'); container.innerHTML = '';
         if (App.wrongList.length === 0) { container.innerHTML = "<div class='chunk-box' style='text-align:center; color:#166534; background:#f0fdf4; border-color:#86efac;'>✨ 恭喜，本次练习全对，完美通关！</div>"; return; }
