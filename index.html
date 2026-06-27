@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>三支一扶题库系统 V6.4 (自动容错版)</title>
+    <title>三支一扶题库系统 V6.5 (计时模拟版)</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #f4f6f9; color: #333; padding: 15px; }
@@ -29,12 +29,13 @@
         .bank-actions { display: flex; gap: 8px; }
         .bank-actions .btn { padding: 8px 12px; font-size: 13px; margin: 0; width: auto; }
 
-        .controls { background: #f8f9fa; padding: 10px; border-radius: 8px; margin-bottom: 15px; font-size: 14px; display: flex; justify-content: space-between;}
-        .controls label { display: flex; align-items: center; margin-bottom: 5px; }
-        .controls input { margin-right: 6px; transform: scale(1.1); }
+        .controls { background: #f8f9fa; padding: 12px; border-radius: 8px; margin-bottom: 15px; font-size: 14px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+        .controls label { display: flex; align-items: center; margin-bottom: 5px; cursor: pointer; }
+        .controls input[type="radio"], .controls input[type="checkbox"] { margin-right: 6px; transform: scale(1.1); }
         
         .header-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
         .progress { font-size: 15px; color: #666; font-weight: bold; }
+        .timer-badge { font-size: 14px; color: #d35400; background: #fdebd0; padding: 3px 10px; border-radius: 12px; font-weight: bold; }
         .bookmark-btn { font-size: 14px; color: #666; background: #f0f2f5; border: 1px solid #ddd; padding: 5px 12px; border-radius: 20px; }
         .bookmark-btn.active { color: #d35400; background: #fdebd0; border-color: #f39c12; font-weight: bold; }
         .question-title { font-size: 16px; font-weight: bold; line-height: 1.6; margin-bottom: 15px; }
@@ -53,6 +54,7 @@
 </head>
 <body>
 
+<!-- 页面一：题库管理首页 -->
 <div class="container" id="page-home">
     <h2>➕ 导入新题目</h2>
     <textarea id="data-input" placeholder="请将AI转换好的JSON题目粘贴到这里..."></textarea>
@@ -68,33 +70,50 @@
     </div>
 
     <h2 style="margin-top: 25px;">📚 我的题库</h2>
+    
+    <!-- ✨ 更新的控制台：包含定时功能 -->
     <div class="controls">
-        <div>
+        <div style="flex: 1; min-width: 100px;">
             <div style="font-weight:bold; margin-bottom:5px;">模式设定</div>
             <label><input type="radio" name="mode" value="exam"> 考试模式</label>
             <label><input type="radio" name="mode" value="instant" checked> 即时反馈</label>
         </div>
-        <div>
+        <div style="flex: 1; min-width: 100px;">
             <div style="font-weight:bold; margin-bottom:5px;">额外选项</div>
             <label><input type="checkbox" id="shuffle-cb" checked> 题目乱序</label>
+        </div>
+        <div style="flex: 1; min-width: 100px;">
+            <div style="font-weight:bold; margin-bottom:5px;">计时模式</div>
+            <label><input type="checkbox" id="timer-cb" onclick="document.getElementById('timer-input-box').style.display = this.checked ? 'block' : 'none'"> 开启倒计时</label>
+            <div id="timer-input-box" style="display:none; margin-top:5px;">
+                <input type="number" id="timer-minutes" value="30" min="1" max="300" style="width:70px; padding:5px; text-align:center; display:inline-block; margin-right:5px;">分钟
+            </div>
         </div>
     </div>
     
     <div id="bank-list"></div>
 </div>
 
+<!-- 页面二：答题区 -->
 <div class="container hidden" id="page-quiz">
     <div class="header-bar">
         <span class="progress" id="progress-text"></span>
+        <span class="timer-badge hidden" id="timer-display">⏳ 00:00</span>
         <button class="bookmark-btn" id="btn-star" onclick="toggleStar()">☆ 收藏标记</button>
     </div>
     <div class="question-title" id="question-text"></div>
     <div id="options-container"></div>
     <div class="feedback-box hidden" id="feedback-box"></div>
     <button class="btn" id="btn-action" onclick="handleAction()">确认答案</button>
-    <button class="btn" style="background:#f1f3f4; color:#555; margin-top:10px;" onclick="location.reload()">中途退出 (自动保存)</button>
+    
+    <!-- ✨ 更新的底部控制台：中途退出 & 放弃重开 -->
+    <div style="display: flex; gap: 10px; margin-top: 10px;">
+        <button class="btn" style="background:#f1f3f4; color:#555; margin:0; flex:1;" onclick="location.reload()">中途退出 (自动保存)</button>
+        <button class="btn" style="background:#fff0f0; color:#d9534f; border: 1px solid #f5c6cb; margin:0; flex:1;" onclick="giveUpQuiz()">放弃重开</button>
+    </div>
 </div>
 
+<!-- 页面三：结算报告 -->
 <div class="container hidden" id="page-result">
     <h2>练习结算报告</h2>
     <div style="font-size: 36px; color: #e67e22; text-align: center; margin: 15px 0 5px 0; font-weight: bold;" id="score-text"></div>
@@ -118,26 +137,17 @@
     function saveBanks() { localStorage.setItem('szys_banks', JSON.stringify(banks)); }
     function getFingerprint(str) { return str.replace(/[^\u4e00-\u9fa5a-zA-Z0-9]/g, ''); }
     
-    // ✨ 核心升级：强大的智能数据清洗器
     function parseInput() {
         let raw = document.getElementById('data-input').value;
         if (!raw.trim()) { alert("⚠️ 请先粘贴题目数据！"); return null; }
-        
-        // 自动清理 AI 输出的 Markdown 代码块标识 (```json 和 ```)
         raw = raw.replace(/```json/gi, '').replace(/```/g, '').trim();
-        // 清理不可见零宽字符
         raw = raw.replace(/[\u200B-\u200D\uFEFF]/g, '');
-        
         try { 
             let data = JSON.parse(raw); 
             if(Array.isArray(data) && data.length > 0) return data; 
-            alert("❌ 数据结构不对！必须是包含题目的数组 [ ] 格式。");
-            return null;
+            alert("❌ 数据结构不对！必须是包含题目的数组 [ ] 格式。"); return null;
         } 
-        catch(e) { 
-            alert("❌ 解析失败，JSON 格式有误！\n\n常见原因：\n1. 漏复制了最开头的 [ 符号\n2. 漏复制了最末尾的 ] 符号\n3. 选项中包含未转义的特殊引号\n\n系统报错信息：" + e.message); 
-            return null; 
-        }
+        catch(e) { alert("❌ 解析失败，JSON 格式有误！系统报错：" + e.message); return null; }
     }
 
     function saveNewBank() {
@@ -148,13 +158,13 @@
         banks[id] = { name: name, data: qs };
         saveBanks(); renderBankList();
         document.getElementById('data-input').value = ''; document.getElementById('new-bank-name').value = '';
-        alert(`✅ 题库 [${name}] 创建成功！共录入 ${qs.length} 题。`);
+        alert(`✅ 题库 [${name}] 创建成功！`);
     }
 
     function appendToBank() {
         let qs = parseInput(); if(!qs) return;
         let bankId = document.getElementById('exist-bank-select').value;
-        if(!bankId) return alert("⚠️ 请先在下拉框选择一个已有题库！");
+        if(!bankId) return alert("⚠️ 请先在下拉框选择已有题库！");
         let bank = banks[bankId];
         let existFps = new Set(bank.data.map(q => getFingerprint(q.question)));
         let added = 0, duplicated = 0;
@@ -164,7 +174,7 @@
         });
         saveBanks(); renderBankList();
         document.getElementById('data-input').value = '';
-        alert(`✅ 追加完成！\n新增题目：${added} 道\n拦截重复：${duplicated} 道`);
+        alert(`✅ 追加完成！新增 ${added} 道，拦截重复 ${duplicated} 道`);
     }
 
     function deleteBank(id) {
@@ -195,11 +205,14 @@
         if(!hasBanks) list.innerHTML = '<div style="text-align:center; color:#999; padding:20px;">暂无题库，请在上方导入。</div>';
     }
 
-    const App = { bankId: null, data: [], current: 0, score: 0, mode: 'instant', wrongList: [], stars: new Set(), selected: [], isAnswered: false };
-    const DOM = { setup: document.getElementById('page-home'), quiz: document.getElementById('page-quiz'), result: document.getElementById('page-result'), title: document.getElementById('question-text'), opts: document.getElementById('options-container'), progress: document.getElementById('progress-text'), feedback: document.getElementById('feedback-box'), btnAction: document.getElementById('btn-action'), btnStar: document.getElementById('btn-star') };
+    // ✨ 状态管理：加入计时器数据
+    const App = { bankId: null, data: [], current: 0, score: 0, mode: 'instant', wrongList: [], stars: new Set(), selected: [], isAnswered: false, timerMode: false, timeRemaining: 0 };
+    let timerInterval = null;
+    
+    const DOM = { setup: document.getElementById('page-home'), quiz: document.getElementById('page-quiz'), result: document.getElementById('page-result'), title: document.getElementById('question-text'), opts: document.getElementById('options-container'), progress: document.getElementById('progress-text'), feedback: document.getElementById('feedback-box'), btnAction: document.getElementById('btn-action'), btnStar: document.getElementById('btn-star'), timerDisplay: document.getElementById('timer-display') };
 
     function saveState() {
-        const state = { bankId: App.bankId, current: App.current, score: App.score, mode: App.mode, wrongList: App.wrongList, stars: Array.from(App.stars), isAnswered: App.isAnswered, selected: App.selected, activeData: App.data };
+        const state = { bankId: App.bankId, current: App.current, score: App.score, mode: App.mode, wrongList: App.wrongList, stars: Array.from(App.stars), isAnswered: App.isAnswered, selected: App.selected, activeData: App.data, timerMode: App.timerMode, timeRemaining: App.timeRemaining };
         localStorage.setItem('szys_state', JSON.stringify(state));
     }
 
@@ -207,12 +220,62 @@
         if (isResume) {
             let s = JSON.parse(localStorage.getItem('szys_state'));
             App.bankId = s.bankId; App.data = s.activeData; App.current = s.current; App.score = s.score; App.mode = s.mode; App.wrongList = s.wrongList; App.stars = new Set(s.stars); App.isAnswered = s.isAnswered; App.selected = s.selected;
+            App.timerMode = s.timerMode || false; App.timeRemaining = s.timeRemaining || 0;
             DOM.setup.classList.add('hidden'); DOM.quiz.classList.remove('hidden'); renderQuestion(true);
         } else {
             App.bankId = bankId; App.data = JSON.parse(JSON.stringify(banks[bankId].data)); App.mode = document.querySelector('input[name="mode"]:checked').value;
             if (document.getElementById('shuffle-cb').checked) { for (let i = App.data.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [App.data[i], App.data[j]] = [App.data[j], App.data[i]]; } }
             App.current = 0; App.score = 0; App.wrongList = []; App.stars.clear(); App.selected = []; App.isAnswered = false;
+            
+            // 初始化计时器
+            App.timerMode = document.getElementById('timer-cb').checked;
+            if(App.timerMode) {
+                let mins = parseInt(document.getElementById('timer-minutes').value) || 30;
+                App.timeRemaining = mins * 60;
+            }
+            
             DOM.setup.classList.add('hidden'); DOM.quiz.classList.remove('hidden'); renderQuestion(false);
+        }
+        
+        // 启动计时器UI
+        if(App.timerMode) {
+            DOM.timerDisplay.classList.remove('hidden');
+            startTimerLogic();
+        } else {
+            DOM.timerDisplay.classList.add('hidden');
+        }
+    }
+
+    // ✨ 计时引擎
+    function startTimerLogic() {
+        if(timerInterval) clearInterval(timerInterval);
+        updateTimerUI();
+        timerInterval = setInterval(() => {
+            if(App.timeRemaining > 0) {
+                App.timeRemaining--;
+                updateTimerUI();
+                if(App.timeRemaining % 5 === 0) saveState(); // 每5秒自动存一次时间
+            } else {
+                clearInterval(timerInterval);
+                alert("⏳ 时间到！系统已为您自动交卷。");
+                showResult();
+            }
+        }, 1000);
+    }
+
+    function updateTimerUI() {
+        let m = Math.floor(App.timeRemaining / 60).toString().padStart(2, '0');
+        let s = (App.timeRemaining % 60).toString().padStart(2, '0');
+        DOM.timerDisplay.innerText = `⏳ ${m}:${s}`;
+        if(App.timeRemaining < 60) DOM.timerDisplay.style.color = 'red'; // 最后1分钟变红
+    }
+
+    // ✨ 放弃重开功能
+    function giveUpQuiz() {
+        if(confirm("⚠️ 确定要放弃当前答题进度吗？\n放弃后，本次所有作答记录都将被清空，且无法恢复。")) {
+            if(timerInterval) clearInterval(timerInterval);
+            localStorage.removeItem('szys_state');
+            location.reload();
         }
     }
 
@@ -273,6 +336,7 @@
     }
 
     function showResult() {
+        if(timerInterval) clearInterval(timerInterval); // 停止计时器
         localStorage.removeItem('szys_state'); DOM.quiz.classList.add('hidden'); DOM.result.classList.remove('hidden');
         document.getElementById('score-text').innerText = `${Math.round((App.score / App.data.length) * 100)} 分`;
         document.getElementById('stat-text').innerText = `本次作答总数: ${App.data.length} 题 | 其中错题/收藏: ${App.wrongList.length} 题`;
@@ -282,31 +346,20 @@
     function renderChunks() {
         const container = document.getElementById('chunks-container');
         container.innerHTML = '';
-        
         if (App.wrongList.length === 0) { 
             container.innerHTML = "<div class='chunk-box' style='text-align:center;'>完美通过，没有需要导出的错题！</div>"; return; 
         }
-
         let chunkSize = parseInt(document.getElementById('chunk-size-input').value) || 5;
         if (chunkSize < 1) chunkSize = 1;
-
         for (let i = 0, batch = 1; i < App.wrongList.length; i += chunkSize, batch++) {
             let chunk = App.wrongList.slice(i, i + chunkSize); 
-            
             let text = `【三支一扶错题解析申请 - 第 ${batch} 批】\n请务必使用工具检索我的“谷歌云盘”。针对每道题提供的【出处文件】，请优先检索该文件或相似答案文件来获取官方解析。严格按4个模块为我逐一解析：\n\n`;
-            
-            chunk.forEach((item, index) => { 
-                text += `[题目 ${index + 1}]\n题目内容: ${item.q}\n出处文件: ${item.source}\n我的选项: ${item.my} | 正确答案: ${item.right}\n---\n`; 
-            });
-            
+            chunk.forEach((item, index) => { text += `[题目 ${index + 1}]\n题目内容: ${item.q}\n出处文件: ${item.source}\n我的选项: ${item.my} | 正确答案: ${item.right}\n---\n`; });
             let div = document.createElement('div'); div.className = 'chunk-box';
-            div.innerHTML = `<div class="chunk-title">分段报告 ${batch} (包含 ${chunk.length} 题)</div>
-                             <textarea class="chunk-textarea" id="txt-${batch}" readonly>${text}</textarea>
-                             <button class="btn btn-green" style="margin:0; padding:10px;" onclick="window.copyRpt(${batch})">复制本段发给解析助手</button>`;
+            div.innerHTML = `<div class="chunk-title">分段报告 ${batch} (包含 ${chunk.length} 题)</div><textarea class="chunk-textarea" id="txt-${batch}" readonly>${text}</textarea><button class="btn btn-green" style="margin:0; padding:10px;" onclick="window.copyRpt(${batch})">复制本段发给解析助手</button>`;
             container.appendChild(div);
         }
     }
-
     window.copyRpt = function(idx) { navigator.clipboard.writeText(document.getElementById(`txt-${idx}`).value).then(() => alert(`✅ 复制成功，快去发给解析助手吧！`)); }
 </script>
 </body>
