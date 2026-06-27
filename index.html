@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>考试助手 V0.1 (重构启航版)</title>
+    <title>考试助手 V0.1.1</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { background-color: #f0f2f5; color: #2c2c2c; font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; padding: 12px; line-height: 1.6; overflow-x: hidden; }
@@ -606,15 +606,32 @@
         localStorage.setItem('exam_github_token', token);
         let backupPayload = { version: "0.1", banks: banks, state: JSON.parse(localStorage.getItem('exam_state') || 'null'), stats: globalStats };
         let payloadStr = JSON.stringify(backupPayload);
-        const btn = document.getElementById('btn-cloud-backup'); let oriTxt = "⬆️ 备份全状态"; btn.innerText = "⏳ 加密上传中..."; btn.disabled = true;
+
+        const btn = document.getElementById('btn-cloud-backup');
+        // 【关键修复】使用 oriHtml 保存完整的节点树（包含红点span），避免 innerText 直接摧毁内部元素
+        let oriHtml = btn.innerHTML;
+        btn.innerHTML = "⏳ 加密上传中...";
+        btn.disabled = true;
+
         try {
             let res = await fetch('https://api.github.com/gists', { headers: { 'Authorization': 'token ' + token }});
             if(!res.ok) throw new Error("密钥验证失败");
             let gists = await res.json(); let targetGist = gists.find(g => g.files['exam_backup.json'] || g.files['szys_backup.json']);
             if(targetGist) { await fetch('https://api.github.com/gists/' + targetGist.id, { method: 'PATCH', headers: { 'Authorization': 'token ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ files: { 'exam_backup.json': { content: payloadStr } } }) }); } 
             else { await fetch('https://api.github.com/gists', { method: 'POST', headers: { 'Authorization': 'token ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ description: "考试助手 V0.1 题库备份", public: false, files: { 'exam_backup.json': { content: payloadStr } } }) }); }
-            setNeedSync(false); alert("✅ 漫游数据备份成功！");
-        } catch(e) { alert("❌ 备份出错：" + e.message); } finally { btn.innerHTML = oriTxt + ' <span id="sync-dot-btn" class="sync-alert-btn hidden">待备份</span>'; btn.disabled = false; if(needSync) document.getElementById('sync-dot-btn').classList.remove('hidden');}
+            
+            // 【关键修复】先恢复 DOM 结构，再调用 setNeedSync(false) 消除红点
+            btn.innerHTML = oriHtml;
+            btn.disabled = false;
+
+            setNeedSync(false); 
+            alert("✅ 漫游数据备份成功！");
+        } catch(e) { 
+            // 【关键修复】出错时也要恢复完整的 DOM 结构
+            btn.innerHTML = oriHtml;
+            btn.disabled = false;
+            alert("❌ 备份出错：" + e.message); 
+        } 
     }
 
     async function executeCloudRestore(token) {
