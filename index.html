@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>考试助手 V0.1.11 (层级修复版)</title>
+    <title>考试助手 V0.1.12 (导师专属沉浸屏)</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { background-color: #f0f2f5; color: #2c2c2c; font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; padding: 12px; line-height: 1.6; overflow-x: hidden; }
@@ -175,7 +175,6 @@
         .chunk-title { font-size: 14px; font-weight: 600; color: #64748b; margin-bottom: 10px; }
         .chunk-textarea { height: 160px; margin-bottom: 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-family: monospace; white-space: pre-wrap;}
 
-        /* === 修复核心：提升模态框层级 === */
         .sys-modal-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(4px); z-index: 99999; display: flex; justify-content: center; align-items: center; transition: opacity 0.3s; }
         .sys-modal-box { background: #ffffff; width: 88%; max-width: 380px; border-radius: 20px; padding: 24px; box-shadow: 0 20px 40px rgba(0,0,0,0.2); text-align: center; transform: scale(1); transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1); }
         .sys-modal-title { font-size: 18px; font-weight: 800; color: #1e293b; margin-bottom: 12px; }
@@ -202,21 +201,12 @@
         ⚙️ 控制面板
     </div>
 
-    <div class="fold-wrapper open" id="fold-tutor" style="border-color: #bfdbfe; box-shadow: 0 4px 20px rgba(59, 130, 246, 0.08);">
-        <div class="fold-header" onclick="toggleFold('fold-tutor')" style="background: #eff6ff;">
-            <div class="fold-title" style="color: #1d4ed8;">👩‍🏫 错题导师 <span class="fold-meta" style="background: #dbeafe; color: #1e40af;">答疑导入</span></div>
-            <div class="fold-icon" style="color: #1d4ed8;">▼</div>
+    <div class="fold-wrapper" style="border-color: #bfdbfe; box-shadow: 0 4px 20px rgba(59, 130, 246, 0.08); cursor: pointer;" onclick="openTutorPage()">
+        <div class="fold-header" style="background: #eff6ff;">
+            <div class="fold-title" style="color: #1d4ed8;">👩‍🏫 错题导师 <span class="fold-meta" style="background: #dbeafe; color: #1e40af;">专属沉浸屏</span></div>
+            <div class="fold-icon" style="color: #1d4ed8;">〉</div>
         </div>
-        <div class="fold-content"><div class="fold-inner"><div class="fold-inner-padding">
-            <p style="font-size:12px; color:#1d4ed8; margin-bottom:12px; font-weight:600; text-align:center; background:#dbeafe; padding:8px; border-radius:8px;">
-                💡 配合新的提示词，将 AI 返回的 JSON 解析代码粘贴至此，生成专属辅导卡片并一键核销错题。
-            </p>
-            <textarea id="tutor-input" placeholder="请粘贴 AI 导师返回的纯 JSON 数组代码..."></textarea>
-            <button class="btn btn-primary" onclick="generateTutorCards()">✨ 召唤解析卡片</button>
-            <div id="tutor-cards-container" style="margin-top: 16px;"></div>
-        </div></div></div>
     </div>
-
     <div class="fold-wrapper" id="fold-tools">
         <div class="fold-header" onclick="toggleFold('fold-tools')">
             <div class="fold-title">云端与题库 <span class="fold-meta" id="mini-stats-1">正在加载...</span><span id="sync-dot-header" class="sync-alert-badge hidden">需同步!</span></div>
@@ -328,6 +318,22 @@
             <p style="font-size: 12px; color: #ef4444; margin-top: 4px;">注意：此操作将清空所有累计数据、荣誉及100%打卡印章，且不可逆。</p>
         </div></div></div>
     </div>
+</div>
+<div class="container hidden" id="page-tutor">
+    <div class="nav-header">
+        <div class="nav-btn" onclick="closeTutorPage()">〈 返回主页</div>
+        <div class="nav-title" style="color:#1d4ed8;">👩‍🏫 错题导师专属屏</div>
+        <div class="nav-btn" style="visibility:hidden;">占位</div>
+    </div>
+    
+    <p style="font-size:13px; color:#1e40af; margin-bottom:16px; font-weight:600; text-align:center; background:#dbeafe; padding:12px; border-radius:10px;">
+        💡 请将 AI 导师返回的 JSON 解析胶囊粘贴至此，生成全屏专属辅导卡片。
+    </p>
+    
+    <textarea id="tutor-input" placeholder="请粘贴 AI 返回的纯 JSON 数组代码..." style="height: 140px; font-family: monospace;"></textarea>
+    <button class="btn btn-primary" onclick="generateTutorCards()" style="padding: 14px; font-size: 16px;">✨ 召唤沉浸式解析卡片</button>
+    
+    <div id="tutor-cards-container" style="margin-top: 24px;"></div>
 </div>
 <div id="page-home" class="container">
     
@@ -468,6 +474,22 @@
         document.getElementById('drawer-overlay').classList.remove('open');
         document.body.style.overflow = '';
     }
+
+    // === 新增：错题导师专属页导航逻辑 ===
+    function openTutorPage() {
+        closeDrawer(); // 先关起抽屉
+        document.getElementById('page-home').classList.add('hidden');
+        document.getElementById('page-tutor').classList.remove('hidden');
+    }
+    
+    function closeTutorPage() {
+        document.getElementById('page-tutor').classList.add('hidden');
+        document.getElementById('page-home').classList.remove('hidden');
+        // 返回主页时，重新渲染大盘和列表，防止核销后主界面数据没刷新
+        renderBankList();
+        updateDashboard();
+    }
+    // =====================================
 
     window.toggleMaterial = function(btn, uid) {
         let content = uid ? document.getElementById(`${uid}-content`) : document.getElementById('mat-content');
@@ -805,8 +827,8 @@
         ];
 
         document.getElementById('tutor-input').value = JSON.stringify(mockJSON, null, 2);
-        openDrawer();
-        document.getElementById('fold-tutor').classList.add('open'); 
+        // === 修复：测试按钮也直接打开独立页 ===
+        openTutorPage();
         generateTutorCards();
     }
 
