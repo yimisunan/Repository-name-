@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>考试助手 V0.1.10 (测试环境同步版)</title>
+    <title>考试助手 V0.1.11 (层级修复版)</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { background-color: #f0f2f5; color: #2c2c2c; font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; padding: 12px; line-height: 1.6; overflow-x: hidden; }
@@ -161,7 +161,7 @@
         @keyframes pulse-glow { 0%{box-shadow: 0 0 10px #fbbf24;} 50%{box-shadow: 0 0 40px #f59e0b, inset 0 0 20px #fbbf24;} 100%{box-shadow: 0 0 10px #fbbf24;} }
         .anim-glow { animation: pulse-glow 1.5s infinite; border: 2px solid #fbbf24; background: #fffbeb !important; }
 
-        .particle { position: fixed; pointer-events: none; width: 8px; height: 8px; border-radius: 50%; opacity: 0; z-index: 9999; }
+        .particle { position: fixed; pointer-events: none; width: 8px; height: 8px; border-radius: 50%; opacity: 0; z-index: 999999; }
         @keyframes fly { 0% { transform: translateY(0) scale(1); opacity: 1; } 100% { transform: translateY(-80vh) scale(0); opacity: 0; } }
 
         #challenge-feedback { padding: 20px; border-radius: 12px; margin-bottom: 20px; text-align: center; }
@@ -175,7 +175,8 @@
         .chunk-title { font-size: 14px; font-weight: 600; color: #64748b; margin-bottom: 10px; }
         .chunk-textarea { height: 160px; margin-bottom: 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-family: monospace; white-space: pre-wrap;}
 
-        .sys-modal-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(4px); z-index: 9999; display: flex; justify-content: center; align-items: center; transition: opacity 0.3s; }
+        /* === 修复核心：提升模态框层级 === */
+        .sys-modal-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(4px); z-index: 99999; display: flex; justify-content: center; align-items: center; transition: opacity 0.3s; }
         .sys-modal-box { background: #ffffff; width: 88%; max-width: 380px; border-radius: 20px; padding: 24px; box-shadow: 0 20px 40px rgba(0,0,0,0.2); text-align: center; transform: scale(1); transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1); }
         .sys-modal-title { font-size: 18px; font-weight: 800; color: #1e293b; margin-bottom: 12px; }
         .sys-modal-desc { font-size: 14px; color: #475569; line-height: 1.5; margin-bottom: 24px; }
@@ -763,9 +764,7 @@
         }
     }
 
-    // === V0.1.10 新增：一键测试导师渲染与核销闭环 ===
     function testInjectTutorData() {
-        // 1. 注入两道假错题到 sys_wrong 中，确保指纹能匹配，测试“移出错题本”功能
         let mockQ1 = {
             id: "test_q1_" + Date.now(),
             question: "[材料原文：这是沙盒测试环境自动注入的一段极简测试材料，用于验证材料折叠逻辑与导师卡片渲染是否正常工作。]\n针对该材料，以下说法正确的是？",
@@ -788,7 +787,6 @@
         saveBanks();
         renderBankList(); 
 
-        // 2. 构造对应的完美 JSON 胶囊
         let mockJSON = [
             {
                 "original_question": mockQ1.question,
@@ -806,13 +804,11 @@
             }
         ];
 
-        // 3. 自动填充文本框 -> 展开抽屉 -> 展开折叠舱 -> 触发渲染
         document.getElementById('tutor-input').value = JSON.stringify(mockJSON, null, 2);
         openDrawer();
         document.getElementById('fold-tutor').classList.add('open'); 
         generateTutorCards();
     }
-    // ===============================================
 
     function testInjectBanks() {
         let dummyData = []; for(let i=0; i<100; i++) { dummyData.push({question: `[沙盒测试题目 ${i+1}] 这是一道由开发者引擎生成的虚假题目用于撑起库容。`, options: {A:"选项甲", B:"选项乙", C:"选项丙", D:"选项丁"}, answer: "A", type: "single", source: "测试引擎"}); }
