@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>考试助手 V0.1.4 (全局UI接管版)</title>
+    <title>考试助手 V0.1.3 (驻留增强版)</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { background-color: #f0f2f5; color: #2c2c2c; font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; padding: 12px; line-height: 1.6; overflow-x: hidden; }
@@ -165,7 +165,18 @@
 </head>
 <body>
 
-<div id="page-home">
+<div id="page-home" class="container">
+
+    <div id="recovery-banner" class="hidden" style="background: #eff6ff; border: 2px dashed #3b82f6; padding: 16px; border-radius: 12px; margin-bottom: 16px; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.15);">
+        <div style="font-size: 16px; font-weight: 800; color: #1e40af; margin-bottom: 8px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+            📋 发现未处理完毕的战报快照
+        </div>
+        <p style="font-size: 13px; color: #3b82f6; margin-bottom: 12px; text-align: center; font-weight: 600;">上次练习的错题提取进程被意外中断。<br>快照已为您安全驻留，是否立即恢复？</p>
+        <div class="flex-row" style="justify-content: center; gap: 10px; margin-bottom: 0;">
+            <button class="btn btn-primary" style="margin-bottom: 0; padding: 10px 20px;" onclick="restoreLastReport()">⚡ 立即恢复战场</button>
+            <button class="btn" style="margin-bottom: 0; padding: 10px 20px; background: #fff; border-color: #bfdbfe; color: #60a5fa;" onclick="dismissLastReport()">清除并忽略</button>
+        </div>
+    </div>
 
     <div class="test-console hidden" id="test-console">
         <div class="tc-title">🚧 沙盒测试终端 <span>(云端接口已物理熔断)</span></div>
@@ -374,7 +385,7 @@
     </div>
 
     <div id="chunks-container" style="margin-top: 24px;"></div>
-    <button class="btn btn-primary" style="margin-top: 24px; padding: 14px; font-size: 16px;" onclick="location.reload()">完成，返回主页</button>
+    <button class="btn btn-primary" style="margin-top: 24px; padding: 14px; font-size: 16px;" onclick="clearReportAndReload()">标记处理完成，返回主页</button>
 </div>
 
 <div class="sys-modal-overlay hidden" id="sys-modal">
@@ -471,11 +482,6 @@
     let foldState = JSON.parse(localStorage.getItem('exam_fold_state') || '{"fold-tools":false, "fold-sys":false, "fold-arena":false, "fold-dev":false}');
     let isSettingsOpen = localStorage.getItem('exam_settings_open') === 'true';
 
-    const UNLOCK_REQS_Q = { 'easy': 70, 'normal': 210, 'hard': 420, 'extreme': 630 };
-    const UNLOCK_REQS_C = { 'easy': 30, 'normal': 90, 'hard': 180, 'extreme': 300 };
-    const UNLOCK_PRE = { 'easy': null, 'normal': 'easy', 'hard': 'normal', 'extreme': 'hard' };
-    const PRE_NAMES = { 'easy': '简单', 'normal': '普通', 'hard': '困难', 'extreme': '极限' };
-
     window.onload = function() { 
         renderBankList(); updateDashboard(); initUIState(); applyFoldState(); applyQuizSettingsState(); setNeedSync(needSync); 
         let savedToken = localStorage.getItem('exam_github_token'); 
@@ -486,6 +492,11 @@
             let tBtn = document.getElementById('test-mode-toggle-btn');
             tBtn.innerText = "关闭测试模式 (将核爆清空所有假数据)"; tBtn.className = "btn btn-danger";
             document.getElementById('btn-cloud-backup').disabled = true; document.getElementById('btn-cloud-restore').disabled = true;
+        }
+
+        // --- Snapshot Recovery Interception ---
+        if(localStorage.getItem('exam_last_report')) {
+            document.getElementById('recovery-banner').classList.remove('hidden');
         }
     };
     
@@ -570,7 +581,7 @@
         } else {
             banks = { 'sys_wrong': { name: "💔 我的错题本", data: [], isSystem: true, sysType: 'wrong' }, 'sys_star': { name: "⭐ 专属收藏夹", data: [], isSystem: true, sysType: 'star' } }; 
             globalStats = { totalAnswered: 0, totalCorrect: 0, challenge: { easy:0, normal:0, hard:0, extreme:0 } };
-            saveBanks(); saveGlobalStats(); localStorage.removeItem('exam_state'); setNeedSync(false);
+            saveBanks(); saveGlobalStats(); localStorage.removeItem('exam_state'); localStorage.removeItem('exam_last_report'); setNeedSync(false);
             localStorage.setItem('exam_test_mode', 'false'); alert("✅ 已退出测试模式，所有测试假数据已核爆销毁，系统恢复纯净！"); location.reload();
         }
     }
@@ -623,7 +634,7 @@
             globalStats = { totalAnswered: 0, totalCorrect: 0, challenge: { easy:0, normal:0, hard:0, extreme:0 } };
             banks['sys_wrong'].data = []; banks['sys_star'].data = [];
             for(let id in banks) { if(banks[id] && banks[id].data && !banks[id].isSystem) { banks[id].completed = false; banks[id].maxRate = 0; } }
-            saveBanks(); saveGlobalStats(); localStorage.removeItem('exam_state'); setNeedSync(false);
+            saveBanks(); saveGlobalStats(); localStorage.removeItem('exam_state'); localStorage.removeItem('exam_last_report'); setNeedSync(false);
             alert("✅ 所有进度数据、错题本与收藏夹已彻底重置。"); location.reload();
         });
     }
@@ -1040,6 +1051,18 @@
         if(timerInterval) clearInterval(timerInterval); if(!App.isChallenge) localStorage.removeItem('exam_state'); 
         DOM.quiz.classList.add('hidden'); DOM.result.classList.remove('hidden');
         
+        // --- Report Snapshot Creation ---
+        let reportSnapshot = {
+            score: App.score,
+            total: App.data.length,
+            wrongList: App.wrongList,
+            isChallenge: App.isChallenge,
+            challengeDiff: App.challengeDiff,
+            bankId: App.bankId,
+            isSystemBank: App.isSystemBank
+        };
+        localStorage.setItem('exam_last_report', JSON.stringify(reportSnapshot));
+
         let pct = App.score / App.data.length; let pctStr = Math.round(pct * 100);
         document.getElementById('score-text').innerText = `${App.score} / ${App.data.length} (${pctStr}%)`;
         
@@ -1067,6 +1090,48 @@
         renderChunks();
         
         if(epicTriggered && !isTestMode) { setTimeout(() => { showEpicModal(epicTitle, epicDesc); }, 1200); }
+    }
+
+    // --- Report Snapshot Management Functions ---
+    function restoreLastReport() {
+        let snapshotStr = localStorage.getItem('exam_last_report');
+        if(!snapshotStr) return;
+        let snapshot = JSON.parse(snapshotStr);
+
+        App.score = snapshot.score;
+        App.data = new Array(snapshot.total); // Dummy mock for length calculation
+        App.wrongList = snapshot.wrongList;
+        App.isChallenge = snapshot.isChallenge;
+        App.challengeDiff = snapshot.challengeDiff;
+        App.bankId = snapshot.bankId;
+        App.isSystemBank = snapshot.isSystemBank;
+
+        DOM.setup.classList.add('hidden');
+        DOM.result.classList.remove('hidden');
+
+        let pctStr = Math.round((App.score / snapshot.total) * 100);
+        document.getElementById('score-text').innerText = `${App.score} / ${snapshot.total} (${pctStr}%)`;
+
+        document.getElementById('result-page-title').innerText = App.isChallenge ? "⚔️ 竞技场战报 (快照恢复)" : "练习战报 (快照恢复)";
+        
+        let statHtml = App.isChallenge ? 
+            `本次极限操作：${snapshot.total} 题 | 期间所有错题已全自动收录至错题本` : 
+            `本次作答 ${snapshot.total} 题 | 收录错题 ${App.wrongList.length} 题 <br><span style='color:#f59e0b;'>（此为本地战报快照驻留，大盘数据已在之前结算时安全记录）</span>`;
+        
+        document.getElementById('stat-text').innerHTML = statHtml;
+        document.getElementById('challenge-feedback').classList.add('hidden');
+
+        renderChunks();
+    }
+
+    function dismissLastReport() {
+        localStorage.removeItem('exam_last_report');
+        document.getElementById('recovery-banner').classList.add('hidden');
+    }
+
+    function clearReportAndReload() {
+        localStorage.removeItem('exam_last_report');
+        location.reload();
     }
 
     function renderChunks() {
