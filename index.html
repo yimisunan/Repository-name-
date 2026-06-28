@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>考试助手 V0.1.8 (材料优雅折叠版)</title>
+    <title>考试助手 V0.1.10 (测试环境同步版)</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { background-color: #f0f2f5; color: #2c2c2c; font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; padding: 12px; line-height: 1.6; overflow-x: hidden; }
@@ -31,7 +31,6 @@
         .flex-row input, .flex-row select { flex: 1; }
         .flex-row .btn { width: auto; padding: 0 20px; line-height: 42px; padding-top: 0; padding-bottom: 0; }
 
-        /* === 极简抽屉菜单核心样式 === */
         .main-header { display: flex; align-items: center; padding: 14px 18px; background: #ffffff; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.04); margin-bottom: 16px; }
         .hamburger-btn { font-size: 22px; cursor: pointer; color: #3b82f6; margin-right: 16px; padding: 4px; transition: transform 0.2s; }
         .hamburger-btn:active { transform: scale(0.9); }
@@ -41,7 +40,6 @@
         .side-drawer.open { left: 0; }
         .drawer-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(2px); z-index: 9999; opacity: 0; pointer-events: none; transition: opacity 0.4s; }
         .drawer-overlay.open { opacity: 1; pointer-events: auto; }
-        /* ============================ */
 
         .fold-wrapper { background: #ffffff; border-radius: 16px; margin-bottom: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid #e2e8f0; overflow: hidden; transition: all 0.3s;}
         .fold-header { padding: 18px 20px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; background: #ffffff; user-select: none; transition: background 0.3s; }
@@ -124,14 +122,12 @@
         .badge { background: #dbeafe; color: #1d4ed8; padding: 3px 8px; border-radius: 6px; font-size: 13px; margin-right: 8px; vertical-align: top; font-weight: 600; }
         .source-text { font-size: 12px; color: #94a3b8; display: block; margin-top: 12px; padding-top: 12px; border-top: 1px dashed #e2e8f0; }
         
-        /* === V0.1.8 新增：材料阅读折叠框样式 === */
         .material-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; margin-bottom: 20px; font-size: 14px; color: #475569; position: relative; line-height: 1.6; }
         .material-content { overflow: hidden; transition: max-height 0.4s cubic-bezier(0.25, 1, 0.5, 1); }
         .material-content.collapsed { max-height: 90px; }
         .material-fade { position: absolute; bottom: 44px; left: 0; width: 100%; height: 40px; background: linear-gradient(to bottom, rgba(248,250,252,0), rgba(248,250,252,1)); pointer-events: none; transition: opacity 0.3s ease; }
         .material-toggle { display: block; text-align: center; color: #3b82f6; font-weight: 600; font-size: 13px; cursor: pointer; padding-top: 12px; margin-top: 8px; border-top: 1px dashed #cbd5e1; user-select: none; transition: all 0.2s; }
         .material-toggle:active { transform: scale(0.98); }
-        /* ======================================= */
 
         .opt-btn { display: flex; width: 100%; padding: 14px 16px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; margin-bottom: 12px; font-size: 15.5px; color: #334155; cursor: pointer; transition: all 0.2s; line-height: 1.5; align-items: flex-start;}
         .opt-btn .opt-letter { font-weight: 700; margin-right: 12px; color: #94a3b8; width: 20px; flex-shrink: 0;}
@@ -145,6 +141,19 @@
         
         .feedback-box { margin-bottom: 20px; padding: 16px; border-radius: 12px; font-size: 15px; font-weight: 600; text-align: center; }
         
+        .tutor-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px; margin-bottom: 20px; box-shadow: 0 8px 30px rgba(0,0,0,0.04); transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1); position: relative; overflow: hidden;}
+        .tutor-card.removing { transform: scale(0.9) translateY(20px); opacity: 0; pointer-events: none; }
+        .tutor-q { font-size: 15.5px; font-weight: 700; color: #1e293b; margin-bottom: 16px; line-height: 1.6; white-space: pre-wrap; text-align: justify;}
+        .tutor-diag { display: flex; gap: 10px; margin-bottom: 16px; font-size: 13px; font-weight: 600; flex-wrap: wrap;}
+        .tutor-diag-my { background: #fef2f2; color: #991b1b; padding: 6px 12px; border-radius: 8px; border: 1px solid #fecaca; display: flex; align-items: center; gap: 4px;}
+        .tutor-diag-right { background: #f0fdf4; color: #166534; padding: 6px 12px; border-radius: 8px; border: 1px solid #86efac; display: flex; align-items: center; gap: 4px;}
+        .tutor-exp { background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border-left: 4px solid #3b82f6; padding: 14px 16px; border-radius: 4px 12px 12px 4px; font-size: 14.5px; color: #1e40af; margin-bottom: 16px; line-height: 1.6; font-weight: 500;}
+        .tutor-rat-btn { font-size: 13px; color: #64748b; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; margin-bottom: 12px; text-decoration: underline; text-underline-offset: 4px; transition: color 0.2s;}
+        .tutor-rat-btn:hover { color: #475569; }
+        .tutor-rat-content { font-size: 13.5px; color: #475569; background: #f8fafc; padding: 14px; border-radius: 10px; line-height: 1.6; display: none; margin-bottom: 16px; border: 1px solid #e2e8f0;}
+        .btn-understood { background: linear-gradient(135deg, #10b981 0%, #059669 100%); border: none; font-size: 15px; font-weight: 700; color: white; padding: 14px; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.25); border-radius: 12px; }
+        .btn-understood:active { transform: scale(0.97); box-shadow: 0 2px 8px rgba(16, 185, 129, 0.2); }
+
         @keyframes shake { 0%{transform:translate(1px,1px) rotate(0deg);} 10%{transform:translate(-1px,-2px) rotate(-1deg);} 20%{transform:translate(-3px,0) rotate(1deg);} 30%{transform:translate(3px,2px) rotate(0deg);} 40%{transform:translate(1px,-1px) rotate(1deg);} 50%{transform:translate(-1px,2px) rotate(-1deg);} 60%{transform:translate(-3px,1px) rotate(0deg);} 70%{transform:translate(3px,1px) rotate(-1deg);} 80%{transform:translate(-1px,-1px) rotate(1deg);} 90%{transform:translate(1px,2px) rotate(0deg);} 100%{transform:translate(1px,-2px) rotate(-1deg);} }
         .anim-shake { animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both; }
         @keyframes rainbow { 0%{color: #ef4444;} 20%{color: #f59e0b;} 40%{color: #10b981;} 60%{color: #3b82f6;} 80%{color: #8b5cf6;} 100%{color: #ef4444;} }
@@ -190,6 +199,21 @@
 <div id="side-drawer" class="side-drawer">
     <div style="font-size: 20px; font-weight: 800; margin-bottom: 24px; padding-left: 8px; color: #1e293b; display: flex; align-items: center; gap: 8px;">
         ⚙️ 控制面板
+    </div>
+
+    <div class="fold-wrapper open" id="fold-tutor" style="border-color: #bfdbfe; box-shadow: 0 4px 20px rgba(59, 130, 246, 0.08);">
+        <div class="fold-header" onclick="toggleFold('fold-tutor')" style="background: #eff6ff;">
+            <div class="fold-title" style="color: #1d4ed8;">👩‍🏫 错题导师 <span class="fold-meta" style="background: #dbeafe; color: #1e40af;">答疑导入</span></div>
+            <div class="fold-icon" style="color: #1d4ed8;">▼</div>
+        </div>
+        <div class="fold-content"><div class="fold-inner"><div class="fold-inner-padding">
+            <p style="font-size:12px; color:#1d4ed8; margin-bottom:12px; font-weight:600; text-align:center; background:#dbeafe; padding:8px; border-radius:8px;">
+                💡 配合新的提示词，将 AI 返回的 JSON 解析代码粘贴至此，生成专属辅导卡片并一键核销错题。
+            </p>
+            <textarea id="tutor-input" placeholder="请粘贴 AI 导师返回的纯 JSON 数组代码..."></textarea>
+            <button class="btn btn-primary" onclick="generateTutorCards()">✨ 召唤解析卡片</button>
+            <div id="tutor-cards-container" style="margin-top: 16px;"></div>
+        </div></div></div>
     </div>
 
     <div class="fold-wrapper" id="fold-tools">
@@ -333,6 +357,7 @@
             <button class="tc-btn" onclick="testForceComplete()">盖 100% 毕业章</button>
             <button class="tc-btn" onclick="testTriggerRedDot()">🔴 触发未同步警示</button>
             <button class="tc-btn" onclick="testTriggerEpicModal()">🏆 触发史诗封存弹窗</button>
+            <button class="tc-btn" onclick="testInjectTutorData()" style="border-color:#3b82f6; color:#1d4ed8; background:#eff6ff;">👩‍🏫 生成模拟导师解析</button>
         </div>
     </div>
     
@@ -381,6 +406,7 @@
     <span class="timer-badge hidden" id="timer-display">倒计时 00:00</span>
     
     <div id="material-container"></div>
+
     <div class="question-title" id="question-text"></div>
     <div id="options-container"></div>
     
@@ -431,7 +457,6 @@
 </div>
 
 <script>
-    // 抽屉栏交互逻辑
     function openDrawer() {
         document.getElementById('side-drawer').classList.add('open');
         document.getElementById('drawer-overlay').classList.add('open');
@@ -443,10 +468,9 @@
         document.body.style.overflow = '';
     }
 
-    // === 新增：长材料动态折叠逻辑 ===
-    window.toggleMaterial = function(btn) {
-        let content = document.getElementById('mat-content');
-        let fade = document.getElementById('mat-fade');
+    window.toggleMaterial = function(btn, uid) {
+        let content = uid ? document.getElementById(`${uid}-content`) : document.getElementById('mat-content');
+        let fade = uid ? document.getElementById(`${uid}-fade`) : document.getElementById('mat-fade');
         if (content.classList.contains('collapsed')) {
             content.classList.remove('collapsed');
             fade.style.opacity = '0';
@@ -456,11 +480,102 @@
             content.classList.add('collapsed');
             fade.style.display = 'block';
             setTimeout(() => fade.style.opacity = '1', 10);
-            btn.innerText = '📄 展开阅读完整材料 ▼';
+            btn.innerText = uid ? '📄 展开阅读 ▼' : '📄 展开阅读完整材料 ▼';
             content.scrollIntoView({behavior: 'smooth', block: 'center'});
         }
     };
-    // =================================
+
+    window.generateTutorCards = function() {
+        let raw = document.getElementById('tutor-input').value;
+        if(!raw.trim()) return alert("请先粘贴解析代码");
+        raw = raw.replace(/```json/gi, '').replace(/```/g, '').trim();
+        try {
+            let data = JSON.parse(raw);
+            if(!Array.isArray(data)) return alert("JSON 格式错误，应为数组形式");
+            let container = document.getElementById('tutor-cards-container');
+            container.innerHTML = '';
+            
+            data.forEach((item, index) => {
+                let card = document.createElement('div');
+                card.className = 'tutor-card';
+
+                let rawQ = item.original_question || "题目加载失败";
+                let displayQ = rawQ;
+                let matHtml = '';
+                let matRegex = /\[材料原文[：:]([\s\S]*?)\]([\s\S]*)/;
+                let match = displayQ.match(matRegex);
+                
+                if (match) {
+                    let matText = match[1].trim();
+                    displayQ = match[2].trim();
+                    let uid = 'tmat-' + Date.now() + '-' + index;
+                    matHtml = `
+                        <div class="material-box" style="margin-bottom:12px; padding:12px;">
+                            <div class="material-content collapsed" id="${uid}-content">
+                                <div style="font-weight:800; color:#1e293b; margin-bottom:4px; font-size:13px;">📖 阅读材料</div>
+                                <div style="white-space: pre-wrap; text-align: justify; font-size: 13px; font-weight: normal;">${matText}</div>
+                            </div>
+                            <div class="material-fade" id="${uid}-fade"></div>
+                            <div class="material-toggle" id="${uid}-toggle" onclick="toggleMaterial(this, '${uid}')">📄 展开阅读 ▼</div>
+                        </div>
+                    `;
+                    setTimeout(() => {
+                        let content = document.getElementById(`${uid}-content`);
+                        if (content && content.scrollHeight <= 80) {
+                            document.getElementById(`${uid}-fade`).style.display = 'none';
+                            document.getElementById(`${uid}-toggle`).style.display = 'none';
+                            content.classList.remove('collapsed');
+                        }
+                    }, 50);
+                }
+
+                let safeQ = rawQ.replace(/'/g, "\\'").replace(/"/g, '&quot;').replace(/\n/g, '\\n');
+
+                card.innerHTML = `
+                    ${matHtml}
+                    <div class="tutor-q">${displayQ}</div>
+                    <div class="tutor-diag">
+                        <div class="tutor-diag-my">❌ 我的作答: ${item.my_answer || '未作答'}</div>
+                        <div class="tutor-diag-right">✅ 官方标答: ${item.correct_answer || '未知'}</div>
+                    </div>
+                    <div class="tutor-exp">💡 <b>导师点拨：</b><br>${item.explanation || '暂无解析'}</div>
+                    <div class="tutor-rat-btn" onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'block' ? 'none' : 'block'">查看官方依据原文 ▼</div>
+                    <div class="tutor-rat-content">${item.rationale || '无官方原文'}</div>
+                    <button class="btn btn-understood" onclick="markUnderstood(this, '${safeQ}')">✅ 彻底顿悟，移出错题本</button>
+                `;
+                container.appendChild(card);
+            });
+            document.getElementById('tutor-input').value = '';
+            alert("✨ 生成成功！请在下方滑动阅读，学会后可一键核销物理删除！");
+        } catch(e) {
+            alert("解析失败，请检查复制的内容是否为规范的 JSON 代码！报错：" + e.message);
+        }
+    };
+
+    window.markUnderstood = function(btn, qText) {
+        let fp = getFingerprint(qText);
+        let wrongBank = banks['sys_wrong'];
+        if (!wrongBank || !wrongBank.data) return;
+        
+        let initialLen = wrongBank.data.length;
+        wrongBank.data = wrongBank.data.filter(x => getFingerprint(x.question) !== fp);
+        
+        if(wrongBank.data.length < initialLen) {
+            saveBanks(); 
+        } else {
+            console.log("未在错题本中找到对应指纹的数据，可能之前已被核销或题干匹配失败。");
+        }
+        
+        let card = btn.closest('.tutor-card');
+        card.classList.add('removing');
+        setTimeout(() => {
+            card.remove();
+            let container = document.getElementById('tutor-cards-container');
+            if(container.children.length === 0) {
+                container.innerHTML = `<div style="text-align:center; color:#059669; font-weight:bold; background:#d1fae5; padding:16px; border-radius:12px;">🎉 太棒了！这批辅导的错题已被你全部攻克并物理超度！</div>`;
+            }
+        }, 300);
+    };
 
     const SysModal = {
         timer: null,
@@ -647,6 +762,57 @@
             localStorage.setItem('exam_test_mode', 'false'); alert("✅ 已退出测试模式，所有测试假数据已核爆销毁，系统恢复纯净！"); location.reload();
         }
     }
+
+    // === V0.1.10 新增：一键测试导师渲染与核销闭环 ===
+    function testInjectTutorData() {
+        // 1. 注入两道假错题到 sys_wrong 中，确保指纹能匹配，测试“移出错题本”功能
+        let mockQ1 = {
+            id: "test_q1_" + Date.now(),
+            question: "[材料原文：这是沙盒测试环境自动注入的一段极简测试材料，用于验证材料折叠逻辑与导师卡片渲染是否正常工作。]\n针对该材料，以下说法正确的是？",
+            options: {A:"说法甲", B:"说法乙", C:"说法丙", D:"说法丁"},
+            answer: "B",
+            type: "single",
+            source: "沙盒测试引擎"
+        };
+        let mockQ2 = {
+            id: "test_q2_" + Date.now(),
+            question: "这是一道独立的单选题，没有材料，用于测试独立题的导师卡片渲染与核销闭环。",
+            options: {A:"选项甲", B:"选项乙", C:"选项丙", D:"选项丁"},
+            answer: "A",
+            type: "single",
+            source: "沙盒测试引擎"
+        };
+
+        banks['sys_wrong'].data.push(mockQ1);
+        banks['sys_wrong'].data.push(mockQ2);
+        saveBanks();
+        renderBankList(); 
+
+        // 2. 构造对应的完美 JSON 胶囊
+        let mockJSON = [
+            {
+                "original_question": mockQ1.question,
+                "my_answer": "A",
+                "correct_answer": "B. 说法乙",
+                "explanation": "这是一段沙盒自动生成的测试解析。材料题折叠框应该在上方正常显示，并且你可以点击下方的按钮将其一键核销。",
+                "rationale": "沙盒测试依据原文：这是从云盘中提取的虚拟原文。"
+            },
+            {
+                "original_question": mockQ2.question,
+                "my_answer": "C",
+                "correct_answer": "A. 选项甲",
+                "explanation": "这是一段独立的沙盒测试解析，没有材料折叠框。点击顿悟后，此题将从错题本中物理删除。",
+                "rationale": "未在云盘检索到原文。"
+            }
+        ];
+
+        // 3. 自动填充文本框 -> 展开抽屉 -> 展开折叠舱 -> 触发渲染
+        document.getElementById('tutor-input').value = JSON.stringify(mockJSON, null, 2);
+        openDrawer();
+        document.getElementById('fold-tutor').classList.add('open'); 
+        generateTutorCards();
+    }
+    // ===============================================
 
     function testInjectBanks() {
         let dummyData = []; for(let i=0; i<100; i++) { dummyData.push({question: `[沙盒测试题目 ${i+1}] 这是一道由开发者引擎生成的虚假题目用于撑起库容。`, options: {A:"选项甲", B:"选项乙", C:"选项丙", D:"选项丁"}, answer: "A", type: "single", source: "测试引擎"}); }
@@ -884,7 +1050,7 @@
         setup: document.getElementById('page-home'), 
         quiz: document.getElementById('page-quiz'), 
         result: document.getElementById('page-result'), 
-        material: document.getElementById('material-container'), // 新增材料容器绑定
+        material: document.getElementById('material-container'),
         title: document.getElementById('question-text'), 
         opts: document.getElementById('options-container'), 
         progressFill: document.getElementById('progress-fill'), 
@@ -1038,7 +1204,6 @@
         let completedNote = App.isCompletedBank ? `<span style="color:#ef4444; font-size:12px; margin-left:8px;">[此题库已达100%，作答不计入大盘]</span>` : '';
         let sourceHtml = q.source ? `<span class="source-text">📄 出处：${q.source}</span>` : '';
         
-        // === 核心逻辑：正则提纯与材料装箱 ===
         let rawQ = q.question;
         let displayQ = rawQ;
         let matRegex = /\[材料原文[：:]([\s\S]*?)\]([\s\S]*)/;
@@ -1059,7 +1224,6 @@
                 </div>
             `;
             
-            // 智能高度判定：太短的材料没必要折叠
             setTimeout(() => {
                 let content = document.getElementById('mat-content');
                 if (content && content.scrollHeight <= 100) {
@@ -1069,7 +1233,6 @@
                 }
             }, 50);
         }
-        // =================================
 
         DOM.title.innerHTML = `<span class="badge">${q.type === 'multiple' ? '多选题' : '单选题'}</span> <span style="font-weight:700;">${displayQ}</span> ${completedNote} ${sourceHtml}`;
         
@@ -1281,7 +1444,6 @@
         let chunkSize = parseInt(document.getElementById('chunk-size-input').value) || 5; if (chunkSize < 1) chunkSize = 1;
         for (let i = 0, batch = 1; i < App.wrongList.length; i += chunkSize, batch++) {
             let chunk = App.wrongList.slice(i, i + chunkSize); 
-            // 注意：导出售题依然将包含完整的 rawQ（含材料），以便导师AI能全面解析
             let text = `【考试助手 - 错题深度解析请求 (第 ${batch} 批)】\n请作为我的专属导师，结合出处文件，严格按结构为我深度解析以下错题：\n\n`;
             chunk.forEach((item, index) => { 
                 text += `### 📝 题目 ${index + 1}\n`;
