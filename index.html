@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>考试助手 V0.2.0 (游戏化导师版)</title>
+    <title>考试助手 V0.2.1 (沙盒增强版)</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { background-color: #f4f6f8; color: #334155; font-family: "Nunito", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; padding: 12px; line-height: 1.6; overflow-x: hidden; }
@@ -143,7 +143,6 @@
         
         .feedback-box { margin-bottom: 24px; padding: 18px; border-radius: 16px; font-size: 16px; font-weight: 800; text-align: center; border: 2px solid transparent;}
         
-        /* === V0.2.0 游戏化导师专属 UI === */
         .tutor-progress-container { background: #ffffff; padding: 16px; border-radius: 16px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 2px solid #e2e8f0; display: flex; flex-direction: column; gap: 8px;}
         .tutor-progress-text { display: flex; justify-content: space-between; font-size: 14px; font-weight: 800; color: #1e293b;}
         
@@ -164,7 +163,6 @@
         
         .btn-understood { background: linear-gradient(135deg, #34d399 0%, #10b981 100%); color: white; border-radius: 20px; padding: 18px; font-size: 17px; font-weight: 900; text-align: center; box-shadow: 0 8px 24px rgba(16, 185, 129, 0.35); border: none; width: 100%; cursor: pointer; transition: all 0.2s cubic-bezier(0.25, 1, 0.5, 1); letter-spacing: 1px;}
         .btn-understood:active { transform: scale(0.95); box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25); }
-        /* ==================================== */
 
         @keyframes shake { 0%{transform:translate(1px,1px) rotate(0deg);} 10%{transform:translate(-1px,-2px) rotate(-1deg);} 20%{transform:translate(-3px,0) rotate(1deg);} 30%{transform:translate(3px,2px) rotate(0deg);} 40%{transform:translate(1px,-1px) rotate(1deg);} 50%{transform:translate(-1px,2px) rotate(-1deg);} 60%{transform:translate(-3px,1px) rotate(0deg);} 70%{transform:translate(3px,1px) rotate(-1deg);} 80%{transform:translate(-1px,-1px) rotate(1deg);} 90%{transform:translate(1px,2px) rotate(0deg);} 100%{transform:translate(1px,-2px) rotate(-1deg);} }
         .anim-shake { animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both; }
@@ -378,16 +376,18 @@
 
     <div class="test-console hidden" id="test-console">
         <div class="tc-title">🚧 沙盒测试终端 <span>(云端接口已物理熔断)</span></div>
-        <p style="font-size:13px; color:#b45309; margin-bottom:14px; font-weight:700;">注入假数据验证解锁逻辑，退出时将自动核爆清空所有痕迹。</p>
+        <p style="font-size:13px; color:#b45309; margin-bottom:14px; font-weight:700;">高级开发者专属武器库，请点击以快速验证系统极端边界。</p>
         <div style="display:flex; flex-wrap:wrap; gap:10px;">
-            <button class="tc-btn" onclick="testInjectBanks()">+ 注入 100 题容量</button>
-            <button class="tc-btn" onclick="testInjectStats()">+ 增加 50 答对数</button>
-            <button class="tc-btn" onclick="testInjectHonor()">+ 随机通关荣誉</button>
-            <button class="tc-btn" onclick="testForceComplete()">盖 100% 毕业章</button>
-            <button class="tc-btn" onclick="testTriggerRedDot()">🔴 触发未同步警示</button>
-            <button class="tc-btn" onclick="testTriggerEpicModal()">🏆 触发史诗封存弹窗</button>
-            <button class="tc-btn" onclick="testInjectTutorData()" style="border-color:#0ea5e9; color:#0369a1; background:#f0f9ff; border-width:2px;">👩‍🏫 生成模拟导师解析(推荐)</button>
-        </div>
+            <button class="tc-btn" onclick="testInjectBanks()">+ 注入 100 题容量库</button>
+            <button class="tc-btn" onclick="testTriggerRedDot()">🔴 点亮同步警示</button>
+            <button class="tc-btn" onclick="testTriggerEpicModal()">🏆 触发史诗弹窗</button>
+            
+            <button class="tc-btn" onclick="testUnlockAllArenas()" style="border-color:#10b981; color:#047857; background:#ecfdf5;">🏆 一键解锁全难度竞技场</button>
+            <button class="tc-btn" onclick="testInjectWrongAndStar()" style="border-color:#f43f5e; color:#be123c; background:#fff1f2;">💔 注入 20 道易错/收藏题</button>
+            <button class="tc-btn" onclick="testMockInterruptState()" style="border-color:#8b5cf6; color:#6d28d9; background:#f5f3ff;">💾 伪造答题中断存档</button>
+            <button class="tc-btn" onclick="testJumpToResult()" style="border-color:#f59e0b; color:#b45309; background:#fffbeb;">📊 直接跳转结算战报页</button>
+            <button class="tc-btn" onclick="testInjectTutorData()" style="border-color:#0ea5e9; color:#0369a1; background:#f0f9ff; border-width:2px; width:100%;">👩‍🏫 生成模拟导师解析进入副本</button>
+            </div>
     </div>
     
     <div class="main-panel">
@@ -527,7 +527,6 @@
         }
     };
 
-    // 全局进度变量
     window.tutorTotal = 0;
     window.tutorDone = 0;
 
@@ -544,7 +543,6 @@
         count.innerText = `${tutorDone} / ${tutorTotal}`;
     }
 
-    // === V0.2.0 核心更新：生成游戏化风格的卡片 ===
     window.generateTutorCards = function() {
         let raw = document.getElementById('tutor-input').value;
         if(!raw.trim()) return alert("请先粘贴解析代码");
@@ -637,7 +635,6 @@
             console.log("未在错题本中找到对应指纹的数据，可能之前已被核销或题干匹配失败。");
         }
         
-        // 增加进度
         window.tutorDone++;
         updateTutorProgress();
         
@@ -647,7 +644,6 @@
             card.remove();
             let container = document.getElementById('tutor-cards-container');
             if(container.children.length === 0) {
-                // 通关结算画面
                 container.innerHTML = `
                 <div style="text-align:center; background:#ecfdf5; border: 2px solid #34d399; padding:30px 20px; border-radius:24px; box-shadow:0 10px 30px rgba(16,185,129,0.15); animation: pulse-border 2s infinite;">
                     <div style="font-size: 50px; margin-bottom: 10px; filter: drop-shadow(0 4px 6px rgba(16,185,129,0.4));">🏆</div>
@@ -657,7 +653,7 @@
                 </div>`;
                 createParticles();
             }
-        }, 400); // 等待缩小消失动画完成
+        }, 400); 
     };
 
     const SysModal = {
@@ -844,6 +840,68 @@
             saveBanks(); saveGlobalStats(); localStorage.removeItem('exam_state'); localStorage.removeItem('exam_last_report'); setNeedSync(false);
             localStorage.setItem('exam_test_mode', 'false'); alert("✅ 已退出测试模式，所有测试假数据已核爆销毁，系统恢复纯净！"); location.reload();
         }
+    }
+
+    // === V0.2.1 增强测试：一键解锁全难度竞技场 ===
+    function testUnlockAllArenas() {
+        let dummyData = [];
+        for(let i=0; i<700; i++) { 
+            dummyData.push({question: `[沙盒] 这是用于撑大题库容量的假题 ${i}`, options: {A:"选项甲", B:"选项乙", C:"选项丙", D:"选项丁"}, answer: "A", type: "single", source: "沙盒引擎"}); 
+        }
+        banks['test_arena_' + Date.now()] = { name: "🧪 竞技场解锁专用库(700题)", data: dummyData, completed: false, maxRate: 0 };
+        
+        globalStats.totalCorrect += 500;
+        globalStats.totalAnswered += 600;
+        globalStats.challenge.easy = (globalStats.challenge.easy || 0) + 1;
+        globalStats.challenge.normal = (globalStats.challenge.normal || 0) + 1;
+        globalStats.challenge.hard = (globalStats.challenge.hard || 0) + 1;
+        
+        saveBanks(); saveGlobalStats(); renderBankList(); updateDashboard();
+        alert("✅ 已注入 700 道题目并修改大盘数据，竞技场全难度模式现已解锁！");
+    }
+
+    // === V0.2.1 增强测试：一键注入错题与收藏 ===
+    function testInjectWrongAndStar() {
+        for(let i=1; i<=15; i++) {
+            banks['sys_wrong'].data.push({question: `[模拟测试题 ${Date.now()}] 这是沙盒自动生成的错题记录 ${i}`, options: {A:"甲",B:"乙",C:"丙",D:"丁"}, answer: "A", type: "single", source: "沙盒"});
+            if(i<=5) {
+                banks['sys_star'].data.push({question: `[模拟收藏题 ${Date.now()}] 这是沙盒自动生成的星标题 ${i}`, options: {A:"A",B:"B",C:"C",D:"D"}, answer: "B", type: "single", source: "沙盒"});
+            }
+        }
+        saveBanks(); renderBankList(); updateDashboard();
+        alert("✅ 成功瞬间注入 15 道错题与 5 道收藏题！请前往左侧抽屉面板查看【专项特训】。");
+    }
+
+    // === V0.2.1 增强测试：伪造中断存档 ===
+    function testMockInterruptState() {
+        let bId = Object.keys(banks).find(k => !banks[k].isSystem);
+        if (!bId) {
+            // 如果没有题库，先造一个
+            testInjectBanks();
+            bId = Object.keys(banks).find(k => !banks[k].isSystem);
+        }
+        
+        let state = { 
+            bankId: bId, current: 5, score: 3, mode: 'instant', wrongList: [], stars: [], 
+            isAnswered: false, selected: [], activeData: banks[bId].data, timerMode: true, timeRemaining: 1500, optShuffle: false 
+        };
+        localStorage.setItem('exam_state', JSON.stringify(state));
+        renderBankList();
+        alert("✅ 中断存档已伪造！请观察主页常规题库中的【继续作答】按钮，点击即可恢复到第 6 题进度。");
+    }
+
+    // === V0.2.1 增强测试：跳转战报页测试分页渲染 ===
+    function testJumpToResult() {
+        App.data = new Array(20).fill({});
+        App.score = 8;
+        App.wrongList = [];
+        for(let i=1; i<=12; i++) {
+            App.wrongList.push({ id: "wq_"+i, q: `这是一道用于测试 Markdown 提取和分页逻辑的假错题 ${i}`, source: "沙盒模拟", my: "B", right: "A", reason: "答错" });
+        }
+        App.isChallenge = false;
+        App.bankId = 'test_bank';
+        App.isSystemBank = false;
+        showResult();
     }
 
     function testInjectTutorData() {
