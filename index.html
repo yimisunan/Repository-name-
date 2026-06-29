@@ -1,9 +1,9 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>考试助手 V0.2.2 (逻辑闭环修复版)</title>
+    <title>考试助手 V0.2.3 (名师沉浸答疑版)</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { background-color: #f4f6f8; color: #334155; font-family: "Nunito", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; padding: 12px; line-height: 1.6; overflow-x: hidden; }
@@ -89,7 +89,7 @@
 
         .bank-item { background: #ffffff; border: 2px solid #e2e8f0; padding: 18px 16px; border-radius: 16px; margin-bottom: 14px; display: flex; flex-direction: column; gap: 14px; transition: all 0.2s cubic-bezier(0.25, 1, 0.5, 1); position: relative; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.02);}
         .bank-header-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
-        .bank-title { font-size: 17px; font-weight: 800; color: #1e293b; line-height: 1.4; flex: 1; word-break: break-all;}
+        .bank-title { font-size: 16px; font-weight: 700; color: #1e293b; line-height: 1.4; flex: 1; word-break: break-all;}
         .bank-delete-text { font-size: 13px; color: #ef4444; font-weight: 800; cursor: pointer; padding: 6px 10px; border-radius: 8px; background: #fef2f2; transition: transform 0.2s; flex-shrink: 0;}
         .bank-delete-text:active { transform: scale(0.9); }
         .bank-meta-row { display: flex; gap: 10px; flex-wrap: wrap; }
@@ -114,7 +114,6 @@
         .bookmark-btn { display: flex; align-items: center; gap: 4px; background: #fffbeb; color: #d97706; border: 1px solid #fde68a;}
         .bookmark-btn.active { background: #f59e0b; color: white; border-color: #f59e0b;}
         
-        /* 游戏化通用进度条 */
         .progress-wrapper { background: #e2e8f0; height: 10px; border-radius: 5px; width: 100%; margin-bottom: 20px; overflow: hidden; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05); }
         .progress-fill { background: linear-gradient(90deg, #34d399 0%, #10b981 100%); height: 100%; width: 0%; border-radius: 5px; transition: width 0.5s cubic-bezier(0.25, 1, 0.5, 1); box-shadow: 0 0 10px rgba(16, 185, 129, 0.4);}
         
@@ -143,7 +142,6 @@
         
         .feedback-box { margin-bottom: 24px; padding: 18px; border-radius: 16px; font-size: 16px; font-weight: 800; text-align: center; border: 2px solid transparent;}
         
-        /* === V0.2.2 导师选项卡片动态 UI === */
         .tutor-progress-container { background: #ffffff; padding: 16px; border-radius: 16px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 2px solid #e2e8f0; display: flex; flex-direction: column; gap: 8px;}
         .tutor-progress-text { display: flex; justify-content: space-between; font-size: 14px; font-weight: 800; color: #1e293b;}
         
@@ -151,14 +149,15 @@
         .tutor-card.removing { transform: scale(0.85) translateY(30px); opacity: 0; pointer-events: none; }
         .tutor-q { font-size: 17px; font-weight: 800; color: #0f172a; margin-bottom: 16px; line-height: 1.6; white-space: pre-wrap; text-align: justify;}
         
-        /* 动态抓取的选项样式 */
         .tutor-opt-normal { background: #f8fafc; border: 2px solid #e2e8f0; color: #475569; padding: 12px 16px; border-radius: 12px; margin-bottom: 8px; font-weight: 600; font-size: 15px; }
         .tutor-opt-wrong { background: #fef2f2; border: 2px solid #fecaca; color: #991b1b; padding: 12px 16px; border-radius: 12px; margin-bottom: 8px; font-weight: 700; font-size: 15px; display: flex; align-items: flex-start; gap: 8px;}
         .tutor-opt-right { background: #ecfdf5; border: 2px solid #6ee7b7; color: #065f46; padding: 12px 16px; border-radius: 12px; margin-bottom: 8px; font-weight: 800; font-size: 15px; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.1); display: flex; align-items: flex-start; gap: 8px;}
         
         .tutor-exp-box { background: #f0fdfa; border-radius: 18px; padding: 18px; position: relative; border: 2px solid #ccfbf1; margin-bottom: 20px; margin-top: 24px; box-shadow: 0 4px 10px rgba(20, 184, 166, 0.05);}
         .tutor-exp-title { display: inline-flex; align-items: center; background: #0d9488; color: white; padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 900; margin-bottom: 10px; letter-spacing: 1px; box-shadow: 0 2px 8px rgba(13, 148, 136, 0.3); transform: translateY(-30px); margin-bottom: -15px;}
-        .tutor-exp-text { font-size: 15px; color: #0f766e; font-weight: 700; line-height: 1.6; text-align: justify;}
+        /* === V0.2.3 核心修复：支持多段落折行显示 === */
+        .tutor-exp-text { font-size: 15px; color: #0f766e; font-weight: 700; line-height: 1.6; text-align: justify; white-space: pre-wrap;}
+        /* ======================================= */
         
         .tutor-rat-btn { font-size: 14px; color: #64748b; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; margin-bottom: 16px; font-weight: 800; background: #f1f5f9; padding: 8px 16px; border-radius: 12px; transition: all 0.2s;}
         .tutor-rat-btn:active { transform: scale(0.95); background: #e2e8f0;}
@@ -166,7 +165,6 @@
         
         .btn-understood { background: linear-gradient(135deg, #34d399 0%, #10b981 100%); color: white; border-radius: 20px; padding: 18px; font-size: 17px; font-weight: 900; text-align: center; box-shadow: 0 8px 24px rgba(16, 185, 129, 0.35); border: none; width: 100%; cursor: pointer; transition: all 0.2s cubic-bezier(0.25, 1, 0.5, 1); letter-spacing: 1px;}
         .btn-understood:active { transform: scale(0.95); box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25); }
-        /* ==================================== */
 
         @keyframes shake { 0%{transform:translate(1px,1px) rotate(0deg);} 10%{transform:translate(-1px,-2px) rotate(-1deg);} 20%{transform:translate(-3px,0) rotate(1deg);} 30%{transform:translate(3px,2px) rotate(0deg);} 40%{transform:translate(1px,-1px) rotate(1deg);} 50%{transform:translate(-1px,2px) rotate(-1deg);} 60%{transform:translate(-3px,1px) rotate(0deg);} 70%{transform:translate(3px,1px) rotate(-1deg);} 80%{transform:translate(-1px,-1px) rotate(1deg);} 90%{transform:translate(1px,2px) rotate(0deg);} 100%{transform:translate(1px,-2px) rotate(-1deg);} }
         .anim-shake { animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both; }
@@ -338,7 +336,7 @@
 <div class="container hidden" id="page-tutor" style="background: #f4f6f8; min-height: 100vh; padding-bottom: 40px;">
     <div class="nav-header" style="background:#fff; margin:-12px -12px 20px -12px; padding:16px 20px; box-shadow:0 4px 15px rgba(0,0,0,0.03); border:none;">
         <div class="nav-btn" onclick="closeTutorPage()" style="background:#f1f5f9; color:#475569;">〈 返回主页</div>
-        <div class="nav-title" style="color:#0f766e; font-size:19px; font-weight:900;">👩‍🏫 错题通关副本</div>
+        <div class="nav-title" style="color:#0f766e; font-size:19px; font-weight:900;">👩‍🏫 错题名师答疑屏</div>
         <div class="nav-btn" style="visibility:hidden;">占位</div>
     </div>
     
@@ -357,7 +355,7 @@
     </p>
     
     <textarea id="tutor-input" placeholder="请粘贴 AI 返回的纯 JSON 数组代码..." style="height: 140px; font-family: monospace; border-color:#99f6e4; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);"></textarea>
-    <button class="btn" style="background: #0ea5e9; color: white; border-color: #0ea5e9; box-shadow: 0 6px 20px rgba(14, 165, 233, 0.3); padding: 16px; font-size: 17px; font-weight:900; border-radius:16px;" onclick="generateTutorCards()">✨ 召唤导师卡片</button>
+    <button class="btn" style="background: #0ea5e9; color: white; border-color: #0ea5e9; box-shadow: 0 6px 20px rgba(14, 165, 233, 0.3); padding: 16px; font-size: 17px; font-weight:900; border-radius:16px;" onclick="generateTutorCards()">✨ 召唤名师深度解析</button>
     
     <div id="tutor-cards-container" style="margin-top: 28px;"></div>
 </div>
@@ -392,7 +390,7 @@
             <button class="tc-btn" onclick="testInjectWrongAndStar()" style="border-color:#f43f5e; color:#be123c; background:#fff1f2;">💔 注入 20 道易错/收藏题</button>
             <button class="tc-btn" onclick="testMockInterruptState()" style="border-color:#8b5cf6; color:#6d28d9; background:#f5f3ff;">💾 伪造答题中断存档</button>
             <button class="tc-btn" onclick="testJumpToResult()" style="border-color:#f59e0b; color:#b45309; background:#fffbeb;">📊 直接跳转结算战报页</button>
-            <button class="tc-btn" onclick="testInjectTutorData()" style="border-color:#0ea5e9; color:#0369a1; background:#f0f9ff; border-width:2px; width:100%;">👩‍🏫 生成模拟导师解析进入副本</button>
+            <button class="tc-btn" onclick="testInjectProfessorTutorData()" style="border-color:#0ea5e9; color:#0369a1; background:#f0f9ff; border-width:2px; width:100%;">👩‍🏫 生成【名师三段论解析】进入副本</button>
         </div>
     </div>
     
@@ -471,25 +469,6 @@
     <button class="btn btn-primary" style="margin-top: 28px; padding: 18px; font-size: 17px; border-radius:16px; box-shadow: 0 6px 20px rgba(59, 130, 246, 0.3);" onclick="clearReportAndReload()">标记处理完成，返回主页</button>
 </div>
 
-<div class="sys-modal-overlay hidden" id="sys-modal">
-    <div class="sys-modal-box">
-        <div class="sys-modal-title" id="modal-title">提示</div>
-        <div class="sys-modal-desc" id="modal-desc">内容</div>
-        <button class="btn btn-primary" id="modal-btn-confirm" style="margin-bottom: 12px; padding: 14px; border-radius: 12px; font-size: 16px;">确认 (3s)</button>
-        <button class="btn" id="modal-btn-cancel" style="background: #f1f5f9; border-color: #cbd5e1; color:#475569; padding: 14px; border-radius: 12px; font-size: 16px;">取消</button>
-    </div>
-</div>
-
-<div class="sys-modal-overlay hidden" id="epic-modal">
-    <div class="sys-modal-box epic-modal-box">
-        <div style="font-size: 56px; margin-bottom: 16px; line-height: 1; filter: drop-shadow(0 4px 10px rgba(245, 158, 11, 0.3));">🏆</div>
-        <div class="sys-modal-title epic-modal-title" id="epic-title">史诗成就达成</div>
-        <div class="sys-modal-desc epic-modal-desc" id="epic-desc">描述内容</div>
-        <button class="btn btn-epic" onclick="epicCloudBackupFlow()">✨ 立即一键封存至云端</button>
-        <button class="btn" style="background: transparent; border: 2px solid #fcd34d; color: #b45309; padding: 14px; border-radius: 14px; font-weight:800;" onclick="document.getElementById('epic-modal').classList.add('hidden')">稍后再说</button>
-    </div>
-</div>
-
 <script>
     function openDrawer() {
         document.getElementById('side-drawer').classList.add('open');
@@ -563,7 +542,6 @@
             let container = document.getElementById('tutor-cards-container');
             container.innerHTML = '';
             
-            // 预先汇总所有的库数据，用于通过指纹反向寻找选项
             let allQs = [];
             for(let k in banks) {
                 if(banks[k] && banks[k].data) allQs = allQs.concat(banks[k].data);
@@ -604,7 +582,6 @@
                     }, 50);
                 }
 
-                // === 核心逻辑：从本地题库反向匹配找出该题原本的 ABCD 选项 ===
                 let fp = getFingerprint(rawQ);
                 let matchedQ = allQs.find(q => getFingerprint(q.question) === fp);
                 let optionsHtml = '';
@@ -630,7 +607,6 @@
                     });
                     optionsHtml += '</div>';
                 } else {
-                    // 降级兜底方案（万一找不到原题，就显示纯文字）
                     optionsHtml = `
                         <div class="tutor-opt-wrong">✖ 我的作答：${item.my_answer || '未作答'}</div>
                         <div class="tutor-opt-right">✔ 官方标答：${item.correct_answer || '未知'}</div>
@@ -646,7 +622,7 @@
                     ${optionsHtml}
                     
                     <div class="tutor-exp-box">
-                        <div class="tutor-exp-title">🤖 导师点拨</div>
+                        <div class="tutor-exp-title">👨‍🏫 名师点拨</div>
                         <div class="tutor-exp-text">${item.explanation || '暂无解析'}</div>
                     </div>
                     
@@ -884,6 +860,53 @@
         }
     }
 
+    // === V0.2.3 教授级名师测试注入逻辑 ===
+    function testInjectProfessorTutorData() {
+        let mockQ1 = {
+            id: "test_q1_" + Date.now(),
+            question: "[材料原文：这是沙盒测试环境自动注入的一段极简测试材料，用于验证材料折叠逻辑与导师卡片渲染是否正常工作。]\n针对该材料，以下说法正确的是？",
+            options: {A:"说法甲", B:"说法乙", C:"说法丙", D:"说法丁"},
+            answer: "B",
+            type: "single",
+            source: "沙盒测试引擎"
+        };
+        let mockQ2 = {
+            id: "test_q2_" + Date.now(),
+            question: "这是一道独立的单选题，没有材料，用于测试独立题的导师卡片渲染与核销闭环。",
+            options: {A:"选项甲", B:"选项乙", C:"选项丙", D:"选项丁"},
+            answer: "A",
+            type: "single",
+            source: "沙盒测试引擎"
+        };
+
+        banks['sys_wrong'].data.push(mockQ1);
+        banks['sys_wrong'].data.push(mockQ2);
+        saveBanks();
+        renderBankList(); 
+
+        let mockJSON = [
+            {
+                "original_question": mockQ1.question,
+                "my_answer": "A",
+                "correct_answer": "B",
+                "explanation": "🔍 **陷阱剖析**：\n你选择了 A，说明你把“说法甲”和“说法乙”发生的先后顺序与因果关系混淆了。\n\n🧠 **核心原理解析**：\n这道题考察的核心是基础概念的辨析。就像英国之所以能率先爆发工业革命，根本前提是它最早确立了资本主义制度一样。有了前提，才能有结果。\n\n💡 **举一反三**：\n记住这个推导链条：制度先发 -> 产权保护 -> 结果产生。以后遇到此类起源题，先找“前提优势”。",
+                "rationale": "沙盒测试依据原文：这是从云盘中提取的虚拟原文。"
+            },
+            {
+                "original_question": mockQ2.question,
+                "my_answer": "C",
+                "correct_answer": "A",
+                "explanation": "🔍 **陷阱剖析**：\n选择了 C，说明你没有理解题目中的绝对否定词。\n\n🧠 **核心原理解析**：\n这是一段独立的沙盒测试解析，没有材料折叠框。考察的重点在于对概念的精确记忆。\n\n💡 **举一反三**：\n注意题干中的“没有”二字。点击顿悟后，此题将从错题本中物理删除。",
+                "rationale": "未在云盘检索到原文。"
+            }
+        ];
+
+        document.getElementById('tutor-input').value = JSON.stringify(mockJSON, null, 2);
+        openTutorPage();
+        generateTutorCards();
+    }
+    // ===========================================
+
     function testUnlockAllArenas() {
         let dummyData = [];
         for(let i=0; i<700; i++) { 
@@ -933,58 +956,12 @@
         App.score = 8;
         App.wrongList = [];
         for(let i=1; i<=12; i++) {
-            // 确保测试数据带有 options 以免后续渲染报错
             App.wrongList.push({ id: "wq_"+i, q: `这是一道用于测试 Markdown 提取和分页逻辑的假错题 ${i}`, options: {A:"测试", B:"测试"}, source: "沙盒模拟", my: "B", right: "A", reason: "答错" });
         }
         App.isChallenge = false;
         App.bankId = 'test_bank';
         App.isSystemBank = false;
         showResult();
-    }
-
-    function testInjectTutorData() {
-        let mockQ1 = {
-            id: "test_q1_" + Date.now(),
-            question: "[材料原文：这是沙盒测试环境自动注入的一段极简测试材料，用于验证材料折叠逻辑与导师卡片渲染是否正常工作。]\n针对该材料，以下说法正确的是？",
-            options: {A:"说法甲", B:"说法乙", C:"说法丙", D:"说法丁"},
-            answer: "B",
-            type: "single",
-            source: "沙盒测试引擎"
-        };
-        let mockQ2 = {
-            id: "test_q2_" + Date.now(),
-            question: "这是一道独立的单选题，没有材料，用于测试独立题的导师卡片渲染与核销闭环。",
-            options: {A:"选项甲", B:"选项乙", C:"选项丙", D:"选项丁"},
-            answer: "A",
-            type: "single",
-            source: "沙盒测试引擎"
-        };
-
-        banks['sys_wrong'].data.push(mockQ1);
-        banks['sys_wrong'].data.push(mockQ2);
-        saveBanks();
-        renderBankList(); 
-
-        let mockJSON = [
-            {
-                "original_question": mockQ1.question,
-                "my_answer": "A",
-                "correct_answer": "B",
-                "explanation": "这是一段沙盒自动生成的测试解析。材料题折叠框应该在上方正常显示，并且你可以点击下方的按钮将其一键核销。",
-                "rationale": "沙盒测试依据原文：这是从云盘中提取的虚拟原文。"
-            },
-            {
-                "original_question": mockQ2.question,
-                "my_answer": "C",
-                "correct_answer": "A",
-                "explanation": "这是一段独立的沙盒测试解析，没有材料折叠框。点击顿悟后，此题将从错题本中物理删除。",
-                "rationale": "未在云盘检索到原文。"
-            }
-        ];
-
-        document.getElementById('tutor-input').value = JSON.stringify(mockJSON, null, 2);
-        openTutorPage();
-        generateTutorCards();
     }
 
     function testInjectBanks() {
@@ -1472,7 +1449,6 @@
             if (!alreadyInWrong && !isTestMode) { wrongBank.data.push(cleanQuestionForStorage(q)); saveBanks(); }
         }
         
-        // === 修复核心：完整存储原本的 options 用于解析面板渲染 ===
         if (!isRight || isStarred) App.wrongList.push({ id: q.id, q: q.question, options: q.options, source: q.source || "未知", my: myAns || "未答", right: q.answer, reason: !isRight ? "答错" : "收藏" });
         if(!App.isChallenge && !App.isCompletedBank && !App.isSystemBank && !isTestMode) { globalStats.totalAnswered++; saveGlobalStats(); }
     }
@@ -1620,12 +1596,9 @@
             let chunk = App.wrongList.slice(i, i + chunkSize); 
             let text = `【考试助手 - 错题深度解析请求 (第 ${batch} 批)】\n请作为我的专属导师，结合出处文件，严格按结构为我深度解析以下错题：\n\n`;
             chunk.forEach((item, index) => { 
-                
-                // === 核心修复 1：智能打 Tag，明确是否为收藏件 ===
                 let isCorrect = (item.my === item.right);
                 let myStatus = isCorrect ? "✅ (作答正确，但已收藏求深度解析)" : "❌";
                 
-                // === 核心修复 2：将原本的 ABCD 选项全量导出给 AI ===
                 let optStr = "";
                 if(item.options) {
                     Object.keys(item.options).sort().forEach(k => {
