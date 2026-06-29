@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>考试助手 V0.2.5 (防刷分坚固版)</title>
+    <title>考试助手 V0.2.6 (架构涅槃版)</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { background-color: #f4f6f8; color: #334155; font-family: "Nunito", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; padding: 12px; line-height: 1.6; overflow-x: hidden; }
@@ -142,6 +142,7 @@
         
         .feedback-box { margin-bottom: 24px; padding: 18px; border-radius: 16px; font-size: 16px; font-weight: 800; text-align: center; border: 2px solid transparent;}
         
+        /* 导师卡片 */
         .tutor-progress-container { background: #ffffff; padding: 16px; border-radius: 16px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 2px solid #e2e8f0; display: flex; flex-direction: column; gap: 8px;}
         .tutor-progress-text { display: flex; justify-content: space-between; font-size: 14px; font-weight: 800; color: #1e293b;}
         
@@ -185,6 +186,7 @@
         .chunk-title { font-size: 15px; font-weight: 800; color: #475569; margin-bottom: 12px; }
         .chunk-textarea { height: 160px; margin-bottom: 16px; border: 2px solid #cbd5e1; border-radius: 10px; font-family: monospace; white-space: pre-wrap; font-weight: 600;}
 
+        /* 系统模态框（唯一化、最高层级） */
         .sys-modal-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(6px); z-index: 99999; display: flex; justify-content: center; align-items: center; transition: opacity 0.3s; }
         .sys-modal-box { background: #ffffff; width: 88%; max-width: 380px; border-radius: 24px; padding: 28px; box-shadow: 0 24px 50px rgba(0,0,0,0.3); text-align: center; transform: scale(1); transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1); border: 2px solid #e2e8f0;}
         .sys-modal-title { font-size: 20px; font-weight: 900; color: #1e293b; margin-bottom: 14px; }
@@ -211,7 +213,7 @@
         ⚙️ 控制面板
     </div>
 
-    <div class="fold-wrapper" style="border-color: #3b82f6; box-shadow: 0 8px 20px rgba(59, 130, 246, 0.15); cursor: pointer; transform: scale(1.02); margin-bottom: 24px;" onclick="openTutorPage()">
+    <div class="fold-wrapper" style="border-color: #3b82f6; box-shadow: 0 8px 20px rgba(59, 130, 246, 0.15); cursor: pointer; transform: scale(1.02); margin-bottom: 24px;" onclick="Router.openTutorPage()">
         <div class="fold-header" style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border-bottom: none;">
             <div class="fold-title" style="color: #1d4ed8; font-size: 18px;">👩‍🏫 错题导师 <span class="fold-meta" style="background: #3b82f6; color: white; border-radius: 8px;">专属沉浸屏</span></div>
             <div class="fold-icon" style="color: #1d4ed8; font-size: 16px;">〉</div>
@@ -322,7 +324,7 @@
                 <label><input type="checkbox" id="opt-shuffle-cb"> 强制选项乱序 (防背与防幻觉双擎激活)</label>
             </div>
             <h3 style="font-size: 15px; color: #1e293b; margin-bottom: 10px; font-weight:800;">🚧 沙盒测试环境</h3>
-            <button class="btn btn-warning" id="test-mode-toggle-btn" onclick="toggleTestMode()">开启测试模式 (注入假数据测试解锁)</button>
+            <button class="btn btn-warning" id="test-mode-toggle-btn" onclick="SandboxEngine.toggleTestMode()">开启测试模式 (注入假数据测试解锁)</button>
             <p style="font-size: 13px; color: #64748b; margin-top: 6px; margin-bottom: 24px; font-weight:600;">需在纯净态下开启，开启后强制禁用云端。</p>
             <h3 style="font-size: 15px; color: #991b1b; margin-bottom: 10px; font-weight:800;">🔥 危险操作</h3>
             <button class="btn btn-danger" onclick="resetAllStatsFlow()">一键重置所有进度与大盘 (保留题库本身)</button>
@@ -331,35 +333,7 @@
     </div>
 </div>
 
-<div class="container hidden" id="page-tutor" style="background: #f4f6f8; min-height: 100vh; padding-bottom: 40px;">
-    <div class="nav-header" style="background:#fff; margin:-12px -12px 20px -12px; padding:16px 20px; box-shadow:0 4px 15px rgba(0,0,0,0.03); border:none;">
-        <div class="nav-btn" onclick="closeTutorPage()" style="background:#f1f5f9; color:#475569;">〈 返回主页</div>
-        <div class="nav-title" style="color:#0f766e; font-size:19px; font-weight:900;">👩‍🏫 错题名师答疑屏</div>
-        <div class="nav-btn" style="visibility:hidden;">占位</div>
-    </div>
-    
-    <div class="tutor-progress-container" id="tutor-progress-box">
-        <div class="tutor-progress-text">
-            <span>当前通关进度</span>
-            <span id="tutor-progress-count" style="color:#10b981;">0 / 0</span>
-        </div>
-        <div class="progress-wrapper" style="margin-bottom:0; height:12px; border-radius:6px; background:#f1f5f9;">
-            <div class="progress-fill" id="tutor-progress-fill" style="width: 0%; border-radius:6px;"></div>
-        </div>
-    </div>
-
-    <p style="font-size:14px; color:#0f766e; margin-bottom:20px; font-weight:700; text-align:center; background:#ccfbf1; padding:14px; border-radius:14px; border:2px dashed #5eead4;">
-        💡 请将 AI 导师返回的 JSON 解析胶囊粘贴至下方输入框，开启您的沉浸式通关之旅。
-    </p>
-    
-    <textarea id="tutor-input" placeholder="请粘贴 AI 返回的纯 JSON 数组代码..." style="height: 140px; font-family: monospace; border-color:#99f6e4; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);"></textarea>
-    <button class="btn" style="background: #0ea5e9; color: white; border-color: #0ea5e9; box-shadow: 0 6px 20px rgba(14, 165, 233, 0.3); padding: 16px; font-size: 17px; font-weight:900; border-radius:16px;" onclick="generateTutorCards()">✨ 召唤名师深度解析</button>
-    
-    <div id="tutor-cards-container" style="margin-top: 28px;"></div>
-</div>
-
 <div id="page-home" class="container">
-    
     <div class="main-header">
         <div class="hamburger-btn" onclick="openDrawer()">☰</div>
         <div class="main-title">考试助手</div>
@@ -381,14 +355,14 @@
         <div class="tc-title">🚧 沙盒测试终端 <span>(云端接口已物理熔断)</span></div>
         <p style="font-size:13px; color:#b45309; margin-bottom:14px; font-weight:700;">高级开发者专属武器库，请点击以快速验证系统极端边界。</p>
         <div style="display:flex; flex-wrap:wrap; gap:10px;">
-            <button class="tc-btn" onclick="testInjectBanks()">+ 注入 100 题容量库</button>
-            <button class="tc-btn" onclick="testTriggerRedDot()">🔴 点亮同步警示</button>
-            <button class="tc-btn" onclick="testTriggerEpicModal()">🏆 触发史诗弹窗</button>
-            <button class="tc-btn" onclick="testUnlockAllArenas()" style="border-color:#10b981; color:#047857; background:#ecfdf5;">🏆 一键解锁全难度竞技场</button>
-            <button class="tc-btn" onclick="testInjectWrongAndStar()" style="border-color:#f43f5e; color:#be123c; background:#fff1f2;">💔 注入 20 道易错/收藏题</button>
-            <button class="tc-btn" onclick="testMockInterruptState()" style="border-color:#8b5cf6; color:#6d28d9; background:#f5f3ff;">💾 伪造答题中断存档</button>
-            <button class="tc-btn" onclick="testJumpToResult()" style="border-color:#f59e0b; color:#b45309; background:#fffbeb;">📊 直接跳转结算战报页</button>
-            <button class="tc-btn" onclick="testInjectProfessorTutorData()" style="border-color:#0ea5e9; color:#0369a1; background:#f0f9ff; border-width:2px; width:100%;">👩‍🏫 生成【名师三段论解析】进入副本</button>
+            <button class="tc-btn" onclick="SandboxEngine.injectBanks()">+ 注入 100 题容量库</button>
+            <button class="tc-btn" onclick="SandboxEngine.triggerRedDot()">🔴 点亮同步警示</button>
+            <button class="tc-btn" onclick="SandboxEngine.triggerEpicModal()">🏆 触发史诗弹窗</button>
+            <button class="tc-btn" onclick="SandboxEngine.unlockAllArenas()" style="border-color:#10b981; color:#047857; background:#ecfdf5;">🏆 一键解锁全难度竞技场</button>
+            <button class="tc-btn" onclick="SandboxEngine.injectWrongAndStar()" style="border-color:#f43f5e; color:#be123c; background:#fff1f2;">💔 注入 20 道易错/收藏题</button>
+            <button class="tc-btn" onclick="SandboxEngine.mockInterruptState()" style="border-color:#8b5cf6; color:#6d28d9; background:#f5f3ff;">💾 伪造答题中断存档</button>
+            <button class="tc-btn" onclick="SandboxEngine.jumpToResult()" style="border-color:#f59e0b; color:#b45309; background:#fffbeb;">📊 直接跳转结算战报页</button>
+            <button class="tc-btn" onclick="SandboxEngine.injectProfessorTutorData()" style="border-color:#0ea5e9; color:#0369a1; background:#f0f9ff; border-width:2px; width:100%;">👩‍🏫 生成【名师三段论解析】进入副本</button>
         </div>
     </div>
     
@@ -467,7 +441,54 @@
     <button class="btn btn-primary" style="margin-top: 28px; padding: 18px; font-size: 17px; border-radius:16px; box-shadow: 0 6px 20px rgba(59, 130, 246, 0.3);" onclick="clearReportAndReload()">标记处理完成，返回主页</button>
 </div>
 
+<div class="container hidden" id="page-tutor" style="background: #f4f6f8; min-height: 100vh; padding-bottom: 40px;">
+    <div class="nav-header" style="background:#fff; margin:-12px -12px 20px -12px; padding:16px 20px; box-shadow:0 4px 15px rgba(0,0,0,0.03); border:none;">
+        <div class="nav-btn" onclick="Router.closeTutorPage()" style="background:#f1f5f9; color:#475569;">〈 返回主页</div>
+        <div class="nav-title" style="color:#0f766e; font-size:19px; font-weight:900;">👩‍🏫 错题名师答疑屏</div>
+        <div class="nav-btn" style="visibility:hidden;">占位</div>
+    </div>
+    
+    <div class="tutor-progress-container" id="tutor-progress-box">
+        <div class="tutor-progress-text">
+            <span>当前通关进度</span>
+            <span id="tutor-progress-count" style="color:#10b981;">0 / 0</span>
+        </div>
+        <div class="progress-wrapper" style="margin-bottom:0; height:12px; border-radius:6px; background:#f1f5f9;">
+            <div class="progress-fill" id="tutor-progress-fill" style="width: 0%; border-radius:6px;"></div>
+        </div>
+    </div>
+
+    <p style="font-size:14px; color:#0f766e; margin-bottom:20px; font-weight:700; text-align:center; background:#ccfbf1; padding:14px; border-radius:14px; border:2px dashed #5eead4;">
+        💡 请将 AI 导师返回的 JSON 解析胶囊粘贴至下方输入框，开启您的沉浸式通关之旅。
+    </p>
+    
+    <textarea id="tutor-input" placeholder="请粘贴 AI 返回的纯 JSON 数组代码..." style="height: 140px; font-family: monospace; border-color:#99f6e4; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);"></textarea>
+    <button class="btn" style="background: #0ea5e9; color: white; border-color: #0ea5e9; box-shadow: 0 6px 20px rgba(14, 165, 233, 0.3); padding: 16px; font-size: 17px; font-weight:900; border-radius:16px;" onclick="generateTutorCards()">✨ 召唤名师深度解析</button>
+    
+    <div id="tutor-cards-container" style="margin-top: 28px;"></div>
+</div>
+
+<div class="sys-modal-overlay hidden" id="sys-modal">
+    <div class="sys-modal-box">
+        <div class="sys-modal-title" id="modal-title">提示</div>
+        <div class="sys-modal-desc" id="modal-desc">内容</div>
+        <button class="btn btn-primary" id="modal-btn-confirm" style="margin-bottom: 12px; padding: 14px; border-radius: 12px; font-size: 16px;">确认 (3s)</button>
+        <button class="btn" id="modal-btn-cancel" style="background: #f1f5f9; border-color: #cbd5e1; color:#475569; padding: 14px; border-radius: 12px; font-size: 16px;">取消</button>
+    </div>
+</div>
+
+<div class="sys-modal-overlay hidden" id="epic-modal">
+    <div class="sys-modal-box epic-modal-box">
+        <div style="font-size: 56px; margin-bottom: 16px; line-height: 1; filter: drop-shadow(0 4px 10px rgba(245, 158, 11, 0.3));">🏆</div>
+        <div class="sys-modal-title epic-modal-title" id="epic-title">史诗成就达成</div>
+        <div class="sys-modal-desc epic-modal-desc" id="epic-desc">描述内容</div>
+        <button class="btn btn-epic" onclick="epicCloudBackupFlow()">✨ 立即一键封存至云端</button>
+        <button class="btn" style="background: transparent; border: 2px solid #fcd34d; color: #b45309; padding: 14px; border-radius: 14px; font-weight:800;" onclick="document.getElementById('epic-modal').classList.add('hidden')">稍后再说</button>
+    </div>
+</div>
+
 <script>
+    // 工具函数
     function getHash(str) {
         let hash = 0;
         for (let i = 0; i < str.length; i++) {
@@ -478,6 +499,34 @@
         return hash.toString(36);
     }
 
+    function getFingerprint(str) { return str.replace(/[^\u4e00-\u9fa5a-zA-Z0-9]/g, ''); }
+    function cleanQuestionForStorage(q) { let copy = JSON.parse(JSON.stringify(q)); delete copy.optMap; return copy; }
+
+    // === V0.2.6 新增：Router 路由引擎 ===
+    const Router = {
+        navigate: function(pageId) {
+            const pages = ['page-home', 'page-quiz', 'page-result', 'page-tutor'];
+            pages.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    if (id === pageId) el.classList.remove('hidden');
+                    else el.classList.add('hidden');
+                }
+            });
+            window.scrollTo(0, 0);
+        },
+        openTutorPage: function() {
+            closeDrawer();
+            this.navigate('page-tutor');
+        },
+        closeTutorPage: function() {
+            this.navigate('page-home');
+            renderBankList();
+            updateDashboard();
+        }
+    };
+
+    // 抽屉栏交互逻辑
     function openDrawer() {
         document.getElementById('side-drawer').classList.add('open');
         document.getElementById('drawer-overlay').classList.add('open');
@@ -489,19 +538,7 @@
         document.body.style.overflow = '';
     }
 
-    function openTutorPage() {
-        closeDrawer();
-        document.getElementById('page-home').classList.add('hidden');
-        document.getElementById('page-tutor').classList.remove('hidden');
-    }
-    
-    function closeTutorPage() {
-        document.getElementById('page-tutor').classList.add('hidden');
-        document.getElementById('page-home').classList.remove('hidden');
-        renderBankList();
-        updateDashboard();
-    }
-
+    // 导师卡片折叠逻辑
     window.toggleMaterial = function(btn, uid) {
         let content = uid ? document.getElementById(`${uid}-content`) : document.getElementById('mat-content');
         let fade = uid ? document.getElementById(`${uid}-fade`) : document.getElementById('mat-fade');
@@ -535,6 +572,7 @@
         count.innerText = `${tutorDone} / ${tutorTotal}`;
     }
 
+    // === V0.2.6 重构：引入 O(1) Map 字典优化，根除卡顿 ===
     window.generateTutorCards = function() {
         let raw = document.getElementById('tutor-input').value;
         if(!raw.trim()) return alert("请先粘贴解析代码");
@@ -550,9 +588,14 @@
             let container = document.getElementById('tutor-cards-container');
             container.innerHTML = '';
             
-            let allQs = [];
+            // 构建 O(1) 字典引擎
+            let qMap = new Map();
             for(let k in banks) {
-                if(banks[k] && banks[k].data) allQs = allQs.concat(banks[k].data);
+                if(banks[k] && banks[k].data) {
+                    banks[k].data.forEach(q => {
+                        qMap.set(getFingerprint(q.question), q);
+                    });
+                }
             }
             
             data.forEach((item, index) => {
@@ -591,7 +634,7 @@
                 }
 
                 let fp = getFingerprint(rawQ);
-                let matchedQ = allQs.find(q => getFingerprint(q.question) === fp);
+                let matchedQ = qMap.get(fp); // 瞬间 O(1) 寻址
                 let optionsHtml = '';
                 
                 if (matchedQ && matchedQ.options) {
@@ -641,6 +684,7 @@
                 `;
                 container.appendChild(card);
             });
+            document.getElementById('tutor-input').value = '';
             alert("✨ 副本生成成功！请在下方滑动阅读，学会后可一键彻底消灭错题！");
         } catch(e) {
             alert("解析失败，请检查复制的内容是否为规范的 JSON 代码！报错：" + e.message);
@@ -657,8 +701,6 @@
         
         if(wrongBank.data.length < initialLen) {
             saveBanks(); 
-        } else {
-            console.log("未在错题本中找到对应指纹的数据，可能之前已被核销或题干匹配失败。");
         }
         
         window.tutorDone++;
@@ -675,13 +717,14 @@
                     <div style="font-size: 50px; margin-bottom: 10px; filter: drop-shadow(0 4px 6px rgba(16,185,129,0.4));">🏆</div>
                     <div style="color:#065f46; font-size: 20px; font-weight:900; margin-bottom: 8px;">PERFECT CLEAR!</div>
                     <div style="color:#0f766e; font-weight:700; font-size: 15px;">本次副本中的错题已被你全数消灭！<br>经验值 +999</div>
-                    <button class="btn" style="margin-top:20px; background:#059669; color:white; border-color:#059669; border-radius:16px; padding: 12px 24px; font-weight:900;" onclick="closeTutorPage()">返回主城</button>
+                    <button class="btn" style="margin-top:20px; background:#059669; color:white; border-color:#059669; border-radius:16px; padding: 12px 24px; font-weight:900;" onclick="Router.closeTutorPage()">返回主城</button>
                 </div>`;
                 createParticles();
             }
         }, 400); 
     };
 
+    // 系统弹窗唯一对象
     const SysModal = {
         timer: null,
         show: function(title, desc, isDanger, onConfirm) {
@@ -783,8 +826,6 @@
     
     function saveBanks() { localStorage.setItem('exam_banks', JSON.stringify(banks)); updateDashboard(); setNeedSync(true); }
     function saveGlobalStats() { localStorage.setItem('exam_global_stats', JSON.stringify(globalStats)); updateDashboard(); setNeedSync(true); }
-    function getFingerprint(str) { return str.replace(/[^\u4e00-\u9fa5a-zA-Z0-9]/g, ''); }
-    function cleanQuestionForStorage(q) { let copy = JSON.parse(JSON.stringify(q)); delete copy.optMap; return copy; }
 
     function setNeedSync(state) {
         if(isTestMode && state) return; 
@@ -858,149 +899,140 @@
         });
     }
 
-    function toggleTestMode() {
-        if (!isTestMode) {
-            let totalQ = 0; for (let id in banks) { if(!banks[id] || !banks[id].data) continue; if(!banks[id].isSystem) totalQ += banks[id].data.length; }
-            if (totalQ > 0 || globalStats.totalAnswered > 0 || globalStats.totalCorrect > 0) return alert("⚠️ 无法开启测试模式！\n\n为了防止假数据污染您的心血存档，测试模式仅能在【0题库、0进度】的纯净状态下开启。\n请先使用下方红色的“一键重置”并在上方删除所有题库。");
-            localStorage.setItem('exam_test_mode', 'true'); alert("🔧 开发者沙盒已激活！"); location.reload();
-        } else {
-            banks = { 'sys_wrong': { name: "💔 我的错题本", data: [], isSystem: true, sysType: 'wrong' }, 'sys_star': { name: "⭐ 专属收藏夹", data: [], isSystem: true, sysType: 'star' } }; 
+    function resetAllStatsFlow() {
+        SysModal.show("🔥 最高级危险：清除个人进度", "您正在试图清空<span style='color:#ef4444;font-weight:bold;'>所有大盘数据、荣誉、100%章以及【错题/收藏】</span>（题库题目保留）。<br><br>清空后绝无找回可能，请慎重决定！", true, () => {
             globalStats = { totalAnswered: 0, totalCorrect: 0, challenge: { easy:0, normal:0, hard:0, extreme:0 }, mastered: [], attempted: [] };
+            banks['sys_wrong'].data = []; banks['sys_star'].data = [];
+            for(let id in banks) { if(banks[id] && banks[id].data && !banks[id].isSystem) { banks[id].completed = false; banks[id].maxRate = 0; } }
             saveBanks(); saveGlobalStats(); localStorage.removeItem('exam_state'); localStorage.removeItem('exam_last_report'); setNeedSync(false);
-            localStorage.setItem('exam_test_mode', 'false'); alert("✅ 已退出测试模式，所有测试假数据已核爆销毁，系统恢复纯净！"); location.reload();
-        }
+            alert("✅ 所有进度数据、错题本与收藏夹已彻底重置。"); location.reload();
+        });
     }
 
-    function testInjectProfessorTutorData() {
-        let mockQ1 = {
-            id: "test_q1_" + Date.now(),
-            question: "[材料原文：这是沙盒测试环境自动注入的一段极简测试材料，用于验证材料折叠逻辑与导师卡片渲染是否正常工作。]\n针对该材料，以下说法正确的是？",
-            options: {A:"说法甲", B:"说法乙", C:"说法丙", D:"说法丁"},
-            answer: "B",
-            type: "single",
-            source: "沙盒测试引擎"
-        };
-        let mockQ2 = {
-            id: "test_q2_" + Date.now(),
-            question: "这是一道独立的单选题，没有材料，用于测试独立题的导师卡片渲染与核销闭环。",
-            options: {A:"选项甲", B:"选项乙", C:"选项丙", D:"选项丁"},
-            answer: "A",
-            type: "single",
-            source: "沙盒测试引擎"
-        };
-
-        banks['sys_wrong'].data.push(mockQ1);
-        banks['sys_wrong'].data.push(mockQ2);
-        saveBanks();
-        renderBankList(); 
-
-        let mockJSON = [
-            {
-                "original_question": mockQ1.question,
-                "my_answer": "A",
-                "correct_answer": "B",
-                "explanation": "🔍 **陷阱剖析**：\n你选择了 A，说明你把“说法甲”和“说法乙”发生的先后顺序与因果关系混淆了。\n\n🧠 **核心原理解析**：\n这道题考察的核心是基础概念的辨析。就像英国之所以能率先爆发工业革命，根本前提是它最早确立了资本主义制度一样。有了前提，才能有结果。\n\n💡 **举一反三**：\n记住这个推导链条：制度先发 -> 产权保护 -> 结果产生。以后遇到此类起源题，先找“前提优势”。",
-                "rationale": "沙盒测试依据原文：这是从云盘中提取的虚拟原文。"
-            },
-            {
-                "original_question": mockQ2.question,
-                "my_answer": "C",
-                "correct_answer": "A",
-                "explanation": "🔍 **陷阱剖析**：\n选择了 C，说明你没有理解题目中的绝对否定词。\n\n🧠 **核心原理解析**：\n这是一段独立的沙盒测试解析，没有材料折叠框。考察的重点在于对概念的精确记忆。\n\n💡 **举一反三**：\n注意题干中的“没有”二字。点击顿悟后，此题将从错题本中物理删除。",
-                "rationale": "未在云盘检索到原文。"
+    // === V0.2.6 封装 SandboxEngine 隔离测试作用域 ===
+    const SandboxEngine = {
+        toggleTestMode: function() {
+            if (!isTestMode) {
+                let totalQ = 0; for (let id in banks) { if(!banks[id] || !banks[id].data) continue; if(!banks[id].isSystem) totalQ += banks[id].data.length; }
+                if (totalQ > 0 || globalStats.totalAnswered > 0 || globalStats.totalCorrect > 0) return alert("⚠️ 无法开启测试模式！\n\n为了防止假数据污染您的心血存档，测试模式仅能在【0题库、0进度】的纯净状态下开启。\n请先使用下方红色的“一键重置”并在上方删除所有题库。");
+                localStorage.setItem('exam_test_mode', 'true'); alert("🔧 开发者沙盒已激活！"); location.reload();
+            } else {
+                banks = { 'sys_wrong': { name: "💔 我的错题本", data: [], isSystem: true, sysType: 'wrong' }, 'sys_star': { name: "⭐ 专属收藏夹", data: [], isSystem: true, sysType: 'star' } }; 
+                globalStats = { totalAnswered: 0, totalCorrect: 0, challenge: { easy:0, normal:0, hard:0, extreme:0 }, mastered: [], attempted: [] };
+                saveBanks(); saveGlobalStats(); localStorage.removeItem('exam_state'); localStorage.removeItem('exam_last_report'); setNeedSync(false);
+                localStorage.setItem('exam_test_mode', 'false'); alert("✅ 已退出测试模式，所有测试假数据已核爆销毁，系统恢复纯净！"); location.reload();
             }
-        ];
+        },
+        injectProfessorTutorData: function() {
+            let mockQ1 = {
+                id: "test_q1_" + Date.now(),
+                question: "[材料原文：这是沙盒测试环境自动注入的一段极简测试材料，用于验证材料折叠逻辑与导师卡片渲染是否正常工作。]\n针对该材料，以下说法正确的是？",
+                options: {A:"说法甲", B:"说法乙", C:"说法丙", D:"说法丁"},
+                answer: "B",
+                type: "single",
+                source: "沙盒测试引擎"
+            };
+            let mockQ2 = {
+                id: "test_q2_" + Date.now(),
+                question: "这是一道独立的单选题，没有材料，用于测试独立题的导师卡片渲染与核销闭环。",
+                options: {A:"选项甲", B:"选项乙", C:"选项丙", D:"选项丁"},
+                answer: "A",
+                type: "single",
+                source: "沙盒测试引擎"
+            };
 
-        document.getElementById('tutor-input').value = JSON.stringify(mockJSON, null, 2);
-        openTutorPage();
-        generateTutorCards();
-    }
+            banks['sys_wrong'].data.push(mockQ1);
+            banks['sys_wrong'].data.push(mockQ2);
+            saveBanks();
+            renderBankList(); 
 
-    function testUnlockAllArenas() {
-        let dummyData = [];
-        for(let i=0; i<700; i++) { 
-            let qText = `[沙盒] 这是用于撑大题库容量的假题 ${i}_${Date.now()}`;
-            dummyData.push({question: qText, options: {A:"选项甲", B:"选项乙", C:"选项丙", D:"选项丁"}, answer: "A", type: "single", source: "沙盒引擎"}); 
+            let mockJSON = [
+                {
+                    "original_question": mockQ1.question,
+                    "my_answer": "A",
+                    "correct_answer": "B",
+                    "explanation": "🔍 **陷阱剖析**：\n你选择了 A，说明你把“说法甲”和“说法乙”发生的先后顺序与因果关系混淆了。\n\n🧠 **核心原理解析**：\n这道题考察的核心是基础概念的辨析。就像英国之所以能率先爆发工业革命，根本前提是它最早确立了资本主义制度一样。有了前提，才能有结果。\n\n💡 **举一反三**：\n记住这个推导链条：制度先发 -> 产权保护 -> 结果产生。以后遇到此类起源题，先找“前提优势”。",
+                    "rationale": "沙盒测试依据原文：这是从云盘中提取的虚拟原文。"
+                },
+                {
+                    "original_question": mockQ2.question,
+                    "my_answer": "C",
+                    "correct_answer": "A",
+                    "explanation": "🔍 **陷阱剖析**：\n选择了 C，说明你没有理解题目中的绝对否定词。\n\n🧠 **核心原理解析**：\n这是一段独立的沙盒测试解析，没有材料折叠框。考察的重点在于对概念的精确记忆。\n\n💡 **举一反三**：\n注意题干中的“没有”二字。点击顿悟后，此题将从错题本中物理删除。",
+                    "rationale": "未在云盘检索到原文。"
+                }
+            ];
+
+            document.getElementById('tutor-input').value = JSON.stringify(mockJSON, null, 2);
+            Router.openTutorPage();
+            generateTutorCards();
+        },
+        unlockAllArenas: function() {
+            let dummyData = [];
+            for(let i=0; i<700; i++) { 
+                let qText = `[沙盒] 这是用于撑大题库容量的假题 ${i}_${Date.now()}`;
+                dummyData.push({question: qText, options: {A:"选项甲", B:"选项乙", C:"选项丙", D:"选项丁"}, answer: "A", type: "single", source: "沙盒引擎"}); 
+                let fpHash = getHash(getFingerprint(qText));
+                if(i < 500) { globalStats.mastered.push(fpHash); }
+                if(i < 600) { globalStats.attempted.push(fpHash); }
+            }
+            banks['test_arena_' + Date.now()] = { name: "🧪 竞技场解锁专用库(700题)", data: dummyData, completed: false, maxRate: 0 };
             
-            // 自动将假题指纹录入防刷分精通库
-            let fpHash = getHash(getFingerprint(qText));
-            if(i < 500) { globalStats.mastered.push(fpHash); }
-            if(i < 600) { globalStats.attempted.push(fpHash); }
-        }
-        banks['test_arena_' + Date.now()] = { name: "🧪 竞技场解锁专用库(700题)", data: dummyData, completed: false, maxRate: 0 };
-        
-        globalStats.totalCorrect += 500;
-        globalStats.totalAnswered += 600;
-        globalStats.challenge.easy = (globalStats.challenge.easy || 0) + 1;
-        globalStats.challenge.normal = (globalStats.challenge.normal || 0) + 1;
-        globalStats.challenge.hard = (globalStats.challenge.hard || 0) + 1;
-        
-        saveBanks(); saveGlobalStats(); renderBankList(); updateDashboard();
-        alert("✅ 已注入 700 道题目并修改大盘数据，竞技场全难度模式现已解锁！");
-    }
-
-    function testInjectWrongAndStar() {
-        for(let i=1; i<=15; i++) {
-            banks['sys_wrong'].data.push({question: `[模拟测试题 ${Date.now()}] 这是沙盒自动生成的错题记录 ${i}`, options: {A:"甲",B:"乙",C:"丙",D:"丁"}, answer: "A", type: "single", source: "沙盒"});
-            if(i<=5) {
-                banks['sys_star'].data.push({question: `[模拟收藏题 ${Date.now()}] 这是沙盒自动生成的星标题 ${i}`, options: {A:"A",B:"B",C:"C",D:"D"}, answer: "B", type: "single", source: "沙盒"});
+            globalStats.totalCorrect += 500;
+            globalStats.totalAnswered += 600;
+            globalStats.challenge.easy = (globalStats.challenge.easy || 0) + 1;
+            globalStats.challenge.normal = (globalStats.challenge.normal || 0) + 1;
+            globalStats.challenge.hard = (globalStats.challenge.hard || 0) + 1;
+            
+            saveBanks(); saveGlobalStats(); renderBankList(); updateDashboard();
+            alert("✅ 已注入 700 道题目并修改大盘数据，竞技场全难度模式现已解锁！");
+        },
+        injectWrongAndStar: function() {
+            for(let i=1; i<=15; i++) {
+                banks['sys_wrong'].data.push({question: `[模拟测试题 ${Date.now()}] 这是沙盒自动生成的错题记录 ${i}`, options: {A:"甲",B:"乙",C:"丙",D:"丁"}, answer: "A", type: "single", source: "沙盒"});
+                if(i<=5) {
+                    banks['sys_star'].data.push({question: `[模拟收藏题 ${Date.now()}] 这是沙盒自动生成的星标题 ${i}`, options: {A:"A",B:"B",C:"C",D:"D"}, answer: "B", type: "single", source: "沙盒"});
+                }
             }
-        }
-        saveBanks(); renderBankList(); updateDashboard();
-        alert("✅ 成功瞬间注入 15 道错题与 5 道收藏题！请前往左侧抽屉面板查看【专项特训】。");
-    }
-
-    function testMockInterruptState() {
-        let bId = Object.keys(banks).find(k => !banks[k].isSystem);
-        if (!bId) {
-            testInjectBanks();
-            bId = Object.keys(banks).find(k => !banks[k].isSystem);
-        }
-        
-        let state = { 
-            bankId: bId, current: 5, score: 3, mode: 'instant', wrongList: [], stars: [], 
-            isAnswered: false, selected: [], activeData: banks[bId].data, timerMode: true, timeRemaining: 1500, optShuffle: false 
-        };
-        localStorage.setItem('exam_state', JSON.stringify(state));
-        renderBankList();
-        alert("✅ 中断存档已伪造！请观察主页常规题库中的【继续作答】按钮，点击即可恢复到第 6 题进度。");
-    }
-
-    function testJumpToResult() {
-        App.data = new Array(20).fill({});
-        App.score = 8;
-        App.wrongList = [];
-        for(let i=1; i<=12; i++) {
-            App.wrongList.push({ id: "wq_"+i, q: `这是一道用于测试 Markdown 提取和分页逻辑的假错题 ${i}`, options: {A:"测试", B:"测试"}, source: "沙盒模拟", my: "B", right: "A", reason: "答错" });
-        }
-        App.isChallenge = false;
-        App.bankId = 'test_bank';
-        App.isSystemBank = false;
-        showResult();
-    }
-
-    function testInjectBanks() {
-        let dummyData = []; for(let i=0; i<100; i++) { dummyData.push({question: `[沙盒测试题目 ${i+1}] 这是一道由开发者引擎生成的虚假题目用于撑起库容。`, options: {A:"选项甲", B:"选项乙", C:"选项丙", D:"选项丁"}, answer: "A", type: "single", source: "测试引擎"}); }
-        banks['test_' + Date.now()] = { name: "🧪 100题测试容量包", data: dummyData, completed: false, maxRate: 0 };
-        saveBanks(); renderBankList(); initUIState(); alert("✅ 成功注入 100 道假题");
-    }
-    function testInjectStats() { 
-        globalStats.totalAnswered += 50; 
-        globalStats.totalCorrect += 50; 
-        for(let i=0; i<50; i++) {
-            let dummyHash = getHash('dummy_' + Date.now() + '_' + i);
-            globalStats.mastered.push(dummyHash);
-            globalStats.attempted.push(dummyHash);
-        }
-        saveGlobalStats(); alert("✅ 全局答对数 +50"); 
-    }
-    function testInjectHonor() { let modes = ['easy', 'normal', 'hard', 'extreme']; let m = modes[Math.floor(Math.random()*modes.length)]; globalStats.challenge[m]++; saveGlobalStats(); alert(`✅ [${PRE_NAMES[m]}] 通关荣誉 +1`); }
-    function testForceComplete() {
-        let keys = Object.keys(banks).filter(k => !banks[k].isSystem); if(keys.length === 0) return alert("请先注入假题库");
-        banks[keys[0]].completed = true; banks[keys[0]].maxRate = 100; saveBanks(); renderBankList(); alert("✅ 已强制给第一个题库盖上 100% 毕业印章");
-    }
-    function testTriggerRedDot() { setNeedSync(true); alert("🔴 警示红点已强制点亮，请查看左侧抽屉面板！"); }
-    function testTriggerEpicModal() { showEpicModal("史诗成就达成 (沙盒测试)", "这只是一个测试弹窗，用于验证您的史诗级荣誉是否能正常唤起云端封存。在真实环境下，达成 100% 毕业或极限通关会自动触发。"); }
+            saveBanks(); renderBankList(); updateDashboard();
+            alert("✅ 成功瞬间注入 15 道错题与 5 道收藏题！请前往左侧抽屉面板查看【专项特训】。");
+        },
+        mockInterruptState: function() {
+            let bId = Object.keys(banks).find(k => !banks[k].isSystem);
+            if (!bId) {
+                this.injectBanks();
+                bId = Object.keys(banks).find(k => !banks[k].isSystem);
+            }
+            
+            let state = { 
+                bankId: bId, current: 5, score: 3, mode: 'instant', wrongList: [], stars: [], 
+                isAnswered: false, selected: [], activeData: banks[bId].data, timerMode: true, timeRemaining: 1500, optShuffle: false 
+            };
+            localStorage.setItem('exam_state', JSON.stringify(state));
+            renderBankList();
+            alert("✅ 中断存档已伪造！请观察主页常规题库中的【继续作答】按钮，点击即可恢复到第 6 题进度。");
+        },
+        jumpToResult: function() {
+            App.data = new Array(20).fill({});
+            App.score = 8;
+            App.wrongList = [];
+            for(let i=1; i<=12; i++) {
+                App.wrongList.push({ id: "wq_"+i, q: `这是一道用于测试 Markdown 提取和分页逻辑的假错题 ${i}`, options: {A:"测试", B:"测试"}, source: "沙盒模拟", my: "B", right: "A", reason: "答错" });
+            }
+            App.isChallenge = false;
+            App.bankId = 'test_bank';
+            App.isSystemBank = false;
+            showResult();
+        },
+        injectBanks: function() {
+            let dummyData = []; for(let i=0; i<100; i++) { dummyData.push({question: `[沙盒测试题目 ${i+1}] 这是一道由开发者引擎生成的虚假题目用于撑起库容。`, options: {A:"选项甲", B:"选项乙", C:"选项丙", D:"选项丁"}, answer: "A", type: "single", source: "测试引擎"}); }
+            banks['test_' + Date.now()] = { name: "🧪 100题测试容量包", data: dummyData, completed: false, maxRate: 0 };
+            saveBanks(); renderBankList(); initUIState(); alert("✅ 成功注入 100 道假题");
+        },
+        triggerRedDot: function() { setNeedSync(true); alert("🔴 警示红点已强制点亮，请查看左侧抽屉面板！"); },
+        triggerEpicModal: function() { showEpicModal("史诗成就达成 (沙盒测试)", "这只是一个测试弹窗，用于验证您的史诗级荣誉是否能正常唤起云端封存。在真实环境下，达成 100% 毕业或极限通关会自动触发。"); }
+    };
+    // ===========================================
 
     function showEpicModal(title, desc) { document.getElementById('epic-modal').classList.remove('hidden'); document.getElementById('epic-title').innerText = title; document.getElementById('epic-desc').innerText = desc; }
     function epicCloudBackupFlow() {
@@ -1029,16 +1061,6 @@
         if(isTestMode) return alert("⛔ 物理熔断：沙盒测试模式下严禁从云端拉取数据！");
         let token = document.getElementById('github-token-input').value.trim(); if(!token) return alert("请先填写 GitHub 密钥！");
         SysModal.show("⚠️ 严重警告：云端强制覆盖", "系统将直接拉取云端存档，并<span style='color:#ef4444;font-weight:bold;'>完全抹除替换</span>您当前手机上的所有题库与进度！<br><br>一旦覆盖，本地丢失数据将无法找回。", true, () => { executeCloudRestore(token); });
-    }
-
-    function resetAllStatsFlow() {
-        SysModal.show("🔥 最高级危险：清除个人进度", "您正在试图清空<span style='color:#ef4444;font-weight:bold;'>所有大盘数据、荣誉、100%章以及【错题/收藏】</span>（题库题目保留）。<br><br>清空后绝无找回可能，请慎重决定！", true, () => {
-            globalStats = { totalAnswered: 0, totalCorrect: 0, challenge: { easy:0, normal:0, hard:0, extreme:0 }, mastered: [], attempted: [] };
-            banks['sys_wrong'].data = []; banks['sys_star'].data = [];
-            for(let id in banks) { if(banks[id] && banks[id].data && !banks[id].isSystem) { banks[id].completed = false; banks[id].maxRate = 0; } }
-            saveBanks(); saveGlobalStats(); localStorage.removeItem('exam_state'); localStorage.removeItem('exam_last_report'); setNeedSync(false);
-            alert("✅ 所有进度数据、错题本与收藏夹已彻底重置。"); location.reload();
-        });
     }
 
     async function executeCloudBackup(token) {
@@ -1249,16 +1271,6 @@
         localStorage.setItem('exam_state', JSON.stringify(state));
     }
 
-    function preprocessOptions(dataArray, isShuffle) {
-        dataArray.forEach(q => {
-            let dKeys = Object.keys(q.options).sort(); q.optMap = {}; 
-            if (isShuffle) {
-                let oKeys = [...dKeys]; for (let i = oKeys.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [oKeys[i], oKeys[j]] = [oKeys[j], oKeys[i]]; }
-                dKeys.forEach((dk, i) => { q.optMap[dk] = oKeys[i]; });
-            } else { dKeys.forEach(dk => { q.optMap[dk] = dk; }); }
-        });
-    }
-
     function blockShuffle(array) {
         let independent = [];
         let groups = {};
@@ -1308,7 +1320,7 @@
             App.timerMode = config.timerMode || false; App.timeRemaining = config.timeRemaining || 0;
         }
 
-        DOM.setup.classList.add('hidden'); DOM.quiz.classList.remove('hidden');
+        Router.navigate('page-quiz');
         document.getElementById('nav-btn-back').innerText = App.isChallenge ? '〈 放弃挑战 (判负)' : '〈 保存并退出'; 
         document.getElementById('btn-quit').innerText = App.isChallenge ? '投降退出' : '放弃当前进度，清空重卷';
         
@@ -1467,13 +1479,12 @@
         App.current++; App.current >= App.data.length ? showResult() : renderQuestion(false);
     }
 
-    // === V0.2.5 核心防刷分逻辑：唯一精通指纹记录机制 ===
     function processAnswer(q) {
         let myAns = App.selected.sort().join(''); let rightAns = q.answer.split('').sort().join(''); let isRight = (myAns === rightAns);
         let fp = getFingerprint(q.question); let wrongBank = banks['sys_wrong'];
         let isStarred = banks['sys_star'] && banks['sys_star'].data && banks['sys_star'].data.some(x => getFingerprint(x.question) === fp);
         
-        let fpHash = getHash(fp); // 降维压缩存储空间
+        let fpHash = getHash(fp);
 
         if(!App.isChallenge && !App.isCompletedBank && !App.isSystemBank && !isTestMode) { 
             if(!globalStats.attempted.includes(fpHash)) {
@@ -1497,11 +1508,8 @@
         }
         
         if (!isRight || isStarred) App.wrongList.push({ id: q.id, q: q.question, options: q.options, source: q.source || "未知", my: myAns || "未答", right: q.answer, reason: !isRight ? "答错" : "收藏" });
-        
-        // 保存最新的记录库
         if(!App.isChallenge && !App.isCompletedBank && !App.isSystemBank && !isTestMode) { saveGlobalStats(); }
     }
-    // =======================================================
 
     function showFeedbackUI(q) {
         let myAns = App.selected.sort().join('');
@@ -1555,7 +1563,7 @@
 
     function showResult() {
         if(timerInterval) clearInterval(timerInterval); if(!App.isChallenge) localStorage.removeItem('exam_state'); 
-        DOM.quiz.classList.add('hidden'); DOM.result.classList.remove('hidden');
+        Router.navigate('page-result');
         
         let reportSnapshot = {
             score: App.score,
@@ -1610,8 +1618,7 @@
         App.bankId = snapshot.bankId;
         App.isSystemBank = snapshot.isSystemBank;
 
-        DOM.setup.classList.add('hidden');
-        DOM.result.classList.remove('hidden');
+        Router.navigate('page-result');
 
         let pctStr = Math.round((App.score / snapshot.total) * 100);
         document.getElementById('score-text').innerText = `${App.score} / ${snapshot.total} (${pctStr}%)`;
