@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>考试助手 V0.2.6 (架构涅槃版)</title>
+    <title>考试助手 V0.2.7 (破壁修复版)</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { background-color: #f4f6f8; color: #334155; font-family: "Nunito", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; padding: 12px; line-height: 1.6; overflow-x: hidden; }
@@ -142,7 +142,6 @@
         
         .feedback-box { margin-bottom: 24px; padding: 18px; border-radius: 16px; font-size: 16px; font-weight: 800; text-align: center; border: 2px solid transparent;}
         
-        /* 导师卡片 */
         .tutor-progress-container { background: #ffffff; padding: 16px; border-radius: 16px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 2px solid #e2e8f0; display: flex; flex-direction: column; gap: 8px;}
         .tutor-progress-text { display: flex; justify-content: space-between; font-size: 14px; font-weight: 800; color: #1e293b;}
         
@@ -327,7 +326,7 @@
             <button class="btn btn-warning" id="test-mode-toggle-btn" onclick="SandboxEngine.toggleTestMode()">开启测试模式 (注入假数据测试解锁)</button>
             <p style="font-size: 13px; color: #64748b; margin-top: 6px; margin-bottom: 24px; font-weight:600;">需在纯净态下开启，开启后强制禁用云端。</p>
             <h3 style="font-size: 15px; color: #991b1b; margin-bottom: 10px; font-weight:800;">🔥 危险操作</h3>
-            <button class="btn btn-danger" onclick="resetAllStatsFlow()">一键重置所有进度与大盘 (保留题库本身)</button>
+            <button class="btn btn-danger" onclick="SandboxEngine.resetAllStatsFlow()">一键重置所有进度与大盘 (保留题库本身)</button>
             <p style="font-size: 13px; color: #ef4444; margin-top: 6px; font-weight:600;">注意：此操作将清空所有累计数据、荣誉及100%打卡印章，且不可逆。</p>
         </div></div></div>
     </div>
@@ -502,15 +501,18 @@
     function getFingerprint(str) { return str.replace(/[^\u4e00-\u9fa5a-zA-Z0-9]/g, ''); }
     function cleanQuestionForStorage(q) { let copy = JSON.parse(JSON.stringify(q)); delete copy.optMap; return copy; }
 
-    // === V0.2.6 新增：Router 路由引擎 ===
+    // === V0.2.7 全新架构：统一路由引擎 ===
     const Router = {
         navigate: function(pageId) {
             const pages = ['page-home', 'page-quiz', 'page-result', 'page-tutor'];
             pages.forEach(id => {
                 const el = document.getElementById(id);
                 if (el) {
-                    if (id === pageId) el.classList.remove('hidden');
-                    else el.classList.add('hidden');
+                    if (id === pageId) {
+                        el.classList.remove('hidden');
+                    } else {
+                        el.classList.add('hidden');
+                    }
                 }
             });
             window.scrollTo(0, 0);
@@ -572,7 +574,7 @@
         count.innerText = `${tutorDone} / ${tutorTotal}`;
     }
 
-    // === V0.2.6 重构：引入 O(1) Map 字典优化，根除卡顿 ===
+    // === V0.2.7 性能优化：O(1) Map 字典引擎 ===
     window.generateTutorCards = function() {
         let raw = document.getElementById('tutor-input').value;
         if(!raw.trim()) return alert("请先粘贴解析代码");
@@ -899,17 +901,7 @@
         });
     }
 
-    function resetAllStatsFlow() {
-        SysModal.show("🔥 最高级危险：清除个人进度", "您正在试图清空<span style='color:#ef4444;font-weight:bold;'>所有大盘数据、荣誉、100%章以及【错题/收藏】</span>（题库题目保留）。<br><br>清空后绝无找回可能，请慎重决定！", true, () => {
-            globalStats = { totalAnswered: 0, totalCorrect: 0, challenge: { easy:0, normal:0, hard:0, extreme:0 }, mastered: [], attempted: [] };
-            banks['sys_wrong'].data = []; banks['sys_star'].data = [];
-            for(let id in banks) { if(banks[id] && banks[id].data && !banks[id].isSystem) { banks[id].completed = false; banks[id].maxRate = 0; } }
-            saveBanks(); saveGlobalStats(); localStorage.removeItem('exam_state'); localStorage.removeItem('exam_last_report'); setNeedSync(false);
-            alert("✅ 所有进度数据、错题本与收藏夹已彻底重置。"); location.reload();
-        });
-    }
-
-    // === V0.2.6 封装 SandboxEngine 隔离测试作用域 ===
+    // === V0.2.7 封装 SandboxEngine 隔离测试作用域 ===
     const SandboxEngine = {
         toggleTestMode: function() {
             if (!isTestMode) {
@@ -1030,7 +1022,16 @@
             saveBanks(); renderBankList(); initUIState(); alert("✅ 成功注入 100 道假题");
         },
         triggerRedDot: function() { setNeedSync(true); alert("🔴 警示红点已强制点亮，请查看左侧抽屉面板！"); },
-        triggerEpicModal: function() { showEpicModal("史诗成就达成 (沙盒测试)", "这只是一个测试弹窗，用于验证您的史诗级荣誉是否能正常唤起云端封存。在真实环境下，达成 100% 毕业或极限通关会自动触发。"); }
+        triggerEpicModal: function() { showEpicModal("史诗成就达成 (沙盒测试)", "这只是一个测试弹窗，用于验证您的史诗级荣誉是否能正常唤起云端封存。在真实环境下，达成 100% 毕业或极限通关会自动触发。"); },
+        resetAllStatsFlow: function() {
+            SysModal.show("🔥 最高级危险：清除个人进度", "您正在试图清空<span style='color:#ef4444;font-weight:bold;'>所有大盘数据、荣誉、100%章以及【错题/收藏】</span>（题库题目保留）。<br><br>清空后绝无找回可能，请慎重决定！", true, () => {
+                globalStats = { totalAnswered: 0, totalCorrect: 0, challenge: { easy:0, normal:0, hard:0, extreme:0 }, mastered: [], attempted: [] };
+                banks['sys_wrong'].data = []; banks['sys_star'].data = [];
+                for(let id in banks) { if(banks[id] && banks[id].data && !banks[id].isSystem) { banks[id].completed = false; banks[id].maxRate = 0; } }
+                saveBanks(); saveGlobalStats(); localStorage.removeItem('exam_state'); localStorage.removeItem('exam_last_report'); setNeedSync(false);
+                alert("✅ 所有进度数据、错题本与收藏夹已彻底重置。"); location.reload();
+            });
+        }
     };
     // ===========================================
 
@@ -1251,10 +1252,6 @@
     const App = { bankId: null, data: [], current: 0, score: 0, mode: 'instant', wrongList: [], stars: new Set(), selected: [], isAnswered: false, timerMode: false, timeRemaining: 0, isChallenge: false, challengeDiff: null, optShuffle: false, isCompletedBank: false, isSystemBank: false };
     let timerInterval = null;
     const DOM = { 
-        setup: document.getElementById('page-home'), 
-        quiz: document.getElementById('page-quiz'), 
-        result: document.getElementById('page-result'), 
-        material: document.getElementById('material-container'),
         title: document.getElementById('question-text'), 
         opts: document.getElementById('options-container'), 
         progressFill: document.getElementById('progress-fill'), 
@@ -1262,13 +1259,24 @@
         feedback: document.getElementById('feedback-box'), 
         btnAction: document.getElementById('btn-action'), 
         btnStar: document.getElementById('btn-star'), 
-        timerDisplay: document.getElementById('timer-display') 
+        timerDisplay: document.getElementById('timer-display'),
+        material: document.getElementById('material-container')
     };
 
     function saveState() {
         if(App.isChallenge || isTestMode) return;
         const state = { bankId: App.bankId, current: App.current, score: App.score, mode: App.mode, wrongList: App.wrongList, stars: Array.from(App.stars), isAnswered: App.isAnswered, selected: App.selected, activeData: App.data, timerMode: App.timerMode, timeRemaining: App.timeRemaining, optShuffle: App.optShuffle };
         localStorage.setItem('exam_state', JSON.stringify(state));
+    }
+
+    function preprocessOptions(dataArray, isShuffle) {
+        dataArray.forEach(q => {
+            let dKeys = Object.keys(q.options).sort(); q.optMap = {}; 
+            if (isShuffle) {
+                let oKeys = [...dKeys]; for (let i = oKeys.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [oKeys[i], oKeys[j]] = [oKeys[j], oKeys[i]]; }
+                dKeys.forEach((dk, i) => { q.optMap[dk] = oKeys[i]; });
+            } else { dKeys.forEach(dk => { q.optMap[dk] = dk; }); }
+        });
     }
 
     function blockShuffle(array) {
@@ -1321,6 +1329,7 @@
         }
 
         Router.navigate('page-quiz');
+        
         document.getElementById('nav-btn-back').innerText = App.isChallenge ? '〈 放弃挑战 (判负)' : '〈 保存并退出'; 
         document.getElementById('btn-quit').innerText = App.isChallenge ? '投降退出' : '放弃当前进度，清空重卷';
         
