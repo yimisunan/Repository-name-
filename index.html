@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>考试助手 V0.2.7 (破壁修复版)</title>
+    <title>考试助手 V0.2.8 (纯净架构终极版)</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { background-color: #f4f6f8; color: #334155; font-family: "Nunito", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; padding: 12px; line-height: 1.6; overflow-x: hidden; }
@@ -185,7 +185,6 @@
         .chunk-title { font-size: 15px; font-weight: 800; color: #475569; margin-bottom: 12px; }
         .chunk-textarea { height: 160px; margin-bottom: 16px; border: 2px solid #cbd5e1; border-radius: 10px; font-family: monospace; white-space: pre-wrap; font-weight: 600;}
 
-        /* 系统模态框（唯一化、最高层级） */
         .sys-modal-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(6px); z-index: 99999; display: flex; justify-content: center; align-items: center; transition: opacity 0.3s; }
         .sys-modal-box { background: #ffffff; width: 88%; max-width: 380px; border-radius: 24px; padding: 28px; box-shadow: 0 24px 50px rgba(0,0,0,0.3); text-align: center; transform: scale(1); transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1); border: 2px solid #e2e8f0;}
         .sys-modal-title { font-size: 20px; font-weight: 900; color: #1e293b; margin-bottom: 14px; }
@@ -501,18 +500,15 @@
     function getFingerprint(str) { return str.replace(/[^\u4e00-\u9fa5a-zA-Z0-9]/g, ''); }
     function cleanQuestionForStorage(q) { let copy = JSON.parse(JSON.stringify(q)); delete copy.optMap; return copy; }
 
-    // === V0.2.7 全新架构：统一路由引擎 ===
+    // 路由控制器
     const Router = {
         navigate: function(pageId) {
             const pages = ['page-home', 'page-quiz', 'page-result', 'page-tutor'];
             pages.forEach(id => {
                 const el = document.getElementById(id);
                 if (el) {
-                    if (id === pageId) {
-                        el.classList.remove('hidden');
-                    } else {
-                        el.classList.add('hidden');
-                    }
+                    if (id === pageId) el.classList.remove('hidden');
+                    else el.classList.add('hidden');
                 }
             });
             window.scrollTo(0, 0);
@@ -528,7 +524,7 @@
         }
     };
 
-    // 抽屉栏交互逻辑
+    // 抽屉与折叠交互
     function openDrawer() {
         document.getElementById('side-drawer').classList.add('open');
         document.getElementById('drawer-overlay').classList.add('open');
@@ -539,8 +535,12 @@
         document.getElementById('drawer-overlay').classList.remove('open');
         document.body.style.overflow = '';
     }
+    
+    function toggleFold(id) { 
+        let el = document.getElementById(id); el.classList.toggle('open'); 
+        foldState[id] = el.classList.contains('open'); localStorage.setItem('exam_fold_state', JSON.stringify(foldState));
+    }
 
-    // 导师卡片折叠逻辑
     window.toggleMaterial = function(btn, uid) {
         let content = uid ? document.getElementById(`${uid}-content`) : document.getElementById('mat-content');
         let fade = uid ? document.getElementById(`${uid}-fade`) : document.getElementById('mat-fade');
@@ -558,6 +558,7 @@
         }
     };
 
+    // 导师进度逻辑
     window.tutorTotal = 0;
     window.tutorDone = 0;
 
@@ -574,7 +575,6 @@
         count.innerText = `${tutorDone} / ${tutorTotal}`;
     }
 
-    // === V0.2.7 性能优化：O(1) Map 字典引擎 ===
     window.generateTutorCards = function() {
         let raw = document.getElementById('tutor-input').value;
         if(!raw.trim()) return alert("请先粘贴解析代码");
@@ -590,7 +590,7 @@
             let container = document.getElementById('tutor-cards-container');
             container.innerHTML = '';
             
-            // 构建 O(1) 字典引擎
+            // O(1) Map 字典引擎构建
             let qMap = new Map();
             for(let k in banks) {
                 if(banks[k] && banks[k].data) {
@@ -636,7 +636,7 @@
                 }
 
                 let fp = getFingerprint(rawQ);
-                let matchedQ = qMap.get(fp); // 瞬间 O(1) 寻址
+                let matchedQ = qMap.get(fp); // O(1) 瞬间寻址
                 let optionsHtml = '';
                 
                 if (matchedQ && matchedQ.options) {
@@ -726,7 +726,7 @@
         }, 400); 
     };
 
-    // 系统弹窗唯一对象
+    // 系统模态框
     const SysModal = {
         timer: null,
         show: function(title, desc, isDanger, onConfirm) {
@@ -775,9 +775,7 @@
         }
     };
 
-    window.alert = function(msg) {
-        SysModal.alert("系统提示", String(msg).replace(/\n/g, '<br>'));
-    };
+    window.alert = function(msg) { SysModal.alert("系统提示", String(msg).replace(/\n/g, '<br>')); };
 
     (function migrateOldData() {
         ['banks', 'global_stats', 'test_mode', 'need_sync', 'fold_state', 'settings_open', 'github_token'].forEach(k => {
@@ -844,10 +842,6 @@
     }
 
     function applyFoldState() { for(let id in foldState) { if(foldState[id] && document.getElementById(id)) { document.getElementById(id).classList.add('open'); } } }
-    function toggleFold(id) { 
-        let el = document.getElementById(id); el.classList.toggle('open'); 
-        foldState[id] = el.classList.contains('open'); localStorage.setItem('exam_fold_state', JSON.stringify(foldState));
-    }
     
     function toggleQuizSettings() {
         isSettingsOpen = !isSettingsOpen; localStorage.setItem('exam_settings_open', isSettingsOpen); applyQuizSettingsState();
@@ -901,7 +895,7 @@
         });
     }
 
-    // === V0.2.7 封装 SandboxEngine 隔离测试作用域 ===
+    // === 沙盒引擎封装 ===
     const SandboxEngine = {
         toggleTestMode: function() {
             if (!isTestMode) {
@@ -1033,7 +1027,6 @@
             });
         }
     };
-    // ===========================================
 
     function showEpicModal(title, desc) { document.getElementById('epic-modal').classList.remove('hidden'); document.getElementById('epic-title').innerText = title; document.getElementById('epic-desc').innerText = desc; }
     function epicCloudBackupFlow() {
