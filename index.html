@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>考试助手 V0.2.3 (名师沉浸答疑版)</title>
+    <title>考试助手 V0.2.4 (纯净修复版)</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { background-color: #f4f6f8; color: #334155; font-family: "Nunito", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; padding: 12px; line-height: 1.6; overflow-x: hidden; }
@@ -155,9 +155,7 @@
         
         .tutor-exp-box { background: #f0fdfa; border-radius: 18px; padding: 18px; position: relative; border: 2px solid #ccfbf1; margin-bottom: 20px; margin-top: 24px; box-shadow: 0 4px 10px rgba(20, 184, 166, 0.05);}
         .tutor-exp-title { display: inline-flex; align-items: center; background: #0d9488; color: white; padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 900; margin-bottom: 10px; letter-spacing: 1px; box-shadow: 0 2px 8px rgba(13, 148, 136, 0.3); transform: translateY(-30px); margin-bottom: -15px;}
-        /* === V0.2.3 核心修复：支持多段落折行显示 === */
         .tutor-exp-text { font-size: 15px; color: #0f766e; font-weight: 700; line-height: 1.6; text-align: justify; white-space: pre-wrap;}
-        /* ======================================= */
         
         .tutor-rat-btn { font-size: 14px; color: #64748b; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; margin-bottom: 16px; font-weight: 800; background: #f1f5f9; padding: 8px 16px; border-radius: 12px; transition: all 0.2s;}
         .tutor-rat-btn:active { transform: scale(0.95); background: #e2e8f0;}
@@ -187,6 +185,7 @@
         .chunk-title { font-size: 15px; font-weight: 800; color: #475569; margin-bottom: 12px; }
         .chunk-textarea { height: 160px; margin-bottom: 16px; border: 2px solid #cbd5e1; border-radius: 10px; font-family: monospace; white-space: pre-wrap; font-weight: 600;}
 
+        /* 系统模态框（拥有最高层级保证不被遮挡） */
         .sys-modal-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(6px); z-index: 99999; display: flex; justify-content: center; align-items: center; transition: opacity 0.3s; }
         .sys-modal-box { background: #ffffff; width: 88%; max-width: 380px; border-radius: 24px; padding: 28px; box-shadow: 0 24px 50px rgba(0,0,0,0.3); text-align: center; transform: scale(1); transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1); border: 2px solid #e2e8f0;}
         .sys-modal-title { font-size: 20px; font-weight: 900; color: #1e293b; margin-bottom: 14px; }
@@ -467,6 +466,25 @@
 
     <div id="chunks-container" style="margin-top: 28px;"></div>
     <button class="btn btn-primary" style="margin-top: 28px; padding: 18px; font-size: 17px; border-radius:16px; box-shadow: 0 6px 20px rgba(59, 130, 246, 0.3);" onclick="clearReportAndReload()">标记处理完成，返回主页</button>
+</div>
+
+<div class="sys-modal-overlay hidden" id="sys-modal">
+    <div class="sys-modal-box">
+        <div class="sys-modal-title" id="modal-title">提示</div>
+        <div class="sys-modal-desc" id="modal-desc">内容</div>
+        <button class="btn btn-primary" id="modal-btn-confirm" style="margin-bottom: 12px; padding: 14px; border-radius: 12px; font-size: 16px;">确认 (3s)</button>
+        <button class="btn" id="modal-btn-cancel" style="background: #f1f5f9; border-color: #cbd5e1; color:#475569; padding: 14px; border-radius: 12px; font-size: 16px;">取消</button>
+    </div>
+</div>
+
+<div class="sys-modal-overlay hidden" id="epic-modal">
+    <div class="sys-modal-box epic-modal-box">
+        <div style="font-size: 56px; margin-bottom: 16px; line-height: 1; filter: drop-shadow(0 4px 10px rgba(245, 158, 11, 0.3));">🏆</div>
+        <div class="sys-modal-title epic-modal-title" id="epic-title">史诗成就达成</div>
+        <div class="sys-modal-desc epic-modal-desc" id="epic-desc">描述内容</div>
+        <button class="btn btn-epic" onclick="epicCloudBackupFlow()">✨ 立即一键封存至云端</button>
+        <button class="btn" style="background: transparent; border: 2px solid #fcd34d; color: #b45309; padding: 14px; border-radius: 14px; font-weight:800;" onclick="document.getElementById('epic-modal').classList.add('hidden')">稍后再说</button>
+    </div>
 </div>
 
 <script>
@@ -860,7 +878,6 @@
         }
     }
 
-    // === V0.2.3 教授级名师测试注入逻辑 ===
     function testInjectProfessorTutorData() {
         let mockQ1 = {
             id: "test_q1_" + Date.now(),
@@ -905,7 +922,6 @@
         openTutorPage();
         generateTutorCards();
     }
-    // ===========================================
 
     function testUnlockAllArenas() {
         let dummyData = [];
