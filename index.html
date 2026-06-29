@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>考试助手 V0.2.4 (纯净修复版)</title>
+    <title>考试助手 V0.2.5 (防刷分坚固版)</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { background-color: #f4f6f8; color: #334155; font-family: "Nunito", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; padding: 12px; line-height: 1.6; overflow-x: hidden; }
@@ -185,7 +185,6 @@
         .chunk-title { font-size: 15px; font-weight: 800; color: #475569; margin-bottom: 12px; }
         .chunk-textarea { height: 160px; margin-bottom: 16px; border: 2px solid #cbd5e1; border-radius: 10px; font-family: monospace; white-space: pre-wrap; font-weight: 600;}
 
-        /* 系统模态框（拥有最高层级保证不被遮挡） */
         .sys-modal-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(6px); z-index: 99999; display: flex; justify-content: center; align-items: center; transition: opacity 0.3s; }
         .sys-modal-box { background: #ffffff; width: 88%; max-width: 380px; border-radius: 24px; padding: 28px; box-shadow: 0 24px 50px rgba(0,0,0,0.3); text-align: center; transform: scale(1); transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1); border: 2px solid #e2e8f0;}
         .sys-modal-title { font-size: 20px; font-weight: 900; color: #1e293b; margin-bottom: 14px; }
@@ -468,26 +467,17 @@
     <button class="btn btn-primary" style="margin-top: 28px; padding: 18px; font-size: 17px; border-radius:16px; box-shadow: 0 6px 20px rgba(59, 130, 246, 0.3);" onclick="clearReportAndReload()">标记处理完成，返回主页</button>
 </div>
 
-<div class="sys-modal-overlay hidden" id="sys-modal">
-    <div class="sys-modal-box">
-        <div class="sys-modal-title" id="modal-title">提示</div>
-        <div class="sys-modal-desc" id="modal-desc">内容</div>
-        <button class="btn btn-primary" id="modal-btn-confirm" style="margin-bottom: 12px; padding: 14px; border-radius: 12px; font-size: 16px;">确认 (3s)</button>
-        <button class="btn" id="modal-btn-cancel" style="background: #f1f5f9; border-color: #cbd5e1; color:#475569; padding: 14px; border-radius: 12px; font-size: 16px;">取消</button>
-    </div>
-</div>
-
-<div class="sys-modal-overlay hidden" id="epic-modal">
-    <div class="sys-modal-box epic-modal-box">
-        <div style="font-size: 56px; margin-bottom: 16px; line-height: 1; filter: drop-shadow(0 4px 10px rgba(245, 158, 11, 0.3));">🏆</div>
-        <div class="sys-modal-title epic-modal-title" id="epic-title">史诗成就达成</div>
-        <div class="sys-modal-desc epic-modal-desc" id="epic-desc">描述内容</div>
-        <button class="btn btn-epic" onclick="epicCloudBackupFlow()">✨ 立即一键封存至云端</button>
-        <button class="btn" style="background: transparent; border: 2px solid #fcd34d; color: #b45309; padding: 14px; border-radius: 14px; font-weight:800;" onclick="document.getElementById('epic-modal').classList.add('hidden')">稍后再说</button>
-    </div>
-</div>
-
 <script>
+    function getHash(str) {
+        let hash = 0;
+        for (let i = 0; i < str.length; i++) {
+            let chr = str.charCodeAt(i);
+            hash = ((hash << 5) - hash) + chr;
+            hash |= 0;
+        }
+        return hash.toString(36);
+    }
+
     function openDrawer() {
         document.getElementById('side-drawer').classList.add('open');
         document.getElementById('drawer-overlay').classList.add('open');
@@ -757,9 +747,12 @@
     if (!banks['sys_wrong']) banks['sys_wrong'] = { name: "💔 我的错题本", data: [], isSystem: true, sysType: 'wrong' };
     if (!banks['sys_star']) banks['sys_star'] = { name: "⭐ 专属收藏夹", data: [], isSystem: true, sysType: 'star' };
 
-    let globalStats = JSON.parse(localStorage.getItem('exam_global_stats') || '{"totalAnswered": 0, "totalCorrect": 0, "challenge": {}}');
+    let globalStats = JSON.parse(localStorage.getItem('exam_global_stats') || '{"totalAnswered": 0, "totalCorrect": 0, "challenge": {}, "mastered": [], "attempted": []}');
     if(globalStats.totalCorrect === undefined) globalStats.totalCorrect = 0;
+    if(globalStats.totalAnswered === undefined) globalStats.totalAnswered = 0;
     if(!globalStats.challenge) globalStats.challenge = { easy:0, normal:0, hard:0, extreme:0 };
+    if(!globalStats.mastered) globalStats.mastered = [];
+    if(!globalStats.attempted) globalStats.attempted = [];
     
     let isTestMode = localStorage.getItem('exam_test_mode') === 'true';
     let needSync = localStorage.getItem('exam_need_sync') === 'true';
@@ -872,7 +865,7 @@
             localStorage.setItem('exam_test_mode', 'true'); alert("🔧 开发者沙盒已激活！"); location.reload();
         } else {
             banks = { 'sys_wrong': { name: "💔 我的错题本", data: [], isSystem: true, sysType: 'wrong' }, 'sys_star': { name: "⭐ 专属收藏夹", data: [], isSystem: true, sysType: 'star' } }; 
-            globalStats = { totalAnswered: 0, totalCorrect: 0, challenge: { easy:0, normal:0, hard:0, extreme:0 } };
+            globalStats = { totalAnswered: 0, totalCorrect: 0, challenge: { easy:0, normal:0, hard:0, extreme:0 }, mastered: [], attempted: [] };
             saveBanks(); saveGlobalStats(); localStorage.removeItem('exam_state'); localStorage.removeItem('exam_last_report'); setNeedSync(false);
             localStorage.setItem('exam_test_mode', 'false'); alert("✅ 已退出测试模式，所有测试假数据已核爆销毁，系统恢复纯净！"); location.reload();
         }
@@ -926,7 +919,13 @@
     function testUnlockAllArenas() {
         let dummyData = [];
         for(let i=0; i<700; i++) { 
-            dummyData.push({question: `[沙盒] 这是用于撑大题库容量的假题 ${i}`, options: {A:"选项甲", B:"选项乙", C:"选项丙", D:"选项丁"}, answer: "A", type: "single", source: "沙盒引擎"}); 
+            let qText = `[沙盒] 这是用于撑大题库容量的假题 ${i}_${Date.now()}`;
+            dummyData.push({question: qText, options: {A:"选项甲", B:"选项乙", C:"选项丙", D:"选项丁"}, answer: "A", type: "single", source: "沙盒引擎"}); 
+            
+            // 自动将假题指纹录入防刷分精通库
+            let fpHash = getHash(getFingerprint(qText));
+            if(i < 500) { globalStats.mastered.push(fpHash); }
+            if(i < 600) { globalStats.attempted.push(fpHash); }
         }
         banks['test_arena_' + Date.now()] = { name: "🧪 竞技场解锁专用库(700题)", data: dummyData, completed: false, maxRate: 0 };
         
@@ -985,7 +984,16 @@
         banks['test_' + Date.now()] = { name: "🧪 100题测试容量包", data: dummyData, completed: false, maxRate: 0 };
         saveBanks(); renderBankList(); initUIState(); alert("✅ 成功注入 100 道假题");
     }
-    function testInjectStats() { globalStats.totalAnswered += 50; globalStats.totalCorrect += 50; saveGlobalStats(); alert("✅ 全局答对数 +50"); }
+    function testInjectStats() { 
+        globalStats.totalAnswered += 50; 
+        globalStats.totalCorrect += 50; 
+        for(let i=0; i<50; i++) {
+            let dummyHash = getHash('dummy_' + Date.now() + '_' + i);
+            globalStats.mastered.push(dummyHash);
+            globalStats.attempted.push(dummyHash);
+        }
+        saveGlobalStats(); alert("✅ 全局答对数 +50"); 
+    }
     function testInjectHonor() { let modes = ['easy', 'normal', 'hard', 'extreme']; let m = modes[Math.floor(Math.random()*modes.length)]; globalStats.challenge[m]++; saveGlobalStats(); alert(`✅ [${PRE_NAMES[m]}] 通关荣誉 +1`); }
     function testForceComplete() {
         let keys = Object.keys(banks).filter(k => !banks[k].isSystem); if(keys.length === 0) return alert("请先注入假题库");
@@ -1025,7 +1033,7 @@
 
     function resetAllStatsFlow() {
         SysModal.show("🔥 最高级危险：清除个人进度", "您正在试图清空<span style='color:#ef4444;font-weight:bold;'>所有大盘数据、荣誉、100%章以及【错题/收藏】</span>（题库题目保留）。<br><br>清空后绝无找回可能，请慎重决定！", true, () => {
-            globalStats = { totalAnswered: 0, totalCorrect: 0, challenge: { easy:0, normal:0, hard:0, extreme:0 } };
+            globalStats = { totalAnswered: 0, totalCorrect: 0, challenge: { easy:0, normal:0, hard:0, extreme:0 }, mastered: [], attempted: [] };
             banks['sys_wrong'].data = []; banks['sys_star'].data = [];
             for(let id in banks) { if(banks[id] && banks[id].data && !banks[id].isSystem) { banks[id].completed = false; banks[id].maxRate = 0; } }
             saveBanks(); saveGlobalStats(); localStorage.removeItem('exam_state'); localStorage.removeItem('exam_last_report'); setNeedSync(false);
@@ -1080,7 +1088,11 @@
                 banks = importedData.banks;
                 if (!banks['sys_wrong']) banks['sys_wrong'] = { name: "💔 我的错题本", data: [], isSystem: true, sysType: 'wrong' };
                 if (!banks['sys_star']) banks['sys_star'] = { name: "⭐ 专属收藏夹", data: [], isSystem: true, sysType: 'star' };
-                globalStats = importedData.stats || {totalAnswered: 0, totalCorrect: 0, challenge: {easy:0,normal:0,hard:0,extreme:0}};
+                
+                globalStats = importedData.stats || {totalAnswered: 0, totalCorrect: 0, challenge: {easy:0,normal:0,hard:0,extreme:0}, mastered: [], attempted: []};
+                if(!globalStats.mastered) globalStats.mastered = [];
+                if(!globalStats.attempted) globalStats.attempted = [];
+
                 if (importedData.state) { localStorage.setItem('exam_state', JSON.stringify(importedData.state)); } else { localStorage.removeItem('exam_state'); }
             } else { 
                 banks = importedData; 
@@ -1111,7 +1123,11 @@
                     banks = importedData.banks;
                     if (!banks['sys_wrong']) banks['sys_wrong'] = { name: "💔 我的错题本", data: [], isSystem: true, sysType: 'wrong' };
                     if (!banks['sys_star']) banks['sys_star'] = { name: "⭐ 专属收藏夹", data: [], isSystem: true, sysType: 'star' };
-                    globalStats = importedData.stats || {totalAnswered: 0, totalCorrect: 0, challenge: {easy:0,normal:0,hard:0,extreme:0}};
+                    
+                    globalStats = importedData.stats || {totalAnswered: 0, totalCorrect: 0, challenge: {easy:0,normal:0,hard:0,extreme:0}, mastered: [], attempted: []};
+                    if(!globalStats.mastered) globalStats.mastered = [];
+                    if(!globalStats.attempted) globalStats.attempted = [];
+
                     if (importedData.state) { localStorage.setItem('exam_state', JSON.stringify(importedData.state)); } else { localStorage.removeItem('exam_state'); }
                 } else { banks = importedData; }
                 saveBanks(); saveGlobalStats(); setNeedSync(true); alert(`✅ 成功从本地文件全量覆盖恢复！`); location.reload();
@@ -1451,14 +1467,29 @@
         App.current++; App.current >= App.data.length ? showResult() : renderQuestion(false);
     }
 
+    // === V0.2.5 核心防刷分逻辑：唯一精通指纹记录机制 ===
     function processAnswer(q) {
         let myAns = App.selected.sort().join(''); let rightAns = q.answer.split('').sort().join(''); let isRight = (myAns === rightAns);
         let fp = getFingerprint(q.question); let wrongBank = banks['sys_wrong'];
         let isStarred = banks['sys_star'] && banks['sys_star'].data && banks['sys_star'].data.some(x => getFingerprint(x.question) === fp);
+        
+        let fpHash = getHash(fp); // 降维压缩存储空间
+
+        if(!App.isChallenge && !App.isCompletedBank && !App.isSystemBank && !isTestMode) { 
+            if(!globalStats.attempted.includes(fpHash)) {
+                globalStats.attempted.push(fpHash);
+                globalStats.totalAnswered++;
+            }
+        }
 
         if (isRight) {
             App.score++; 
-            if(!App.isChallenge && !App.isCompletedBank && !App.isSystemBank && !isTestMode) { globalStats.totalCorrect++; }
+            if(!App.isChallenge && !App.isCompletedBank && !App.isSystemBank && !isTestMode) { 
+                if(!globalStats.mastered.includes(fpHash)) {
+                    globalStats.mastered.push(fpHash);
+                    globalStats.totalCorrect++; 
+                }
+            }
             if(App.bankId === 'sys_wrong') { wrongBank.data = wrongBank.data.filter(x => getFingerprint(x.question) !== fp); saveBanks(); }
         } else {
             let alreadyInWrong = wrongBank.data.some(x => getFingerprint(x.question) === fp);
@@ -1466,8 +1497,11 @@
         }
         
         if (!isRight || isStarred) App.wrongList.push({ id: q.id, q: q.question, options: q.options, source: q.source || "未知", my: myAns || "未答", right: q.answer, reason: !isRight ? "答错" : "收藏" });
-        if(!App.isChallenge && !App.isCompletedBank && !App.isSystemBank && !isTestMode) { globalStats.totalAnswered++; saveGlobalStats(); }
+        
+        // 保存最新的记录库
+        if(!App.isChallenge && !App.isCompletedBank && !App.isSystemBank && !isTestMode) { saveGlobalStats(); }
     }
+    // =======================================================
 
     function showFeedbackUI(q) {
         let myAns = App.selected.sort().join('');
